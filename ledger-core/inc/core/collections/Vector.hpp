@@ -33,9 +33,21 @@
 
 #include <vector>
 #include <functional>
+#include <list>
 
 namespace ledger {
     namespace core {
+
+        namespace list {
+            template <typename T>
+            std::list<T> concat(const std::list<T>& left, const std::list<T>& right) {
+                std::list<T> result;
+                result.insert(result.end(), left.begin(), left.end());
+                result.insert(result.end(), right.begin(), right.end());
+                return result;
+            }
+        }
+
         namespace vector {
 
             template <typename T>

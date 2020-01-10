@@ -151,6 +151,10 @@ namespace ledger {
              */
             std::vector<uint8_t> toByteArray() const;
 
+            void reset() {
+                _bytes.clear();
+            }
+
         private:
             std::vector<uint8_t> _bytes;
         };

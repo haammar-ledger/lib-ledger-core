@@ -6,8 +6,8 @@ namespace ledger {
     namespace core {
         /// Tag type.
         struct CosmosMigration {
-          static int constexpr COIN_ID = 99999; // TODO: edit
-          static uint32_t constexpr CURRENT_VERSION = 1; // TODO: edit
+          static int constexpr COIN_ID = 118;
+          static std::uint32_t constexpr CURRENT_VERSION = 1;
         };
 
         // migrations

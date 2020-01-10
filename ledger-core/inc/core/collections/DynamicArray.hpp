@@ -36,6 +36,8 @@
 #include <cereal/cereal.hpp>
 #include <cereal/types/vector.hpp>
 
+#include <rapidjson/document.h>
+
 #include <core/api/DynamicArray.hpp>
 #include <core/api/DynamicObject.hpp>
 #include <core/api/DynamicType.hpp>
@@ -110,6 +112,8 @@ namespace ledger {
             void serialize(Archive& ar) {
                 ar(_values.getContainer());
             }
+
+            rapidjson::Value toJson(rapidjson::Document::AllocatorType& allocator);
 
         private:
             Array<DynamicValue> _values;

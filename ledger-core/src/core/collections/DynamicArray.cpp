@@ -203,5 +203,85 @@ namespace ledger {
             archive(array);
             return array;
         }
+
+        rapidjson::Value DynamicArray::toJson(rapidjson::Document::AllocatorType& allocator) {
+            using namespace rapidjson;
+
+            Value object(kArrayType);
+
+            for (int64_t i = 0; i < size(); ++i) {
+                switch (getType(i).value()) {
+                    case api::DynamicType::OBJECT:
+                        object.PushBack(
+                            std::dynamic_pointer_cast<DynamicObject>(getObject(i))->toJson(allocator),
+                            allocator);
+                        break;
+                    case api::DynamicType::ARRAY:
+                        object.PushBack(
+                            std::dynamic_pointer_cast<DynamicArray>(getArray(i))->toJson(allocator),
+                            allocator);
+                        break;
+                    case api::DynamicType::STRING:
+                    {
+                        auto value = getString(i).value();
+                        Value string(kStringType);
+
+                        string.SetString(value.c_str(), static_cast<SizeType>(value.size()), allocator);
+                        object.PushBack(string, allocator);
+                        break;
+                    }
+                    case api::DynamicType::BOOLEAN:
+                    {
+                        auto value = getBoolean(i).value();
+                        Value number(value ? kTrueType : kFalseType);
+
+                        number.SetBool(value);
+                        object.PushBack(number, allocator);
+                        break;
+                    }
+                    case api::DynamicType::DOUBLE:
+                    {
+                        Value number(kNumberType);
+
+                        number.SetDouble(getDouble(i).value());
+                        object.PushBack(number, allocator);
+                        break;
+                    }
+                    case api::DynamicType::INT32:
+                    {
+                        Value number(kNumberType);
+
+                        number.SetInt(getInt(i).value());
+                        object.PushBack(number, allocator);
+                        break;
+                    }
+                    case api::DynamicType::INT64:
+                    {
+                        Value number(kNumberType);
+
+                        number.SetInt64(getLong(i).value());
+                        object.PushBack(number, allocator);
+                        break;
+                    }
+                    case api::DynamicType::DATA:
+                    {
+                        auto value = getData(i).value();
+                        auto stringifiedValue = std::string(std::begin(value), std::end(value));
+
+                        Value string(kStringType);
+
+                        string.SetString(stringifiedValue.c_str(), static_cast<SizeType>(stringifiedValue.size()), allocator);
+                        object.PushBack(string, allocator);
+                        break;
+                    }
+                    default:
+                        throw Exception(
+                            api::ErrorCode::RUNTIME_ERROR,
+                            fmt::format("cannot parse '{}' type", api::to_string(getType(i).value())));
+                        break;
+                }
+            }
+            return object;
+        }
     }
 }

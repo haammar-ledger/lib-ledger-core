@@ -34,6 +34,9 @@
 #include <cereal/cereal.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/unordered_map.hpp>
+
+#include <rapidjson/document.h>
+
 #include <core/api/DynamicArray.hpp>
 #include <core/api/DynamicObject.hpp>
 #include <core/api/DynamicType.hpp>
@@ -111,6 +114,8 @@ namespace ledger {
             void serialize(Archive& ar) {
                 ar(_values.getContainer());
             }
+
+            rapidjson::Value toJson(rapidjson::Document::AllocatorType& allocator);
 
         private:
             Map<std::string, DynamicValue> _values;

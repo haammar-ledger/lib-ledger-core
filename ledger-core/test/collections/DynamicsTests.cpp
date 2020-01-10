@@ -30,6 +30,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <rapidjson/document.h>
 
 #include <core/api/DynamicArray.hpp>
 #include <core/api/DynamicObject.hpp>
@@ -250,4 +251,112 @@ TEST(Dynamics, OverwriteDynamicObject) {
     EXPECT_EQ(object->getInt("int").value(), 1);
     EXPECT_EQ(object->getLong("long").value(), 16);
     EXPECT_EQ(object->getData("data").value(), std::vector<uint8_t>({0x19, 0x90}));
+}
+TEST(Dynamics, JsonFromDynamicObject) {
+    using namespace rapidjson;
+
+    Document document;
+    document.SetObject();
+
+    auto innerArrayObject = std::make_shared<ledger::core::DynamicObject>();
+    innerArrayObject->putBoolean("boolean", false);
+
+    auto boolArray = std::make_shared<ledger::core::DynamicArray>();
+    boolArray->pushBoolean(false)
+             ->pushBoolean(true);
+
+    auto doubleArray = std::make_shared<ledger::core::DynamicArray>();
+    doubleArray->pushDouble(21.8)
+             ->pushDouble(14.500001)
+             ->pushDouble(-48);
+
+    auto intArray = std::make_shared<ledger::core::DynamicArray>();
+    intArray->pushInt(30);
+
+    auto longArray = std::make_shared<ledger::core::DynamicArray>();
+    longArray->pushLong(21474836470)
+             ->pushLong(-21474836470);
+
+    auto stringArray = std::make_shared<ledger::core::DynamicArray>();
+    stringArray->pushString("foobarzoo")
+               ->pushString("test");
+
+    auto dataArray = std::make_shared<ledger::core::DynamicArray>();
+    dataArray->pushData({'y', 'e', 's'})
+             ->pushData({'n', 'o'});
+
+    auto innerObject = std::make_shared<ledger::core::DynamicObject>();
+    innerObject->putArray("boolean", boolArray);
+    innerObject->putArray("double", doubleArray);
+    innerObject->putArray("int", intArray);
+    innerObject->putArray("long", longArray);
+    innerObject->putArray("string", stringArray);
+    innerObject->putArray("data", dataArray);
+
+    auto object = std::make_shared<ledger::core::DynamicObject>();
+    object->putBoolean("boolean", true)
+          ->putDouble("double", 42.1)
+          ->putString("string", "Hello, World")
+          ->putInt("int", 14)
+          ->putLong("long", 21474836470)
+          ->putData("data", {'t', 'e', 's', 't'})
+          ->putObject("object", innerObject);
+
+    auto value = object->toJson(document.GetAllocator());
+    EXPECT_EQ(value["boolean"].GetType(), kTrueType);
+    EXPECT_TRUE(value["double"].IsNumber());
+    EXPECT_EQ(value["double"].GetDouble(), 42.1);
+    EXPECT_TRUE(value["string"].IsString());
+    EXPECT_STREQ(value["string"].GetString(), "Hello, World");
+    EXPECT_TRUE(value["int"].IsNumber());
+    EXPECT_EQ(value["int"].GetInt(), 14);
+    EXPECT_TRUE(value["long"].IsNumber());
+    EXPECT_EQ(value["long"].GetInt64(), 21474836470);
+    EXPECT_TRUE(value["data"].IsString());
+    EXPECT_STREQ(value["data"].GetString(), "test");
+    EXPECT_TRUE(value["object"].IsObject());
+
+    value = value["object"].GetObject();
+    EXPECT_TRUE(value["boolean"].IsArray());
+    EXPECT_TRUE(value["double"].IsArray());
+    EXPECT_TRUE(value["int"].IsArray());
+    EXPECT_TRUE(value["long"].IsArray());
+    EXPECT_TRUE(value["string"].IsArray());
+    EXPECT_TRUE(value["data"].IsArray());
+
+    auto array = value["boolean"].GetArray();
+    EXPECT_EQ(array.Size(), 2);
+    EXPECT_TRUE(array[0].IsBool());
+    EXPECT_EQ(array[0].GetType(), kFalseType);
+    EXPECT_EQ(array[1].GetType(), kTrueType);
+
+    array = value["double"].GetArray();
+    EXPECT_EQ(array.Size(), 3);
+    EXPECT_TRUE(array[0].IsDouble());
+    EXPECT_EQ(array[0].GetDouble(), 21.8);
+    EXPECT_EQ(array[1].GetDouble(), 14.500001);
+    EXPECT_EQ(array[2].GetDouble(), -48);
+
+   array = value["int"].GetArray();
+    EXPECT_EQ(array.Size(), 1);
+    EXPECT_TRUE(array[0].IsInt());
+    EXPECT_EQ(array[0].GetInt(), 30);
+
+    array = value["long"].GetArray();
+    EXPECT_EQ(array.Size(), 2);
+    EXPECT_TRUE(array[0].IsInt64());
+    EXPECT_EQ(array[0].GetInt64(), 21474836470);
+    EXPECT_EQ(array[1].GetInt64(), -21474836470);
+
+    array = value["string"].GetArray();
+    EXPECT_EQ(array.Size(), 2);
+    EXPECT_TRUE(array[0].IsString());
+    EXPECT_STREQ(array[0].GetString(), "foobarzoo");
+    EXPECT_STREQ(array[1].GetString(), "test");
+
+    array = value["data"].GetArray();
+    EXPECT_EQ(array.Size(), 2);
+    EXPECT_TRUE(array[0].IsString());
+    EXPECT_STREQ(array[0].GetString(), "yes");
+    EXPECT_STREQ(array[1].GetString(), "no");
 }
