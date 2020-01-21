@@ -38,7 +38,6 @@
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <core/bytes/BytesReader.hpp>
 
-#include <cosmos/api/CosmosLikeTransactionCallback.hpp>
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 #include <cosmos/api/CosmosLikeMessage.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
@@ -275,7 +274,7 @@ namespace ledger {
             return shared_from_this();
         }
 
-        void CosmosLikeTransactionBuilder::build(const std::shared_ptr<api::CosmosLikeTransactionCallback> &callback) {
+        void CosmosLikeTransactionBuilder::build(const std::function<void(std::shared_ptr<api::CosmosLikeTransaction>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
             build().callback(_context, callback);
         }
 

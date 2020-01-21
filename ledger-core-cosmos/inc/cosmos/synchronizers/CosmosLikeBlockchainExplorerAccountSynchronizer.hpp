@@ -33,7 +33,7 @@
 #define LEDGER_CORE_COSMOSLIKEBLOCKCHAINEXPLORERACCOUNTSYNCHRONIZER_H
 
 
-#include <core/wallet/common/synchronizers/AbstractBlockchainExplorerAccountSynchronizer.hpp>
+#include <core/wallet/synchronizers/AbstractBlockchainExplorerAccountSynchronizer.hpp>
 #include <core/wallet/pool/WalletPool.hpp>
 #include <core/async/DedicatedContext.hpp>
 #include <core/events/ProgressNotifier.hpp>

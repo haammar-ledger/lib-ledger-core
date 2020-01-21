@@ -35,13 +35,13 @@
 
 #include <cosmos/api/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransaction.hpp>
-#include <core/wallet/common/api_impl/OperationApi.h>
+#include <core/operation/Operation.hpp>
 
 namespace ledger {
     namespace core {
-        class CosmosLikeOperation : public api::CosmosLikeOperation {
+        class CosmosLikeOperation : public api::CosmosLikeOperation, public Operation {
         public:
-            CosmosLikeOperation(const std::shared_ptr<OperationApi>& baseOp);
+            CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp);
             virtual std::shared_ptr<api::CosmosLikeTransaction> getTransaction() override;
             virtual std::shared_ptr<api::CosmosLikeMessage> getMessage() override;
 

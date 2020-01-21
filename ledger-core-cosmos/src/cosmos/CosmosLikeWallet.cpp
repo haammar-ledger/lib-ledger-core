@@ -40,15 +40,12 @@
 
 #include <core/async/Wait.hpp>
 #include <core/api/ErrorCode.hpp>
-#include <core/api/AccountCallback.hpp>
 #include <core/api/ConfigurationDefaults.hpp>
 #include <core/api/KeychainEngines.hpp>
-#include <core/wallet/common/database/AccountDatabaseHelper.hpp>
+#include <core/wallet/AccountDatabaseHelper.hpp>
 
 namespace ledger {
     namespace core {
-
-        const api::WalletType CosmosLikeWallet::type = api::WalletType::ETHEREUM;
 
         CosmosLikeWallet::CosmosLikeWallet(const std::string &name,
                                            const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,

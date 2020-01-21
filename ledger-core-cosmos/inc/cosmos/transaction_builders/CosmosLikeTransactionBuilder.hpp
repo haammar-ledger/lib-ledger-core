@@ -37,7 +37,7 @@
 #include <core/api/Currency.hpp>
 #include <core/api/ExecutionContext.hpp>
 #include <core/api/Amount.hpp>
-#include <core/wallet/common/Amount.hpp>
+#include <core/wallet/Amount.hpp>
 #include <core/math/BigInt.hpp>
 #include <core/async/Future.hpp>
 
@@ -86,7 +86,7 @@ namespace ledger {
 
             std::shared_ptr<api::CosmosLikeTransactionBuilder> setFee(const std::shared_ptr<api::Amount> & fee) override;
 
-            void build(const std::shared_ptr<api::CosmosLikeTransactionCallback> &callback) override;
+            void build(const std::function<void(std::shared_ptr<api::CosmosLikeTransaction>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
 
             Future<std::shared_ptr<api::CosmosLikeTransaction>> build();
 

@@ -34,16 +34,14 @@
 
 #include <time.h>
 
-#include <core/api/AddressListCallback.hpp>
 #include <core/api/Address.hpp>
-#include <core/api/StringCallback.hpp>
 #include <core/api/Event.hpp>
-#include <core/api/BigIntCallback.hpp>
-#include <core/wallet/common/AbstractWallet.hpp>
-#include <core/wallet/common/AbstractAccount.hpp>
-#include <core/wallet/common/Amount.hpp>
+#include <core/wallet/AbstractWallet.hpp>
+#include <core/wallet/AbstractAccount.hpp>
+#include <core/wallet/Amount.hpp>
 
 #include <cosmos/api/CosmosLikeAccount.hpp>
+#include <cosmos/api_impl/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransactionBuilder.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
@@ -52,77 +50,77 @@
 #include <cosmos/database/CosmosLikeAccountDatabaseEntry.hpp>
 
 namespace ledger {
-    namespace core {
-        class CosmosLikeAccount : public api::CosmosLikeAccount, public AbstractAccount {
-        public:
-            static const int FLAG_TRANSACTION_IGNORED = 0x00;
+        namespace core {
+                class CosmosLikeAccount : public api::CosmosLikeAccount, public AbstractAccount {
+                        public:
+                                static const int FLAG_TRANSACTION_IGNORED = 0x00;
 
-            CosmosLikeAccount(const std::shared_ptr<AbstractWallet> &wallet,
-                             int32_t index,
-                             const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
-                             const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
-                             const std::shared_ptr<CosmosLikeAccountSynchronizer> &synchronizer,
-                             const std::shared_ptr<CosmosLikeKeychain> &keychain);
+                                CosmosLikeAccount(const std::shared_ptr<AbstractWallet> &wallet,
+                                                  int32_t index,
+                                                  const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
+                                                  const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
+                                                  const std::shared_ptr<CosmosLikeAccountSynchronizer> &synchronizer,
+                                                  const std::shared_ptr<CosmosLikeKeychain> &keychain);
 
-                std::shared_ptr<api::CosmosLikeAccount> asCosmosLikeAccount() override;
+                                std::shared_ptr<api::CosmosLikeAccount> asCosmosLikeAccount();
 
-            void inflateOperation(Operation &out,
-                                  const std::shared_ptr<const AbstractWallet> &wallet,
-                                  const cosmos::Transaction &tx);
+                                void inflateOperation(CosmosLikeOperation &out,
+                                                      const std::shared_ptr<const AbstractWallet> &wallet,
+                                                      const cosmos::Transaction &tx);
 
-            int putTransaction(soci::session &sql,
-                               const cosmos::Transaction &transaction);
+                                int putTransaction(soci::session &sql,
+                                                   const cosmos::Transaction &transaction);
 
-            bool putBlock(soci::session &sql, const CosmosLikeBlockchainExplorer::Block &block);
+                                bool putBlock(soci::session &sql, const api::Block &block);
 
-            std::shared_ptr<CosmosLikeKeychain> getKeychain() const;
+                                std::shared_ptr<CosmosLikeKeychain> getKeychain() const;
 
-            FuturePtr<Amount> getBalance() override;
+                                FuturePtr<Amount> getBalance() override;
 
-            Future<AbstractAccount::AddressList> getFreshPublicAddresses() override;
+                                Future<AbstractAccount::AddressList> getFreshPublicAddresses() override;
 
-            Future<std::vector<std::shared_ptr<api::Amount>>>
-            getBalanceHistory(const std::string &start,
-                              const std::string &end,
-                              api::TimePeriod precision) override;
+                                Future<std::vector<std::shared_ptr<api::Amount>>>
+                                getBalanceHistory(const std::string &start,
+                                                  const std::string &end,
+                                                  api::TimePeriod precision) override;
 
-            Future<api::ErrorCode> eraseDataSince(const std::chrono::system_clock::time_point &date) override;
+                                Future<api::ErrorCode> eraseDataSince(const std::chrono::system_clock::time_point &date) override;
 
-            bool isSynchronizing() override;
+                                bool isSynchronizing() override;
 
-            std::shared_ptr<api::EventBus> synchronize() override;
+                                std::shared_ptr<api::EventBus> synchronize() override;
 
-            void startBlockchainObservation() override;
+                                void startBlockchainObservation() override;
 
-            void stopBlockchainObservation() override;
+                                void stopBlockchainObservation() override;
 
-            bool isObservingBlockchain() override;
+                                bool isObservingBlockchain() override;
 
-            std::string getRestoreKey() override;
+                                std::string getRestoreKey() override;
 
-            void broadcastRawTransaction(const std::string &transaction,
-                                         const std::shared_ptr<api::StringCallback> &callback) override;
+                                void broadcastRawTransaction(const std::string &transaction,
+                                                             const std::function<void(std::experimental::optional<std::string>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
 
-            void broadcastTransaction(const std::shared_ptr<api::CosmosLikeTransaction> &transaction,
-                                      const std::shared_ptr<api::StringCallback> &callback) override;
+                                void broadcastTransaction(const std::shared_ptr<api::CosmosLikeTransaction> &transaction,
+                                                          const std::function<void(std::experimental::optional<std::string>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
 
-            std::shared_ptr<api::CosmosLikeTransactionBuilder> buildTransaction() override;
-            std::shared_ptr<api::CosmosLikeTransactionBuilder> buildTransaction(const std::string &senderAddress);
+                                std::shared_ptr<api::CosmosLikeTransactionBuilder> buildTransaction() override;
+                                std::shared_ptr<api::CosmosLikeTransactionBuilder> buildTransaction(const std::string &senderAddress);
 
-            std::shared_ptr<api::OperationQuery> queryOperations() override;
-            void getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::shared_ptr<api::BigIntCallback> &callback) override;
-        private:
-            std::shared_ptr<CosmosLikeAccount> getSelf();
+                                std::shared_ptr<api::OperationQuery> queryOperations() override;
+                                void getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::function<void(std::experimental::optional<std::shared_ptr<::ledger::core::api::BigInt>>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
+                        private:
+                                std::shared_ptr<CosmosLikeAccount> getSelf();
 
-            std::shared_ptr<CosmosLikeKeychain> _keychain;
-            std::string _accountAddress;
-            std::shared_ptr<CosmosLikeBlockchainExplorer> _explorer;
-            std::shared_ptr<CosmosLikeAccountSynchronizer> _synchronizer;
-            std::shared_ptr<CosmosLikeBlockchainObserver> _observer;
-            uint64_t _currentBlockHeight;
-            std::shared_ptr<api::EventBus> _currentSyncEventBus;
-            std::mutex _synchronizationLock;
-        };
-    }
+                                std::shared_ptr<CosmosLikeKeychain> _keychain;
+                                std::string _accountAddress;
+                                std::shared_ptr<CosmosLikeBlockchainExplorer> _explorer;
+                                std::shared_ptr<CosmosLikeAccountSynchronizer> _synchronizer;
+                                std::shared_ptr<CosmosLikeBlockchainObserver> _observer;
+                                uint64_t _currentBlockHeight;
+                                std::shared_ptr<api::EventBus> _currentSyncEventBus;
+                                std::mutex _synchronizationLock;
+                };
+        }
 }
 #endif //LEDGER_CORE_COSMOSLIKEACCOUNT_H

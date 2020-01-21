@@ -32,7 +32,7 @@
 #ifndef LEDGER_CORE_COSMOSLIKEACCOUNTSYNCHRONIZER_H
 #define LEDGER_CORE_COSMOSLIKEACCOUNTSYNCHRONIZER_H
 
-#include <core/wallet/common/synchronizers/AbstractAccountSynchronizer.hpp>
+#include <core/synchronizers/AbstractAccountSynchronizer.hpp>
 
 namespace ledger {
     namespace core {

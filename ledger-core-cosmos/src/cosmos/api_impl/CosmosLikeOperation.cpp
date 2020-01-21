@@ -30,12 +30,15 @@
 
 
 #include <cosmos/api_impl/CosmosLikeOperation.hpp>
+
+#include <core/api/ErrorCode.hpp>
+
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 
 namespace ledger {
     namespace core {
 
-        CosmosLikeOperation::CosmosLikeOperation(const std::shared_ptr<OperationApi>& baseOp) {
+        CosmosLikeOperation::CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp) {
             _transaction = std::make_shared<CosmosLikeTransactionApi>(baseOp);
         }
 

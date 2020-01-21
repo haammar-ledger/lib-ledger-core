@@ -34,7 +34,7 @@
 
 #include <vector>
 
-#include <core/wallet/common/api_impl/OperationApi.hpp>
+#include <core/operation/Operation.hpp>
 #include <core/api/Amount.hpp>
 #include <core/api/Currency.hpp>
 #include <core/math/BigInt.hpp>
@@ -49,7 +49,7 @@ namespace ledger {
         class CosmosLikeTransactionApi : public api::CosmosLikeTransaction {
         public:
             explicit CosmosLikeTransactionApi(const api::Currency& currency);
-            explicit CosmosLikeTransactionApi(const std::shared_ptr<OperationApi>& operation);
+            explicit CosmosLikeTransactionApi(const std::shared_ptr<Operation>& operation);
 
             std::string getHash() const override;
             std::shared_ptr<api::Amount> getFee() const override;

@@ -36,7 +36,7 @@
 
 #include <soci.h>
 
-#include <core/wallet/common/Operation.hpp>
+#include <core/operation/Operation.hpp>
 
 #include <cosmos/database/CosmosLikeAccountDatabaseEntry.hpp>
 

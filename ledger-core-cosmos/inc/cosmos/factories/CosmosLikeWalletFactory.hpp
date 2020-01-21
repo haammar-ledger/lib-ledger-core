@@ -37,7 +37,7 @@
 
 #include <core/api/Currency.hpp>
 
-#include <core/wallet/common/AbstractWalletFactory.hpp>
+#include <core/wallet/AbstractWalletFactory.hpp>
 #include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>

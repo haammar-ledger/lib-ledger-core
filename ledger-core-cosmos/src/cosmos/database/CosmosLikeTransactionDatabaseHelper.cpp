@@ -35,7 +35,7 @@
 #include <core/database/SociDate.hpp>
 #include <core/database/SociNumber.hpp>
 #include <core/crypto/SHA256.hpp>
-#include <core/wallet/common/database/BlockDatabaseHelper.hpp>
+#include <core/wallet/database/BlockDatabaseHelper.hpp>
 
 #include <cosmos/database/SociCosmosAmount.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>

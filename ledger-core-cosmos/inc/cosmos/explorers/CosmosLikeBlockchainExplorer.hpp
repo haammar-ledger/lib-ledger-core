@@ -43,8 +43,7 @@
 #include <core/net/HttpClient.hpp>
 #include <core/utils/ConfigurationMatchable.hpp>
 #include <core/utils/Option.hpp>
-#include <core/wallet/common/Block.hpp>
-#include <core/wallet/common/explorers/AbstractBlockchainExplorer.h>
+#include <core/wallet/Block.hpp>
 
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
 #include <cosmos/cosmos.hpp>

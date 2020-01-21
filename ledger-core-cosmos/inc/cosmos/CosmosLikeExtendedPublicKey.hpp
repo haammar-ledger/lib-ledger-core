@@ -34,17 +34,17 @@
 
 #include <memory>
 
-#include <core/common/AbstractExtendedPublicKey.hpp>
+#include <core/AbstractExtendedPublicKey.hpp>
 #include <core/crypto/DeterministicPublicKey.hpp>
 #include <core/utils/Option.hpp>
 #include <core/utils/DerivationPath.hpp>
 #include <core/api/Currency.hpp>
-#include <core/api/CosmosCurve.hpp>
 
 #include <cosmos/api/CosmosLikeExtendedPublicKey.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>
 #include <cosmos/api/CosmosBech32Type.hpp>
 #include <cosmos/api/CosmosLikeAddress.hpp>
+#include <cosmos/api/CosmosCurve.hpp>
 
 namespace ledger {
     namespace core {

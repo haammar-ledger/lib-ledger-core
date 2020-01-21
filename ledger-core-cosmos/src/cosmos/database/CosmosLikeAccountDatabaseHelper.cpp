@@ -31,7 +31,7 @@
 
 #include <cosmos/CosmosLikeAccountDatabaseHelper.hpp>
 
-#include <core/wallet/common/database/AccountDatabaseHelper.hpp>
+#include <core/wallet/database/AccountDatabaseHelper.hpp>
 #include <core/utils/DateUtils.hpp>
 #include <core/database/SociOption.hpp>
 #include <core/database/SociDate.hpp>

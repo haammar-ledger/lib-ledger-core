@@ -43,8 +43,8 @@
 #include <core/api/ExecutionContext.hpp>
 #include <core/api/Currency.hpp>
 #include <core/api/DynamicObject.hpp>
-#include <core/wallet/common/observers/AbstractBlockchainObserver.hpp>
-#include <core/wallet/common/observers/AbstractLedgerApiBlockchainObserver.hpp>
+#include <core/observers/AbstractBlockchainObserver.hpp>
+#include <core/observers/AbstractLedgerApiBlockchainObserver.hpp>
 #include <core/net/WebSocketClient.hpp>
 #include <core/net/WebSocketConnection.hpp>
 

@@ -35,15 +35,15 @@
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
-#include <utils/base64.h>
+#include <cereal/external/base64.hpp>
 
-#include <core/wallet/common/Amount.hpp>
-#include <core/wallet/common/AbstractAccount.hpp>
-#include <core/wallet/common/AbstractWallet.hpp>
+#include <core/wallet/Amount.hpp>
+#include <core/wallet/AbstractAccount.hpp>
+#include <core/wallet/AbstractWallet.hpp>
 #include <core/bytes/BytesWriter.hpp>
 #include <core/bytes/BytesReader.hpp>
 #include <core/utils/Hex.hpp>
-#include <core/api_impl/BigIntImpl.hpp>
+#include <core/math/BigInt.hpp>
 
 #include <cosmos/CosmosLikeAddress.hpp>
 #include <cosmos/api/CosmosLikeMsgType.hpp>
@@ -58,7 +58,7 @@ namespace ledger {
             _currency = currency;
         }
 
-        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const std::shared_ptr<OperationApi> &operation) {
+        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const std::shared_ptr<Operation> &operation) {
             auto &tx = operation->getBackend().cosmosTransaction.getValue();
             _time = tx.timestamp;
             // TODO COSMOS Retrieve a block (the model only has an optional height)

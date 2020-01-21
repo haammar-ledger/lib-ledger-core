@@ -31,7 +31,7 @@
 #pragma once
 
 #include <core/math/BigInt.hpp>
-#include <core/wallet/common/Block.hpp>
+#include <core/wallet/Block.hpp>
 
 #include <cosmos/CosmosLikeMessage.hpp>
 #include <cosmos/api/CosmosLikeMsgType.hpp>
@@ -101,7 +101,7 @@ namespace ledger {
                         struct Transaction {
                                 std::string uid;
                                 std::string hash;
-                                Option<Block> block;
+                                Option<api::Block> block;
                                 Fee fee;
                                 Option<BigInt> gasUsed;
                                 std::chrono::system_clock::time_point timestamp;

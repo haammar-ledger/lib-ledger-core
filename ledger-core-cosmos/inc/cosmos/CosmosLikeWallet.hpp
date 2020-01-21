@@ -31,7 +31,7 @@
 
 #ifndef LEDGER_CORE_COSMOSLIKEWALLET_H
 #define LEDGER_CORE_COSMOSLIKEWALLET_H
-#include <core/wallet/common/AbstractWallet.hpp>
+#include <core/wallet/AbstractWallet.hpp>
 
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
@@ -43,8 +43,6 @@ namespace ledger {
     namespace core {
         class CosmosLikeWallet : public AbstractWallet {
         public:
-            static const api::WalletType type;
-
             CosmosLikeWallet(
                     const std::string &name,
                     const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
