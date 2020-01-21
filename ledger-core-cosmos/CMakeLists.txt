@@ -37,6 +37,9 @@ if(IS_IOS GREATER_EQUAL 0 OR TARGET_JNI OR ANDROID)
     set(BUILD_TESTS OFF CACHE BOOL "Cannot run tests for these options" FORCE)
 endif()
 
+# Ledger-core dependency
+set(ledger-core_DIR "/usr/lib/ledger-core/cmake" CACHE PATH "Installation directory of ledger-core")
+
 add_subdirectory(src)
 
 string(FIND "${CMAKE_OSX_SYSROOT}" "iphone" IS_IOS)
