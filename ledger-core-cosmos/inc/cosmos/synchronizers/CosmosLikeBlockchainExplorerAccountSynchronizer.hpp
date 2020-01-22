@@ -33,8 +33,8 @@
 #define LEDGER_CORE_COSMOSLIKEBLOCKCHAINEXPLORERACCOUNTSYNCHRONIZER_H
 
 
-#include <core/wallet/synchronizers/AbstractBlockchainExplorerAccountSynchronizer.hpp>
-#include <core/wallet/pool/WalletPool.hpp>
+#include <core/synchronizers/AbstractBlockchainExplorerAccountSynchronizer.hpp>
+#include <core/Services.hpp>
 #include <core/async/DedicatedContext.hpp>
 #include <core/events/ProgressNotifier.hpp>
 
@@ -54,7 +54,7 @@ namespace ledger {
                                                                 public std::enable_shared_from_this<CosmosLikeBlockchainExplorerAccountSynchronizer> {
         public:
 
-            CosmosLikeBlockchainExplorerAccountSynchronizer(const std::shared_ptr<WalletPool> &pool,
+            CosmosLikeBlockchainExplorerAccountSynchronizer(const std::shared_ptr<Services> &services,
                                                             const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer);
 
             std::shared_ptr<ProgressNotifier<Unit>>

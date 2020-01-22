@@ -50,12 +50,12 @@ namespace ledger {
                                              const std::vector<uint8_t> &version,
                                              api::CosmosBech32Type type,
                                              const Option<std::string> &derivationPath) :
-                _params(currency.cosmosLikeNetworkParameters.value()),
-                _derivationPath(derivationPath),
-                _hash160(hash160),
-                _version(version),
-                _type(type),
-                AbstractAddress(currency, derivationPath) {
+            _params(networks::getCosmosLikeNetworkParameters(currency.name)),
+            _derivationPath(derivationPath),
+            _hash160(hash160),
+            _version(version),
+            _type(type),
+            Address(currency, derivationPath) {
 
         }
 
@@ -84,20 +84,20 @@ namespace ledger {
             return toBech32();
         }
 
-        std::shared_ptr<AbstractAddress>
+        std::shared_ptr<Address>
         CosmosLikeAddress::parse(const std::string &address,
                                  const api::Currency &currency,
                                  const Option<std::string> &derivationPath) {
-            auto result = Try<std::shared_ptr<ledger::core::AbstractAddress>>::from([&]() {
+            auto result = Try<std::shared_ptr<ledger::core::Address>>::from([&]() {
                 return fromBech32(address, currency, derivationPath);
             });
-            return std::dynamic_pointer_cast<AbstractAddress>(result.toOption().getValueOr(nullptr));
+            return std::dynamic_pointer_cast<Address>(result.toOption().getValueOr(nullptr));
         }
 
         std::shared_ptr<CosmosLikeAddress> CosmosLikeAddress::fromBech32(const std::string &address,
                                                                          const api::Currency &currency,
                                                                          const Option<std::string> &derivationPath) {
-            auto& params = currency.cosmosLikeNetworkParameters.value();
+            auto& params = networks::getCosmosLikeNetworkParameters(currency.name);
             auto type = address.find(COSMOS_VAL.hrp) == std::string::npos ? api::CosmosBech32Type::ADDRESS : api::CosmosBech32Type::ADDRESS_VAL;
             auto bech32 = std::make_shared<CosmosBech32>(type);
             auto decoded = bech32->decode(address);

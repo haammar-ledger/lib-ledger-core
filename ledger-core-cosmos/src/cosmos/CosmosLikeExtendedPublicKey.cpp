@@ -38,9 +38,8 @@
 #include <core/crypto/SHA256.hpp>
 #include <core/crypto/HASH160.hpp>
 
-#include <cosmos/CosmosNetworks.hpp>
-#include <cosmos/api/CosmosCurve.hpp>
 #include <cosmos/bech32/CosmosBech32.hpp>
+#include <cosmos/CosmosLikeAddress.hpp>
 
 namespace ledger {
     namespace core {
@@ -94,7 +93,7 @@ namespace ledger {
                                              const std::string& path,
                                              api::CosmosCurve curve,
                                              api::CosmosBech32Type type) {
-            auto& params = currency.cosmosLikeNetworkParameters.value();
+            auto& params = networks::getCosmosLikeNetworkParameters(currency.name);
             DeterministicPublicKey k = CosmosExtendedPublicKey::fromRaw(currency, params, parentPublicKey, publicKey, {}, path);
             DerivationPath p(path);
             return std::make_shared<CosmosLikeExtendedPublicKey>(currency, k, curve, type, p);
@@ -105,7 +104,7 @@ namespace ledger {
                                                 const std::string& xpub,
                                                 const Option<std::string>& path,
                                                 api::CosmosBech32Type type) {
-            auto &params = currency.cosmosLikeNetworkParameters.value();
+            auto &params = networks::getCosmosLikeNetworkParameters(currency.name);
             DeterministicPublicKey k = CosmosExtendedPublicKey::fromBase58(currency, params, xpub, path);
             return std::make_shared<ledger::core::CosmosLikeExtendedPublicKey>(currency, k, api::CosmosCurve::SECP256K1, type, DerivationPath(path.getValueOr("m")));
         }
@@ -114,7 +113,7 @@ namespace ledger {
         CosmosLikeExtendedPublicKey::fromBech32(const api::Currency& currency,
                                                 const std::string& bech32PubKey,
                                                 const Option<std::string>& path) {
-            auto &params = currency.cosmosLikeNetworkParameters.value();
+            auto &params = networks::getCosmosLikeNetworkParameters(currency.name);
             if (bech32PubKey.find(COSMOS_PUB.hrp) == std::string::npos) {
                 throw Exception(api::ErrorCode::INVALID_ARGUMENT, "Invalid Bech32 public Key: should be prefixed with \"cosmospub\"");
             }

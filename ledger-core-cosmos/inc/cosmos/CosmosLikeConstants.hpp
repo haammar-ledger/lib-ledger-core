@@ -75,7 +75,7 @@ namespace ledger {
                                 constexpr const char kSignature[] = "signature";
                         }
 
-                        const char* msgTypeToChars(MsgType type) {
+                        static constexpr const char* msgTypeToChars(MsgType type) {
                                 switch (type) {
                                         case MsgType::MSGSEND:
                                                 return constants::kMsgSend;
@@ -98,7 +98,7 @@ namespace ledger {
                                 }
                         }
 
-                        MsgType stringToMsgType(const std::string& string) {
+                        static constexpr MsgType stringToMsgType(const char* string) {
                                 if (string == constants::kMsgSend) {
                                         return MsgType::MSGSEND;
                                 } else if (string == constants::kMsgDelegate) {

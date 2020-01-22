@@ -32,11 +32,12 @@
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
 
 #include <core/api/ConfigurationDefaults.hpp>
-#include <core/math/Fibonacci.h>
-#include <core/utils/JSONUtils.h>
+#include <core/api/Configuration.hpp>
+#include <core/math/Fibonacci.hpp>
+#include <core/utils/JSONUtils.hpp>
 
 #include <cosmos/api/CosmosConfigurationDefaults.hpp>
-#include <cosmos/CosmosLikeAccount.h>
+#include <cosmos/CosmosLikeAccount.hpp>
 
 namespace ledger {
     namespace core {
@@ -86,7 +87,7 @@ namespace ledger {
                     bool shouldEmitNow = false;
                     {
                         soci::session sql(account->getWallet()->getDatabase()->getPool());
-                        shouldEmitNow = account->putBlock(sql, block);
+                        shouldEmitNow = account->putBlock(sql, block.toApiBlock());
                     }
                     if (shouldEmitNow)
                         account->emitEventsNow();

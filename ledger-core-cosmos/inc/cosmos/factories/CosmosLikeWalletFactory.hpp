@@ -36,8 +36,9 @@
 #include <functional>
 
 #include <core/api/Currency.hpp>
-
+#include <core/Services.hpp>
 #include <core/wallet/AbstractWalletFactory.hpp>
+
 #include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
@@ -51,7 +52,7 @@ namespace ledger {
 
         class CosmosLikeWalletFactory : public AbstractWalletFactory {
         public:
-            CosmosLikeWalletFactory(const api::Currency &currency, const std::shared_ptr<WalletPool> &pool);
+            CosmosLikeWalletFactory(const api::Currency &currency, const std::shared_ptr<Services> &services);
             std::shared_ptr<AbstractWallet> build(const WalletDatabaseEntry &entry) override;
 
         private:

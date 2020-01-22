@@ -34,7 +34,8 @@
 
 namespace ledger {
     namespace core {
-        CosmosBech32::CosmosBech32(api::CosmosBech32Type type) : BTCBech32("btc", 0) {
+        CosmosBech32::CosmosBech32(api::CosmosBech32Type type, size_t offsetConversion) :
+            _offsetConversion(offsetConversion) {
             switch (type) {
                 case api::CosmosBech32Type::PUBLIC_KEY :
                     _bech32Params = COSMOS_PUB;
@@ -71,6 +72,43 @@ namespace ledger {
             }
             std::vector<uint8_t> version{decoded.second[0]};
             return std::make_pair(version, converted);
+        }
+
+        uint64_t CosmosBech32::polymod(const std::vector<uint8_t>& values) {
+            uint32_t chk = 1;
+            for (size_t i = 0; i < values.size(); ++i) {
+                uint8_t top = chk >> 25;
+                chk = (chk & 0x1ffffff) << 5 ^ values[i];
+                auto index = 0;
+                for (auto& gen : _bech32Params.generator) {
+                    chk ^= (-((top >> index) & 1) & gen);
+                    index++;
+                }
+            }
+            return chk;
+        }
+
+        std::vector<uint8_t> CosmosBech32::expandHrp(const std::string& hrp) {
+            std::vector<uint8_t> ret;
+            ret.resize(hrp.size() * 2 + 1);
+            for (size_t i = 0; i < hrp.size(); ++i) {
+                unsigned char c = hrp[i];
+                ret[i] = c >> 5;
+                ret[i + hrp.size() + 1] = c & 0x1f;
+            }
+            ret[hrp.size()] = 0;
+            return ret;
+        }
+
+        std::string CosmosBech32::encode(const std::vector<uint8_t>& hash,
+                                         const std::vector<uint8_t>& version) {
+            std::vector<uint8_t> data(hash);
+            int fromBits = 8, toBits = 5;
+            bool pad = true;
+            std::vector<uint8_t> converted;
+            converted.insert(converted.end(), version.begin(), version.end());
+            Bech32::convertBits(data, fromBits, toBits, pad, converted);
+            return encodeBech32(converted);
         }
     }
 }

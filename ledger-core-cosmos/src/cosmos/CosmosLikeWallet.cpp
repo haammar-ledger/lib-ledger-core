@@ -52,12 +52,12 @@ namespace ledger {
                                            const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
                                            const std::shared_ptr<CosmosLikeKeychainFactory> &keychainFactory,
                                            const CosmosLikeAccountSynchronizerFactory &synchronizer,
-                                           const std::shared_ptr<WalletPool> &pool,
+                                           const std::shared_ptr<Services> &services,
                                            const api::Currency &network,
                                            const std::shared_ptr<DynamicObject> &configuration,
                                            const DerivationScheme &scheme
         )
-                : AbstractWallet(name, network, pool, configuration, scheme) {
+                : AbstractWallet(name, network, services, configuration, scheme) {
             _explorer = explorer;
             _observer = observer;
             _keychainFactory = keychainFactory;
@@ -147,6 +147,11 @@ namespace ledger {
 
         std::shared_ptr<CosmosLikeBlockchainExplorer> CosmosLikeWallet::getBlockchainExplorer() {
             return _explorer;
+        }
+
+        bool CosmosLikeWallet::hasMultipleAddresses() const {
+            // TODO check if ATOM accepts multiple addresses
+            return false;
         }
 
     }

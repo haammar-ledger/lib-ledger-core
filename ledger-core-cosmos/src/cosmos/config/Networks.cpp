@@ -31,6 +31,7 @@
 
 #include <cosmos/CosmosNetworks.hpp>
 #include <core/api/ErrorCode.hpp>
+#include <core/utils/Exception.hpp>
 
 namespace ledger {
         namespace core {

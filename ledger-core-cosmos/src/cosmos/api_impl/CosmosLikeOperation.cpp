@@ -32,6 +32,7 @@
 #include <cosmos/api_impl/CosmosLikeOperation.hpp>
 
 #include <core/api/ErrorCode.hpp>
+#include <core/utils/Exception.hpp>
 
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 
@@ -39,7 +40,10 @@ namespace ledger {
     namespace core {
 
         CosmosLikeOperation::CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp) {
-            _transaction = std::make_shared<CosmosLikeTransactionApi>(baseOp);
+            auto cosmosBaseOp = std::dynamic_pointer_cast<CosmosLikeOperation>(baseOp);
+            if (cosmosBaseOp) {
+                _transaction = std::make_shared<CosmosLikeTransactionApi>(cosmosBaseOp);
+            }
         }
 
 		std::shared_ptr<api::CosmosLikeTransaction> CosmosLikeOperation::getTransaction() {
@@ -49,5 +53,11 @@ namespace ledger {
 		std::shared_ptr<api::CosmosLikeMessage> CosmosLikeOperation::getMessage() {
 			throw make_exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeOperation::getMessage");
 		}
+
+        void CosmosLikeOperation::refreshUid(const std::string &additional) {
+            // TODO: Add implementation
+            (void) additional;
+        }
+
     }
 }

@@ -34,7 +34,7 @@
 
 #include <memory>
 
-#include <core/AbstractExtendedPublicKey.hpp>
+#include <core/key/ExtendedPublicKey.hpp>
 #include <core/crypto/DeterministicPublicKey.hpp>
 #include <core/utils/Option.hpp>
 #include <core/utils/DerivationPath.hpp>
@@ -45,10 +45,11 @@
 #include <cosmos/api/CosmosBech32Type.hpp>
 #include <cosmos/api/CosmosLikeAddress.hpp>
 #include <cosmos/api/CosmosCurve.hpp>
+#include <cosmos/CosmosNetworks.hpp>
 
 namespace ledger {
     namespace core {
-        using CosmosExtendedPublicKey = AbstractExtendedPublicKey<api::CosmosLikeNetworkParameters>;
+        using CosmosExtendedPublicKey = ExtendedPublicKey<api::CosmosLikeNetworkParameters>;
 
         class CosmosLikeExtendedPublicKey : public CosmosExtendedPublicKey, public api::CosmosLikeExtendedPublicKey {
         public:
@@ -91,8 +92,8 @@ namespace ledger {
                                                                            const Option<std::string>& path);
 
         protected:
-            const api::CosmosLikeNetworkParameters &params() const override {
-                return _currency.cosmosLikeNetworkParameters.value();
+            virtual const api::CosmosLikeNetworkParameters params() const override {
+                return networks::getCosmosLikeNetworkParameters(_currency.name);
             };
 
             const DeterministicPublicKey &getKey() const override {

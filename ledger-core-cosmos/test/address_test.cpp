@@ -42,12 +42,13 @@
 #include <cosmos/bech32/CosmosBech32.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <cosmos/CosmosLikeExtendedPublicKey.hpp>
+#include <cosmos/CosmosLikeAddress.hpp>
 #include <cosmos/api/CosmosCurve.hpp>
 
 using namespace ledger::core::api;
 using namespace ledger::core;
 
-static api::Currency currency = currencies::COSMOS;
+static api::Currency currency = currencies::ATOM;
 TEST(CosmosAddress, AddressFromPubKey) {
     {
         // Results returned by device

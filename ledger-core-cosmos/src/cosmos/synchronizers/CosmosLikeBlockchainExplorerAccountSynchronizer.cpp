@@ -36,11 +36,11 @@
 namespace ledger {
     namespace core {
         CosmosLikeBlockchainExplorerAccountSynchronizer::CosmosLikeBlockchainExplorerAccountSynchronizer(
-                const std::shared_ptr<WalletPool> &pool,
+                const std::shared_ptr<Services> &services,
                 const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer) :
-                DedicatedContext(pool->getDispatcher()->getThreadPoolExecutionContext("synchronizers")) {
+                DedicatedContext(services->getDispatcher()->getThreadPoolExecutionContext("synchronizers")) {
             _explorer = explorer;
-            _database = pool->getDatabaseSessionPool();
+            _database = services->getDatabaseSessionPool();
         }
 
         std::shared_ptr<ProgressNotifier<Unit>>

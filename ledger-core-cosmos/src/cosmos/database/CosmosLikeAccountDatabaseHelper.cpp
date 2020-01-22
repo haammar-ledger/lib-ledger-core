@@ -29,9 +29,9 @@
  */
 
 
-#include <cosmos/CosmosLikeAccountDatabaseHelper.hpp>
+#include <cosmos/database/CosmosLikeAccountDatabaseHelper.hpp>
 
-#include <core/wallet/database/AccountDatabaseHelper.hpp>
+#include <core/wallet/AccountDatabaseHelper.hpp>
 #include <core/utils/DateUtils.hpp>
 #include <core/database/SociOption.hpp>
 #include <core/database/SociDate.hpp>

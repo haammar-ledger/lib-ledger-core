@@ -40,6 +40,7 @@
 #include <core/math/BigInt.hpp>
 
 #include <cosmos/api_impl/CosmosLikeBlockApi.hpp>
+#include <cosmos/api_impl/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransaction.hpp>
 #include <cosmos/api/CosmosLikeAmount.hpp>
 #include <cosmos/api/CosmosLikeMessage.hpp>
@@ -49,7 +50,7 @@ namespace ledger {
         class CosmosLikeTransactionApi : public api::CosmosLikeTransaction {
         public:
             explicit CosmosLikeTransactionApi(const api::Currency& currency);
-            explicit CosmosLikeTransactionApi(const std::shared_ptr<Operation>& operation);
+            explicit CosmosLikeTransactionApi(const std::shared_ptr<CosmosLikeOperation>& operation);
 
             std::string getHash() const override;
             std::shared_ptr<api::Amount> getFee() const override;

@@ -55,7 +55,7 @@ using namespace rapidjson;
 namespace ledger {
     namespace core {
 
-        using namespace constants;
+        using namespace cosmos::constants;
 
         using Object = GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>::Object;
 
@@ -321,7 +321,7 @@ namespace ledger {
                     throw Exception(api::ErrorCode::INVALID_ARGUMENT, "Unknown unit while parsing transaction");
                 }
                 //TODO: Fix Amount::toUnit
-                return Amount(currency, 0, BigInt(amount) * BigInt(10).pow(static_cast<unsigned short>((*unit).numberOfDecimal)));
+                return Amount(currency, 0, BigInt(amount) * BigInt(10).powu(static_cast<unsigned short>((*unit).numberOfDecimal)));
             };
 
             tx->setAccountNumber(getString(document.GetObject(), kAccountNumber));

@@ -35,10 +35,11 @@
 #include <core/database/SociDate.hpp>
 #include <core/database/SociNumber.hpp>
 #include <core/crypto/SHA256.hpp>
-#include <core/wallet/database/BlockDatabaseHelper.hpp>
+#include <core/wallet/BlockDatabaseHelper.hpp>
 
 #include <cosmos/database/SociCosmosAmount.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
+#include <cosmos/CosmosLikeConstants.hpp>
 
 using namespace soci;
 
@@ -129,7 +130,7 @@ namespace ledger {
         static void insertMessage(soci::session& sql, const std::string& txUid, uint64_t index,
                 const cosmos::Message& msg, const cosmos::MessageLog& log) {
             auto uid = CosmosLikeTransactionDatabaseHelper::createCosmosMessageUid(txUid, index);
-            switch (cosmos::stringToMsgType(msg.type)) {
+            switch (cosmos::stringToMsgType(msg.type.c_str())) {
                 case api::CosmosLikeMsgType::MSGSEND:
                     {
                         const auto& m = boost::get<cosmos::MsgSend>(msg.content);
@@ -244,7 +245,7 @@ namespace ledger {
             Option<std::string> blockUid;
             Option<uint64_t> blockHeight;
             if (tx.block.nonEmpty() && !tx.block.getValue().hash.empty()) {
-                blockUid = BlockDatabaseHelper::createBlockUid(tx.block.getValue());
+                blockUid = BlockDatabaseHelper::createBlockUid(tx.block.getValue().toApiBlock());
             } else if (tx.block.nonEmpty()) {
                 blockHeight = tx.block.getValue().height;
             }
@@ -285,7 +286,7 @@ namespace ledger {
             } else {
                 // Insert
                 if (tx.block.nonEmpty() && !tx.block.getValue().hash.empty()) {
-                    BlockDatabaseHelper::putBlock(sql, tx.block.getValue());
+                    BlockDatabaseHelper::putBlock(sql, tx.block.getValue().toApiBlock());
                 }
                 // Insert transaction
                 insertTransaction(sql, cosmosTxUid, tx);

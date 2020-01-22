@@ -101,7 +101,7 @@ namespace ledger {
                         struct Transaction {
                                 std::string uid;
                                 std::string hash;
-                                Option<api::Block> block;
+                                Option<Block> block;
                                 Fee fee;
                                 Option<BigInt> gasUsed;
                                 std::chrono::system_clock::time_point timestamp;

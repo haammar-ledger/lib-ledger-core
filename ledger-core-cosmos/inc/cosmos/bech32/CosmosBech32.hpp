@@ -32,8 +32,8 @@
 #ifndef LEDGER_CORE_COSMOSBECH32_H
 #define LEDGER_CORE_COSMOSBECH32_H
 
+#include <core/math/bech32/Bech32.hpp>
 #include <core/math/bech32/Bech32Factory.hpp>
-#include <core/math/bech32/BTCBech32.hpp>
 #include <core/math/bech32/Bech32Parameters.hpp>
 
 #include <cosmos/api/CosmosBech32Type.hpp>
@@ -41,11 +41,11 @@
 using namespace ledger::core;
 
 namespace ledger {
-    namespace core {
+        namespace core {
 
-        //Reference: https://github.com/cosmos/cosmos-sdk/blob/9a16e2675f392b083dd1074ff92ff1f9fbda750d/docs/spec/addresses/bech32.md
-        //TODO: support Cosmos Validator Consensus address & public key
-        const Bech32Parameters::Bech32Struct COSMOS = {
+                //Reference: https://github.com/cosmos/cosmos-sdk/blob/9a16e2675f392b083dd1074ff92ff1f9fbda750d/docs/spec/addresses/bech32.md
+                //TODO: support Cosmos Validator Consensus address & public key
+                const Bech32Parameters::Bech32Struct COSMOS = {
                 "cosmos",
                 "cosmos",
                 "1",
@@ -55,7 +55,7 @@ namespace ledger {
                 {0x01}
         };
 
-        const Bech32Parameters::Bech32Struct COSMOS_VAL = {
+                const Bech32Parameters::Bech32Struct COSMOS_VAL = {
                 "cosmos",
                 "cosmosvaloper",
                 "1",
@@ -65,7 +65,7 @@ namespace ledger {
                 {0x01}
         };
 
-        const Bech32Parameters::Bech32Struct COSMOS_PUB = {
+                const Bech32Parameters::Bech32Struct COSMOS_PUB = {
                 "cosmos",
                 "cosmospub",
                 "1",
@@ -75,7 +75,7 @@ namespace ledger {
                 {0x00}
         };
 
-        const Bech32Parameters::Bech32Struct COSMOS_PUB_VAL = {
+                const Bech32Parameters::Bech32Struct COSMOS_PUB_VAL = {
                 "cosmos",
                 "cosmosvaloperpub",
                 "1",
@@ -85,13 +85,26 @@ namespace ledger {
                 {0x00}
         };
 
-        class CosmosBech32 : public BTCBech32 {
-        public:
-            explicit CosmosBech32(api::CosmosBech32Type type);
+                class CosmosBech32 : public Bech32 {
+                        public:
+                                explicit CosmosBech32(api::CosmosBech32Type type, size_t offsetConversion = 1);
 
-            std::pair<std::vector<uint8_t>, std::vector<uint8_t>> decode(const std::string& str) override;
-        };
-    }
+                                virtual ~CosmosBech32(){};
+
+                                uint64_t polymod(const std::vector<uint8_t>& values) override;
+
+                                std::vector<uint8_t> expandHrp(const std::string& hrp) override;
+
+                                std::string encode(const std::vector<uint8_t>& hash,
+                                                   const std::vector<uint8_t>& version) override;
+
+                                std::pair<std::vector<uint8_t>, std::vector<uint8_t>>
+                                decode(const std::string& str) override;
+
+                        protected:
+                                size_t _offsetConversion;
+                };
+        }
 }
 
 #endif //LEDGER_CORE_COSMOSBECH32_H

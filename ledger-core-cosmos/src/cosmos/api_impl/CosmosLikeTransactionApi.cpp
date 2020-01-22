@@ -49,6 +49,7 @@
 #include <cosmos/api/CosmosLikeMsgType.hpp>
 #include <cosmos/CosmosLikeMessage.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
+#include <cosmos/CosmosNetworks.hpp>
 
 using namespace rapidjson;
 namespace ledger {
@@ -58,24 +59,24 @@ namespace ledger {
             _currency = currency;
         }
 
-        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const std::shared_ptr<Operation> &operation) {
-            auto &tx = operation->getBackend().cosmosTransaction.getValue();
-            _time = tx.timestamp;
+        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const std::shared_ptr<CosmosLikeOperation> &operation) {
+            auto tx = operation->getTransaction();
+            _time = tx->getDate();
             // TODO COSMOS Retrieve a block (the model only has an optional height)
             _block = nullptr;
 
-            _hash = tx.hash;
+            _hash = tx->getHash();
             _currency = operation->getAccount()->getWallet()->getCurrency();
             // _fee = tx.fee;
             // _gaz = tx.gas;
             // _accountNumber = tx.accountNumber;
-            _memo = tx.memo;
+            _memo = tx->getMemo();
             // _sequence = tx.sequence;
 //            _currency = operation->getAccount()->getWallet()->getCurrency();
 //            _gasPrice = std::make_shared<Amount>(_currency, 0, tx.fee.amount);
 //            _gasLimit = std::make_shared<Amount>(_currency, 0, tx.gasLimit);
 
-            if (tx.messages.empty()) {
+            if (tx->getMessages().empty()) {
                 throw Exception(api::ErrorCode::INVALID_ARGUMENT, "No messages while creating Cosmos transaction");
             }
             else {
@@ -158,7 +159,7 @@ namespace ledger {
         }
 
         std::string CosmosLikeTransactionApi::serialize() {
-            using namespace constants;
+            using namespace cosmos::constants;
 
             Document document;
             document.SetObject();
@@ -169,7 +170,7 @@ namespace ledger {
             vString.SetString(_accountNumber.c_str(), static_cast<rapidjson::SizeType>(_accountNumber.length()), allocator);
             document.AddMember(kAccountNumber, vString, allocator);
 
-            auto chainID = _currency.cosmosLikeNetworkParameters.value().ChainId;
+            auto chainID = networks::getCosmosLikeNetworkParameters(_currency.name).ChainId;
             vString.SetString(chainID.c_str(), static_cast<rapidjson::SizeType>(chainID.length()), allocator);
             document.AddMember(kChainId, vString, allocator);
 
@@ -215,7 +216,7 @@ namespace ledger {
                 vString.SetString(pubKeyType.c_str(), static_cast<rapidjson::SizeType>(pubKeyType.length()), allocator);
                 pubKeyObject.AddMember(kType, vString, allocator);
 
-                auto pubKeyValue = base64_encode(_signingPubKey.data(), _signingPubKey.size());
+                auto pubKeyValue = cereal::base64::encode(_signingPubKey.data(), _signingPubKey.size());
                 vString.SetString(pubKeyValue.c_str(), static_cast<rapidjson::SizeType>(pubKeyValue.length()), allocator);
                 pubKeyObject.AddMember(kValue, vString, allocator);
 
@@ -235,7 +236,7 @@ namespace ledger {
                 Value sigObject(kObjectType);
                 sigObject.AddMember(kPubKey, pubKeyObject, allocator);
                 // Set signature
-                auto strSignature = base64_encode(signature.data(), signature.size());
+                auto strSignature = cereal::base64::encode(signature.data(), signature.size());
                 vString.SetString(strSignature.c_str(), static_cast<rapidjson::SizeType>(strSignature.length()), allocator);
                 sigObject.AddMember(kSignature, vString, allocator);
 

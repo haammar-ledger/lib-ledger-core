@@ -44,7 +44,7 @@
 namespace ledger {
 	namespace core {
 
-		using namespace constants;
+		using namespace cosmos::constants;
 		namespace {
 			// a closure helper that check if a `DynamicObject` holds a specific key
 			inline auto containsKeys(const std::shared_ptr<api::DynamicObject>& object) {

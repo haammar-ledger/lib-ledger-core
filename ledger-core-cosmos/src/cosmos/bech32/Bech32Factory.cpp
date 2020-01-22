@@ -1,8 +1,8 @@
 /*
  *
- * CosmosLikeOperation
+ * Bech32Factory
  *
- * Created by El Khalil Bellakrid on  14/06/2019.
+ * Created by El Khalil Bellakrid on 18/02/2019.
  *
  * The MIT License (MIT)
  *
@@ -28,30 +28,14 @@
  *
  */
 
+#include <core/utils/Exception.hpp>
 
-#ifndef LEDGER_CORE_COSMOSLIKEOPERATION_H
-#define LEDGER_CORE_COSMOSLIKEOPERATION_H
-
-
-#include <cosmos/api/CosmosLikeOperation.hpp>
-#include <cosmos/api/CosmosLikeTransaction.hpp>
-#include <core/operation/Operation.hpp>
+#include <core/math/bech32/Bech32Factory.hpp>
 
 namespace ledger {
     namespace core {
-        class CosmosLikeOperation : public api::CosmosLikeOperation, public Operation {
-            public:
-                CosmosLikeOperation() = default;
-                CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp);
-                virtual std::shared_ptr<api::CosmosLikeTransaction> getTransaction() override;
-                virtual std::shared_ptr<api::CosmosLikeMessage> getMessage() override;
-                virtual void refreshUid(const std::string &additional) override;
-
-            private:
-                std::shared_ptr<api::CosmosLikeTransaction> _transaction {nullptr};
-        };
-
+        Option<std::shared_ptr<Bech32>> Bech32Factory::newBech32Instance(const std::string &networkIdentifier) {
+            return Option<std::shared_ptr<Bech32>>();
+        }
     }
 }
-
-#endif //LEDGER_CORE_COSMOSLIKEOPERATION_H

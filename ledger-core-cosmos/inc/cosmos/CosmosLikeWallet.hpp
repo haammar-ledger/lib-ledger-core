@@ -32,6 +32,7 @@
 #ifndef LEDGER_CORE_COSMOSLIKEWALLET_H
 #define LEDGER_CORE_COSMOSLIKEWALLET_H
 #include <core/wallet/AbstractWallet.hpp>
+#include <core/Services.hpp>
 
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
@@ -49,7 +50,7 @@ namespace ledger {
                     const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
                     const std::shared_ptr<CosmosLikeKeychainFactory> &keychainFactory,
                     const CosmosLikeAccountSynchronizerFactory &synchronizerFactory,
-                    const std::shared_ptr<WalletPool> &pool,
+                    const std::shared_ptr<Services> &services,
                     const api::Currency &network,
                     const std::shared_ptr<DynamicObject> &configuration,
                     const DerivationScheme &scheme
@@ -71,6 +72,8 @@ namespace ledger {
             Future<api::AccountCreationInfo> getAccountCreationInfo(int32_t accountIndex) override;
 
             std::shared_ptr<CosmosLikeBlockchainExplorer> getBlockchainExplorer();
+
+            bool hasMultipleAddresses() const override;
 
         protected:
             std::shared_ptr<AbstractAccount>

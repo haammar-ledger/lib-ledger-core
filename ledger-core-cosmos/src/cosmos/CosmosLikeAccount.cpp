@@ -40,6 +40,7 @@
 #include <cosmos/database/CosmosLikeTransactionDatabaseHelper.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/transaction_builders/CosmosLikeTransactionBuilder.hpp>
+#include <cosmos/CosmosLikeOperationQuery.hpp>
 
 #include <core/database/SociNumber.hpp>
 #include <core/database/SociDate.hpp>
@@ -66,7 +67,7 @@ namespace ledger {
                                                      const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
                                                      const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
                                                      const std::shared_ptr<CosmosLikeAccountSynchronizer> &synchronizer,
-                                                     const std::shared_ptr<CosmosLikeKeychain> &keychain) : AbstractAccount(wallet, index) {
+                                                     const std::shared_ptr<CosmosLikeKeychain> &keychain) : AbstractAccount(wallet->getServices(), wallet, index) {
                         _explorer = explorer;
                         _observer = observer;
                         _synchronizer = synchronizer;
@@ -83,7 +84,7 @@ namespace ledger {
                                                          const cosmos::Transaction &tx) {
                         // TODO COSMOS Implement inflateOperation
                         out.accountUid = getAccountUid();
-                        out.block = tx.block;
+                        out.block = tx.block->toApiBlock();
                         // TODO : find out if out.cosmosTransaction is necessary
                         // out.cosmosTransaction = Option<cosmos::Transaction>(tx);
                         out.currencyName = getWallet()->getCurrency().name;
@@ -106,7 +107,7 @@ namespace ledger {
                         }
 
                         if (tx.block.nonEmpty()) {
-                                putBlock(sql, tx.block.getValue());
+                                putBlock(sql, tx.block.getValue().toApiBlock());
                         }
 
                         int result = FLAG_TRANSACTION_IGNORED;
@@ -203,15 +204,19 @@ namespace ledger {
 
                 FuturePtr<Amount> CosmosLikeAccount::getBalance() {
                         auto currency = getWallet()->getCurrency();
-//            return _explorer->getAccount(_keychain->getAddress()->toBech32()).mapPtr<Amount>(getContext(), [currency](const cosmos::Account &balance) {
-//                //TODO: handle balanceS
-//                return std::make_shared<Amount>(currency, 0, balance.balances.size() > 0 ? balance.balances[0] : BigInt::ZERO);
-//            });
+                        // return _explorer->getAccount(_keychain->getAddress()->toBech32())
+                        //         .mapPtr<Amount>(getContext(), [currency](const cosmos::Account &balance) {
+                        //                 //TODO: handle balanceS
+                        //                 return std::make_shared<Amount>(
+                        //                         currency,
+                        //                         0,
+                        //                         balance.balances.size() > 0 ? balance.balances[0] : BigInt::ZERO);
+                        // });
                 }
 
                 std::shared_ptr<api::OperationQuery> CosmosLikeAccount::queryOperations() {
                         auto headFilter = api::QueryFilter::accountEq(getAccountUid());
-                        auto query = std::make_shared<api::OperationQuery>(
+                        auto query = std::make_shared<CosmosLikeOperationQuery>(
                                 headFilter,
                                 getWallet()->getDatabase(),
                                 getWallet()->getContext(),
@@ -221,10 +226,10 @@ namespace ledger {
                         return query;
                 }
 
-                void CosmosLikeAccount::getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, , const std::function<void(std::experimental::optional<std::shared_ptr<::ledger::core::api::BigInt>>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
-//            _explorer->getEstimatedGasLimit(transaction).mapPtr<api::BigInt>(getContext(), [] (const std::shared_ptr<BigInt> &gasLimit) -> std::shared_ptr<api::BigInt> {
-//                return std::make_shared<api::BigIntImpl>(*gasLimit);
-//            }).callback(getContext(), callback);
+                void CosmosLikeAccount::getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::function<void(std::experimental::optional<std::shared_ptr<::ledger::core::api::BigInt>>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
+                        // _explorer->getEstimatedGasLimit(transaction).mapPtr<api::BigInt>(getContext(), [] (const std::shared_ptr<BigInt> &gasLimit) -> std::shared_ptr<api::BigInt> {
+                        //                 return std::make_shared<api::BigIntImpl>(*gasLimit);
+                        //         }).callback(getContext(), callback);
                 }
 
                 Future<AbstractAccount::AddressList> CosmosLikeAccount::getFreshPublicAddresses() {
@@ -251,7 +256,7 @@ namespace ledger {
 
                                         const auto &uid = self->getAccountUid();
                                         soci::session sql(self->getWallet()->getDatabase()->getPool());
-                                        std::vector<Operation> operations;
+                                        std::vector<CosmosLikeOperation> operations;
 
                                         auto keychain = self->getKeychain();
                                         std::function<bool(const std::string &)> filter = [&keychain](const std::string addr) -> bool {

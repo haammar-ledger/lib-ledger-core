@@ -33,7 +33,7 @@
 #define LEDGER_CORE_NODECOSMOSLIKEBLOCKCHAINEXPLORER_H
 
 
-#include <core/wallet/explorers/AbstractLedgerApiBlockchainExplorer.h>
+#include <core/explorers/AbstractLedgerApiBlockchainExplorer.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>
 
