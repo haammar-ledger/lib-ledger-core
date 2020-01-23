@@ -53,15 +53,16 @@ TEST(CosmosAddress, AddressFromPubKey) {
     {
         // Results returned by device
         std::string prefixedPubKey = "cosmospub1addwnpepqdtwj8njf68zedmfhzru54tg2475nnfjrrgtfd533prvs7sljk7nzxvtkpd";
-        std::string bech32Addr = "cosmos16xkkyj97z7r83sx45xwk9uwq0mj0zszlf6c6mq";
+        std::string expectedBech32Addr = "cosmos16xkkyj97z7r83sx45xwk9uwq0mj0zszlf6c6mq";
 
         // From bech32 pubKey to pubKeyHash160
         auto pkBech32 = std::make_shared<CosmosBech32>(api::CosmosBech32Type::PUBLIC_KEY);
         auto pkDecodedHash160 = pkBech32->decode(prefixedPubKey);
 
-        // Byte array to encode : <PrefixBytes> <Length> <ByteArray> hence the + 5
+        // Byte array to encode : <PrefixBytes> <Size> <ByteArray> hence the + 5
         std::vector<uint8_t> secp256k1PubKey(pkDecodedHash160.second.begin() + 5, pkDecodedHash160.second.end());
 
+        // Concat the <PrefixBytes> and <Size> again manually
         std::vector<uint8_t> prefixAndSize{0xEB, 0x5A, 0xE9, 0x87, 0x21};
         auto encoded = vector::concat(prefixAndSize, secp256k1PubKey);
 
@@ -69,10 +70,10 @@ TEST(CosmosAddress, AddressFromPubKey) {
         HashAlgorithm hashAlgorithm("cosmos");
         auto publicKeyHash160 = HASH160::hash(secp256k1PubKey, hashAlgorithm);
 
-        // Encode to bech32
+        // Encode to bech32 address and check
         auto bech32 = std::make_shared<CosmosBech32>(api::CosmosBech32Type::ADDRESS);
         auto bech32AddrResult = bech32->encode(publicKeyHash160, std::vector<uint8_t>());
-        EXPECT_EQ(bech32AddrResult, bech32Addr);
+        EXPECT_EQ(bech32AddrResult, expectedBech32Addr);
     }
 
     {
