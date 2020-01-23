@@ -23,4 +23,5 @@ target_link_libraries(${PROJECT_NAME} ledger-core-cosmos)
 target_link_libraries(${PROJECT_NAME} gtest gtest_main)
 
 
-add_test (NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
+include(GoogleTest)
+gtest_discover_tests(${PROJECT_NAME})
