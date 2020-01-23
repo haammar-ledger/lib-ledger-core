@@ -230,3 +230,7 @@ TEST(CosmosTransaction, Encode) {
     EXPECT_EQ(hex::toString(finalResult), rawTxHex);
 
 }
+
+TEST(CosmosTransaction, EncodeToJSON) {
+    FAIL() << "Encoding to Ledger firmapp JSON format has not been implemented";
+}
