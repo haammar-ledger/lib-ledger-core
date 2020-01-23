@@ -164,7 +164,7 @@ TEST(CosmosAddress, CosmosValAddressFromBech32) {
     EXPECT_EQ(address->toBech32(), expectedResult);
 }
 
-TEST(TezosAddress, SecpPubbKey) {
+TEST(CosmosAddress, SecpPubbKey) {
     std::vector<uint8_t> pubKey = hex::toByteArray("02c4becf6843868d9556ea43d46518b51a13cb1a48cd6c05a21c029ea4231fcde4");
     std::vector<uint8_t> chainCode = hex::toByteArray("");
     auto zPub = ledger::core::CosmosLikeExtendedPublicKey::fromRaw(currency,
