@@ -35,7 +35,7 @@
 namespace ledger {
     namespace core {
         CosmosBech32::CosmosBech32(api::CosmosBech32Type type, size_t offsetConversion) :
-            _offsetConversion(offsetConversion) {
+            _offsetConversion(0) {
             switch (type) {
                 case api::CosmosBech32Type::PUBLIC_KEY :
                     _bech32Params = COSMOS_PUB;

@@ -38,7 +38,7 @@ namespace ledger {
     namespace core {
         namespace currencies {
             api::Currency const ATOM =
-                CurrencyBuilder("cosmos")
+                CurrencyBuilder("atom")
                 .bip44(ATOM_COIN_ID)
                 .paymentUri("cosmos")
                 .unit("natom", 0, "natom")
