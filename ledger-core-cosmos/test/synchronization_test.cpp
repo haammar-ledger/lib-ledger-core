@@ -32,13 +32,15 @@
 #include <iostream>
 #include <set>
 
-#include "../Fixtures.hpp"
+#include "Fixtures.hpp"
 
 #include <gtest/gtest.h>
 
+#include <core/api/Configuration.hpp>
 #include <core/api/KeychainEngines.hpp>
 #include <core/utils/DateUtils.hpp>
 #include <core/collections/DynamicObject.hpp>
+#include <integration/BaseFixture.hpp>
 
 #include <cosmos/explorers/GaiaCosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/CosmosNetworks.hpp>
@@ -46,11 +48,13 @@
 #include <cosmos/CosmosLikeExtendedPublicKey.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <cosmos/transaction_builders/CosmosLikeTransactionBuilder.hpp>
+#include <cosmos/CosmosLikeWallet.hpp>
+#include <cosmos/CosmosLikeOperationQuery.hpp>
 
 using namespace std;
 using namespace ledger::core;
 
-api::CosmosLikeNetworkParameters COSMOS = networks::getCosmosLikeNetworkParameters("cosmos");
+api::CosmosLikeNetworkParameters COSMOS = networks::getCosmosLikeNetworkParameters("atom");
 std::string DEFAULT_ADDRESS = "cosmos1sd4tl9aljmmezzudugs7zlaya7pg2895tyn79r";
 std::string DEFAULT_HEX_PUB_KEY = "03d672c1b90c84d9d97522e9a73252a432b77d90a78bf81cdbe35270d9d3dc1c34";
 
@@ -59,11 +63,11 @@ class CosmosLikeWalletSynchronization : public BaseFixture {};
 TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
 
     auto context = this->dispatcher->getSerialExecutionContext("context");
-    auto pool = this->newDefaultPool();
+    auto services = this->newDefaultServices();
 
     auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
-            pool->getDispatcher()->getSerialExecutionContext("explorer"),
-            pool->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+            services->getDispatcher()->getSerialExecutionContext("explorer"),
+            services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
             COSMOS,
             std::make_shared<DynamicObject>()
             );
@@ -77,11 +81,11 @@ TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
 
 TEST_F(CosmosLikeWalletSynchronization, GetTransactionsWithExplorer) {
     auto context = this->dispatcher->getSerialExecutionContext("context");
-    auto pool = this->newDefaultPool();
+    auto services = this->newDefaultServices();
 
     auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
-            pool->getDispatcher()->getSerialExecutionContext("explorer"),
-            pool->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+            services->getDispatcher()->getSerialExecutionContext("explorer"),
+            services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
             COSMOS,
             std::make_shared<DynamicObject>()
     );
@@ -115,11 +119,11 @@ TEST_F(CosmosLikeWalletSynchronization, GetTransactionsWithExplorer) {
 TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
     std::string address = "cosmos16xkkyj97z7r83sx45xwk9uwq0mj0zszlf6c6mq";
     auto context = this->dispatcher->getSerialExecutionContext("context");
-    auto pool = this->newDefaultPool();
+    auto services = this->newDefaultServices();
 
     auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
-            pool->getDispatcher()->getSerialExecutionContext("explorer"),
-            pool->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+            services->getDispatcher()->getSerialExecutionContext("explorer"),
+            services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
             COSMOS,
             std::make_shared<DynamicObject>()
     );
@@ -130,18 +134,26 @@ TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
 }
 
 TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
-    auto pool = newDefaultPool();
+    auto services = newDefaultServices();
+    auto walletStore = newWalletStore(services);
+    walletStore->addCurrency(currencies::ATOM);
+
+    auto factory = std::make_shared<CosmosLikeWalletFactory>(currencies::ATOM, services);
+    walletStore->registerFactory(currencies::ATOM, factory);
     {
         auto configuration = DynamicObject::newInstance();
         configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME,
                                  "44'/<coin_type>'/<account>'/<node>/<address>");
-        auto wallet = wait(pool->createWallet("e847815f-488a-4301-b67c-378a5e9c8a61", "cosmos", configuration));
+        auto wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
+                wait(walletStore->createWallet(
+                             "e847815f-488a-4301-b67c-378a5e9c8a61", "cosmos", configuration)));
         std::set<std::string> emittedOperations;
         {
 			auto accountInfo = wait(wallet->getNextAccountCreationInfo());
 			EXPECT_EQ(accountInfo.index, 0);
 			accountInfo.publicKeys.push_back(hex::toByteArray(DEFAULT_HEX_PUB_KEY));
-			auto account = createCosmosLikeAccount(wallet, accountInfo.index, accountInfo);
+                        auto account = ledger::testing::cosmos::createCosmosLikeAccount(
+                                wallet, accountInfo.index, accountInfo);
 
 			auto receiver = make_receiver([&](const std::shared_ptr<api::Event> &event) {
 			    if (event->getCode() == api::EventCode::NEW_OPERATION) {
@@ -151,7 +163,7 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
 			});
 			auto address = wait(account->getFreshPublicAddresses())[0]->toString();
 			EXPECT_EQ(address, DEFAULT_ADDRESS);
-			pool->getEventBus()->subscribe(dispatcher->getMainExecutionContext(), receiver);
+			services->getEventBus()->subscribe(dispatcher->getMainExecutionContext(), receiver);
 
 			receiver.reset();
 			receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
@@ -173,7 +185,7 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
 
 			dispatcher->waitUntilStopped();
 
-			auto ops = wait(std::dynamic_pointer_cast<OperationQuery>(account->queryOperations()->complete())->execute());
+			auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
 			std::cout << "Ops: " << ops.size() << std::endl;
 			auto block = wait(account->getLastBlock());
 			auto blockHash = block.blockHash;

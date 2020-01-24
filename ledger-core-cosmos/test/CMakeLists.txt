@@ -13,7 +13,13 @@ if (APPLE)
     add_definitions(-D__GLIBCXX__)
 endif (APPLE)
 
-add_executable(${PROJECT_NAME} main.cpp address_test.cpp transactions_test.cpp)
+add_executable(${PROJECT_NAME}
+  main.cpp
+  Fixtures.cpp
+  address_test.cpp
+  transactions_test.cpp
+  synchronization_test.cpp
+  )
 
 target_link_libraries(${PROJECT_NAME} Core::ledger-core)
 target_link_libraries(${PROJECT_NAME} Core::ledger-test)
