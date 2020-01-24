@@ -61,36 +61,65 @@ namespace ledger {
 
         namespace {
             auto getString(const Object& object, const char *fieldName) {
+                if (!object.HasMember(fieldName)) {
+                    throw Exception(api::ErrorCode::INVALID_ARGUMENT, fmt::format("Error while getting {} from rawTransaction : non existing key", fieldName));
+                }
                 if (!object[fieldName].IsString()) {
-                    throw Exception(api::ErrorCode::INVALID_ARGUMENT, fmt::format("Error while getting {} from rawTransaction", fieldName));
+                    throw Exception(api::ErrorCode::INVALID_ARGUMENT, fmt::format("Error while getting string {} from rawTransaction : not a string", fieldName));
                 }
                 return object[fieldName].GetString();
             }
 
+            // auto getObject(const Object& object, const char *fieldName) {
+            //     if (!object[fieldName].IsObject()) {
+            //         throw Exception(api::ErrorCode::INVALID_ARGUMENT, fmt::format("Error while getting object {} from rawTransaction", fieldName));
+            //     }
+            //     return object[fieldName].GetObject();
+            // }
+
             api::CosmosLikeMsgSend buildMsgSendFromRawMessage(Object const& object) {
                 std::vector<api::CosmosLikeAmount> amounts;
 
-                if (object[kAmount].IsArray()) {
-                    // the size of the array of amount should be frequently equals to one
-                    amounts.reserve(object[kAmount].GetArray().Size());
+                if (!object[kValue][kAmount].IsArray() && !object[kValue][kAmount].IsObject()) {
+                    return {
+                    "",
+                    "",
+                    amounts
+                };
+                } else if (object[kValue][kAmount].IsObject()) {
+                    auto amountObject = object[kValue][kAmount].GetObject();
+                    amounts.push_back(api::CosmosLikeAmount{
+                        getString(amountObject, kAmount),
+                        getString(amountObject, kDenom)
+                    });
+                    return {
+                    getString(object[kValue].GetObject(), kFromAddress),
+                    getString(object[kValue].GetObject(), kToAddress),
+                    amounts
+                };
+                } else {
 
-                    for (auto& amount : object[kAmount].GetArray()) {
+                    // We are sure object[kValue][kAmount] is an array here
+
+                    // the size of the array of amount should be frequently equals to one
+                    amounts.reserve(object[kValue][kAmount].GetArray().Size());
+
+                    for (auto& amount : object[kValue][kAmount].GetArray()) {
                         if (amount.IsObject()) {
                             auto amountObject = amount.GetObject();
-
                             amounts.push_back(api::CosmosLikeAmount{
                                 getString(amountObject, kAmount),
                                 getString(amountObject, kDenom)
                             });
                         }
                     }
-                }
 
-                return {
-                    getString(object, kFromAddress),
-                    getString(object, kToAddress),
+                    return {
+                    getString(object[kValue].GetObject(), kFromAddress),
+                    getString(object[kValue].GetObject(), kToAddress),
                     amounts
-               };
+                };
+                }
             }
 
             api::CosmosLikeMsgDelegate buildMsgDelegateFromRawMessage(Object const& object) {
@@ -363,7 +392,7 @@ namespace ledger {
                     if (msg.IsObject()) {
                         auto msgObject = msg.GetObject();
 
-                        switch (api::from_string<api::CosmosLikeMsgType>(getString(msgObject, kType))) {
+                        switch (cosmos::stringToMsgType(getString(msgObject, kType))) {
                             case api::CosmosLikeMsgType::MSGSEND:
                                 messages.push_back(api::CosmosLikeMessage::wrapMsgSend(
                                     buildMsgSendFromRawMessage(msgObject)));

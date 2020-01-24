@@ -94,26 +94,31 @@ namespace ledger {
                                         case MsgType::MSGWITHDRAWDELEGATIONREWARD:
                                                 return constants::kMsgWithdrawDelegationReward;
                                         case MsgType::UNKNOWN:
+                                        default:
                                                 return "";
                                 }
                         }
 
+                        static inline constexpr bool strings_equal(char const * a, char const * b) {
+                                return *a == *b && (*a == '\0' || strings_equal(a + 1, b + 1));
+                        }
+
                         static constexpr MsgType stringToMsgType(const char* string) {
-                                if (string == constants::kMsgSend) {
+                                if (strings_equal(string, constants::kMsgSend)) {
                                         return MsgType::MSGSEND;
-                                } else if (string == constants::kMsgDelegate) {
+                                } else if (strings_equal(string, constants::kMsgDelegate)) {
                                         return MsgType::MSGDELEGATE;
-                                } else if (string == constants::kMsgUndelegate) {
+                                } else if (strings_equal(string, constants::kMsgUndelegate)) {
                                         return MsgType::MSGUNDELEGATE;
-                                } else if (string == constants::kMsgRedelegate) {
+                                } else if (strings_equal(string, constants::kMsgRedelegate)) {
                                         return MsgType::MSGREDELEGATE;
-                                } else if (string == constants::kMsgSubmitProposal) {
+                                } else if (strings_equal(string, constants::kMsgSubmitProposal)) {
                                         return MsgType::MSGSUBMITPROPOSAL;
-                                } else if (string == constants::kMsgVote) {
+                                } else if (strings_equal(string, constants::kMsgVote)) {
                                         return MsgType::MSGVOTE;
-                                } else if (string == constants::kMsgDeposit) {
+                                } else if (strings_equal(string, constants::kMsgDeposit)) {
                                         return MsgType::MSGDEPOSIT;
-                                } else if (string == constants::kMsgWithdrawDelegationReward) {
+                                } else if (strings_equal(string, constants::kMsgWithdrawDelegationReward)) {
                                         return MsgType::MSGWITHDRAWDELEGATIONREWARD;
                                 } else {
                                         return MsgType::UNKNOWN;

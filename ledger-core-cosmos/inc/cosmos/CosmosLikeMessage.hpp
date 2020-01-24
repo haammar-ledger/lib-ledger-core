@@ -34,8 +34,6 @@
 
 #include <core/collections/DynamicObject.hpp>
 
-#include <cosmos/api/CosmosLikeMessage.hpp>
-#include <cosmos/api/CosmosLikeMsgType.hpp>
 #include <cosmos/api/CosmosLikeAmount.hpp>
 #include <cosmos/api/CosmosLikeContent.hpp>
 #include <cosmos/api/CosmosLikeVoteOption.hpp>
@@ -47,6 +45,8 @@
 #include <cosmos/api/CosmosLikeMsgVote.hpp>
 #include <cosmos/api/CosmosLikeMsgDeposit.hpp>
 #include <cosmos/api/CosmosLikeMsgWithdrawDelegationReward.hpp>
+#include <cosmos/api/CosmosLikeMessage.hpp>
+#include <cosmos/api/CosmosLikeMsgType.hpp>
 
 namespace ledger {
 	namespace core {
