@@ -270,12 +270,30 @@ TEST(CosmosTransaction, ParseSignedRawMsgSendTransaction) {
     auto signature = hex::toByteArray(sSignature);
     tx->setDERSignature(signature);
 
+    // clang-format off
+    // Disable formatters here so the structure of the expected json is easier to read
     EXPECT_EQ(tx->serialize(),
               "{\"account_number\":\"6571\","
               "\"chain_id\":\"cosmoshub-3\","
-              "\"fee\":{\"amount\":[{\"amount\":\"5000000\",\"denom\":\"natom\"}],\"gas\":\"200000\"},"
+              "\"fee\":{"
+                  "\"amount\":[{"
+                      "\"amount\":\"5000000\","
+                      "\"denom\":\"natom\"}],"
+                  "\"gas\":\"200000\"},"
               "\"memo\":\"Sent from Ledger\","
-              "\"msgs\":[{\"value\":{\"amount\":[{\"denom\":\"uatom\",\"amount\":\"1000000\"}],\"from_address\":\"cosmos102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl\",\"to_address\":\"cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7\"},\"type\":\"cosmos-sdk/MsgSend\"}],"
+              "\"msgs\":[{"
+                  "\"type\":\"cosmos-sdk/MsgSend\","
+                  "\"value\":{"
+                      "\"amount\":[{"
+                          "\"amount\":\"1000000\","
+                          "\"denom\":\"uatom\"}],"
+                      "\"from_address\":\"cosmos102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl\","
+                      "\"to_address\":\"cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7\"}}],"
               "\"sequence\":\"0\","
-              "\"signature\":[{\"pub_key\":{\"type\":\"tendermint/PubKeySecp256k1\",\"value\":\"AsS+z2hDho2VVupD1GUYtRoTyxpIzWwFohwCnqQjH83k\"},\"signature\":\"9Nn7Az62vDLW0bMgdcO26kzOeVrtd/M0GxXFsePghch7lY098oi6/MFnr0zKoeyoPxLUjCISn6JRvpVJ22WmBg==\"}]}") << "The keys in dictionnaries must be lexicographically sorted!";
+              "\"signature\":[{"
+                  "\"pub_key\":{"
+                      "\"type\":\"tendermint/PubKeySecp256k1\","
+                      "\"value\":\"AsS+z2hDho2VVupD1GUYtRoTyxpIzWwFohwCnqQjH83k\"},"
+                  "\"signature\":\"9Nn7Az62vDLW0bMgdcO26kzOeVrtd/M0GxXFsePghch7lY098oi6/MFnr0zKoeyoPxLUjCISn6JRvpVJ22WmBg==\"}]}") << "The keys in dictionnaries must be lexicographically sorted!";
+              // clang-format on
 }
