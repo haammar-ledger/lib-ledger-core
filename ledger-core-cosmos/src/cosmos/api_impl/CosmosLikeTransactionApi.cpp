@@ -52,6 +52,15 @@
 #include <cosmos/CosmosNetworks.hpp>
 
 using namespace rapidjson;
+
+// Used to sort lexicographically the keys in dictionnary as per
+// https://github.com/cosmos/ledger-cosmos-app/blob/master/docs/TXSPEC.md
+struct NameComparator {
+    bool operator()(const Value::Member &lhs, const Value::Member &rhs) const {
+        return (strcmp(lhs.name.GetString(), rhs.name.GetString()) < 0);
+    }
+};
+
 namespace ledger {
     namespace core {
 
@@ -249,6 +258,7 @@ namespace ledger {
 
             StringBuffer buffer;
             Writer<StringBuffer> writer(buffer);
+            std::sort(document.MemberBegin(), document.MemberEnd(), NameComparator());
             document.Accept(writer);
             return buffer.GetString();
         }
