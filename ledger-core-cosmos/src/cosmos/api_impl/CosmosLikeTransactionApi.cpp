@@ -190,6 +190,7 @@ namespace ledger {
                 amountObject.AddMember(kAmount, vStringLocal, allocator);
                 vStringLocal.SetString(denom.c_str(), static_cast<rapidjson::SizeType>(denom.length()), allocator);
                 amountObject.AddMember(kDenom, vStringLocal, allocator);
+                std::sort(amountObject.MemberBegin(), amountObject.MemberEnd(), NameComparator());
                 return amountObject;
             };
 
@@ -243,11 +244,13 @@ namespace ledger {
 
                 // Set pub key
                 Value sigObject(kObjectType);
+                std::sort(pubKeyObject.MemberBegin(), pubKeyObject.MemberEnd(), NameComparator());
                 sigObject.AddMember(kPubKey, pubKeyObject, allocator);
                 // Set signature
                 auto strSignature = cereal::base64::encode(signature.data(), signature.size());
                 vString.SetString(strSignature.c_str(), static_cast<rapidjson::SizeType>(strSignature.length()), allocator);
                 sigObject.AddMember(kSignature, vString, allocator);
+                std::sort(sigObject.MemberBegin(), sigObject.MemberEnd(), NameComparator());
 
                 sigArray.PushBack(sigObject, allocator);
                 document.AddMember(kSignature, sigArray, allocator);

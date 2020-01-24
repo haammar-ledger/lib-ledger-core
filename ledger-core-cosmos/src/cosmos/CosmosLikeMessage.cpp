@@ -107,6 +107,8 @@ namespace ledger {
 		}
 
 		rapidjson::Value CosmosLikeMessage::toJson(rapidjson::Document::AllocatorType& allocator) const {
+			// TODO : Sort the Value before returning it.
+			// Fails CosmosTransaction.ParseSignedRawMsgSendTransaction
 			return _content->toJson(allocator);
 		}
 
