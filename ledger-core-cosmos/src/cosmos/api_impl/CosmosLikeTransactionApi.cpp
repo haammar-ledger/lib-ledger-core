@@ -204,6 +204,7 @@ namespace ledger {
             auto gas = _gas->toString();
             vString.SetString(gas.c_str(), static_cast<rapidjson::SizeType>(gas.length()), allocator);
             feeAmountObject.AddMember(kGas, vString, allocator);
+            std::sort(feeAmountObject.MemberBegin(), feeAmountObject.MemberEnd(), NameComparator());
             document.AddMember(kFee, feeAmountObject, allocator);
 
             vString.SetString(_memo.c_str(), static_cast<rapidjson::SizeType>(_memo.length()), allocator);
