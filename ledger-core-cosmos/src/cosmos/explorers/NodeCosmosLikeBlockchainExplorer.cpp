@@ -37,7 +37,7 @@
 #include <core/collections/Collections.hpp>
 
 #include <cosmos/api/CosmosConfigurationDefaults.hpp>
-#include <cosmos/explorers/api/rpcs_parsers.hpp>
+#include <cosmos/explorers/RpcsParsers.hpp>
 
 // TODO COSMOS Compute gas price
 

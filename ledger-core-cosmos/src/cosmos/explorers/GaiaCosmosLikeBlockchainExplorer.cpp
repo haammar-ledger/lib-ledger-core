@@ -33,7 +33,7 @@
 
 #include <core/api/Configuration.hpp>
 
-#include <cosmos/explorers/api/rpcs_parsers.hpp>
+#include <cosmos/explorers/RpcsParsers.hpp>
 
 namespace ledger {
     namespace core {
