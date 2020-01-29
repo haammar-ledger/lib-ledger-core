@@ -136,7 +136,7 @@ namespace ledger {
         }
 
         std::shared_ptr<api::Amount> CosmosLikeTransactionApi::getFee() const {
-            return std::make_shared<Amount>(_currency, 0, BigInt(_fee->toString()) * BigInt(_gas->toString()));
+            return std::make_shared<Amount>(_currency, 0, BigInt(_fee->toString()));
         }
 
        std::chrono::system_clock::time_point CosmosLikeTransactionApi::getDate() const {
@@ -212,7 +212,7 @@ namespace ledger {
             };
 
             // Fee object
-            auto fees = std::make_shared<BigInt>(BigInt(_fee->toString()) * BigInt(_gas->toString()));
+            auto fees = std::make_shared<BigInt>(BigInt(_fee->toString()));
             auto feeAmountObj = getAmountObject(_fee->getUnit().name, fees->toString());
             Value feeArray(kArrayType);
             feeArray.PushBack(feeAmountObj, allocator);

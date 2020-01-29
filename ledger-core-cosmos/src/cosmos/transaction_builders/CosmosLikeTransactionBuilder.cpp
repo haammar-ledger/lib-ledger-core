@@ -360,11 +360,12 @@ namespace ledger {
             //Get fees
             if (document[kFee].IsObject()) {
                 auto feeObject = document[kFee].GetObject();
-                //Gas Limit
+                // Gas Limit
                 auto gas = std::make_shared<BigInt>(getString(feeObject, kGas));
                 tx->setGas(gas);
 
-                //Gas Price
+                // Total Tx fees
+                // Gas Price is then deduced with Total_Tx_fees / Gas Limit
                 // TODO figure out why the fee contains an array of amounts
                 if (feeObject[kAmount].IsArray()) {
                     auto fee = BigInt();
@@ -373,12 +374,11 @@ namespace ledger {
                     for (auto& amount : feeObject[kAmount].GetArray()) {
                         if (amount.IsObject()) {
                             fee = fee +  BigInt(getAmount(amount.GetObject()).toString());
+                            std::cerr << "Current Fees : " << fee.toString() << std::endl;
                         }
                     }
 
-                    // TODO figure out why we have to divide by gas
-                    // https://github.com/luniehq/cosmos-api/blob/develop/src/send.js
-                    tx->setFee(std::make_shared<BigInt>(fee / *gas));
+                    tx->setFee(std::make_shared<BigInt>(fee));
                 }
             }
 
