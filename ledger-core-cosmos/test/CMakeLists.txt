@@ -21,11 +21,11 @@ add_executable(${PROJECT_NAME}
   synchronization_test.cpp
   )
 
-target_link_libraries(${PROJECT_NAME} Core::ledger-core)
+target_link_libraries(${PROJECT_NAME} ledger-core-cosmos-static)
+target_link_libraries(${PROJECT_NAME} Core::ledger-core-static)
 target_link_libraries(${PROJECT_NAME} Core::ledger-test)
 target_link_libraries(${PROJECT_NAME} Core::ledger-core-integration-test)
 target_link_libraries(${PROJECT_NAME} Core::ledger-qt-host)
-target_link_libraries(${PROJECT_NAME} ledger-core-cosmos)
 target_link_libraries(${PROJECT_NAME} gtest gtest_main)
 
 
