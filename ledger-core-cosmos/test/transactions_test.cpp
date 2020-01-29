@@ -245,7 +245,7 @@ TEST(CosmosTransaction, EncodeToJSON) {
     auto message = tx->getMessages().front();
     auto sendMessage = api::CosmosLikeMessage::unwrapMsgSend(message);
     // ensure the values are correct
-   EXPECT_EQ(tx->getFee()->toLong(), 5000000L);
+   EXPECT_EQ(tx->getFee()->toLong(), 5000L);
    EXPECT_EQ(tx->getGas()->toLong(), 200000L);
    EXPECT_EQ(sendMessage.fromAddress, "cosmos102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl");
    EXPECT_EQ(sendMessage.toAddress, "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7");
@@ -277,8 +277,8 @@ TEST(CosmosTransaction, ParseSignedRawMsgSendTransaction) {
               "\"chain_id\":\"cosmoshub-3\","
               "\"fee\":{"
                   "\"amount\":[{"
-                      "\"amount\":\"5000000\","
-                      "\"denom\":\"natom\"}],"
+                      "\"amount\":\"5000\","
+                      "\"denom\":\"uatom\"}],"
                   "\"gas\":\"200000\"},"
               "\"memo\":\"Sent from Ledger\","
               "\"msgs\":[{"

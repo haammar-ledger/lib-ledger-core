@@ -37,14 +37,15 @@
 namespace ledger {
     namespace core {
         namespace currencies {
+            // Minimum value is uatom according to
+            // https://github.com/cosmos/gaia/blob/ba8d2b3177e1b891b72d6f40538fc2c6344bdeac/docs/delegators/delegator-guide-cli.md#sending-transactions
             api::Currency const ATOM =
                 CurrencyBuilder("atom")
                 .bip44(ATOM_COIN_ID)
                 .paymentUri("cosmos")
-                .unit("natom", 0, "natom")
-                .unit("uatom", 3, "uatom")
-                .unit("matom", 6, "matom")
-                .unit("atom", 9, "atom");
+                .unit("uatom", 0, "uatom")
+                .unit("matom", 3, "matom")
+                .unit("atom", 6, "atom");
         }
     }
 }
