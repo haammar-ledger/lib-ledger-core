@@ -41,15 +41,6 @@
 
 #include <cosmos/CosmosLikeConstants.hpp>
 
-// Used to sort lexicographically the keys in dictionnary as per
-// https://github.com/cosmos/ledger-cosmos-app/blob/master/docs/TXSPEC.md
-struct NameComparator {
-    bool operator()(const rapidjson::Value::Member &lhs, const rapidjson::Value::Member &rhs) const {
-        return (strcmp(lhs.name.GetString(), rhs.name.GetString()) < 0);
-    }
-};
-
-
 namespace ledger {
 	namespace core {
 
@@ -116,12 +107,11 @@ namespace ledger {
 		}
 
 		rapidjson::Value CosmosLikeMessage::toJson(rapidjson::Document::AllocatorType& allocator) const {
-			// TODO : Sort the Value before returning it.
-			// Fails CosmosTransaction.ParseSignedRawMsgSendTransaction
-			auto retval = _content->toJson(allocator);
-			// TODO : recursively sort retval for all "Objects" in retval
-			std::sort(retval.MemberBegin(), retval.MemberEnd(), NameComparator());
-			return retval;
+			// Note : this Json has not been sorted yet
+			// This doesn't follow the spec
+                        // https://github.com/cosmos/ledger-cosmos-app/blob/master/docs/TXSPEC.md
+                        // but we defer the sorting to the TransactionApi::serialize() method
+			return _content->toJson(allocator);
 		}
 
 		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgSend(const api::CosmosLikeMsgSend & msg) {

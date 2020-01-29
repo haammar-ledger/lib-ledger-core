@@ -61,6 +61,24 @@ struct NameComparator {
     }
 };
 
+// Recursively sort the dictionnaries in the given json
+static void sortJson(Value& val) {
+	// This code assumes that
+	// only "objects" ({key: Value}) and "arrays" ([Value]) can have nested
+	// dictionnaries to sort
+	// Therefore the base case is reaching a "primitive" type as inner Value
+	if (val.IsObject()){
+		std::sort(val.MemberBegin(), val.MemberEnd(), NameComparator());
+		for (auto subValue = val.MemberBegin(); subValue != val.MemberEnd(); subValue++) {
+			sortJson(subValue->value);
+		}
+	} else if (val.IsArray()) {
+		for (auto subValue = val.Begin(); subValue != val.End(); subValue++) {
+			sortJson(*subValue);
+		}
+	}
+}
+
 namespace ledger {
     namespace core {
 
@@ -81,9 +99,9 @@ namespace ledger {
             // _accountNumber = tx.accountNumber;
             _memo = tx->getMemo();
             // _sequence = tx.sequence;
-//            _currency = operation->getAccount()->getWallet()->getCurrency();
-//            _gasPrice = std::make_shared<Amount>(_currency, 0, tx.fee.amount);
-//            _gasLimit = std::make_shared<Amount>(_currency, 0, tx.gasLimit);
+            // _currency = operation->getAccount()->getWallet()->getCurrency();
+            // _gasPrice = std::make_shared<Amount>(_currency, 0, tx.fee.amount);
+            // _gasLimit = std::make_shared<Amount>(_currency, 0, tx.gasLimit);
 
             if (tx->getMessages().empty()) {
                 throw Exception(api::ErrorCode::INVALID_ARGUMENT, "No messages while creating Cosmos transaction");
@@ -190,7 +208,6 @@ namespace ledger {
                 amountObject.AddMember(kAmount, vStringLocal, allocator);
                 vStringLocal.SetString(denom.c_str(), static_cast<rapidjson::SizeType>(denom.length()), allocator);
                 amountObject.AddMember(kDenom, vStringLocal, allocator);
-                std::sort(amountObject.MemberBegin(), amountObject.MemberEnd(), NameComparator());
                 return amountObject;
             };
 
@@ -204,7 +221,6 @@ namespace ledger {
             auto gas = _gas->toString();
             vString.SetString(gas.c_str(), static_cast<rapidjson::SizeType>(gas.length()), allocator);
             feeAmountObject.AddMember(kGas, vString, allocator);
-            std::sort(feeAmountObject.MemberBegin(), feeAmountObject.MemberEnd(), NameComparator());
             document.AddMember(kFee, feeAmountObject, allocator);
 
             vString.SetString(_memo.c_str(), static_cast<rapidjson::SizeType>(_memo.length()), allocator);
@@ -245,13 +261,11 @@ namespace ledger {
 
                 // Set pub key
                 Value sigObject(kObjectType);
-                std::sort(pubKeyObject.MemberBegin(), pubKeyObject.MemberEnd(), NameComparator());
                 sigObject.AddMember(kPubKey, pubKeyObject, allocator);
                 // Set signature
                 auto strSignature = cereal::base64::encode(signature.data(), signature.size());
                 vString.SetString(strSignature.c_str(), static_cast<rapidjson::SizeType>(strSignature.length()), allocator);
                 sigObject.AddMember(kSignature, vString, allocator);
-                std::sort(sigObject.MemberBegin(), sigObject.MemberEnd(), NameComparator());
 
                 sigArray.PushBack(sigObject, allocator);
                 document.AddMember(kSignature, sigArray, allocator);
@@ -262,7 +276,7 @@ namespace ledger {
 
             StringBuffer buffer;
             Writer<StringBuffer> writer(buffer);
-            std::sort(document.MemberBegin(), document.MemberEnd(), NameComparator());
+            sortJson(document);
             document.Accept(writer);
             return buffer.GetString();
         }
