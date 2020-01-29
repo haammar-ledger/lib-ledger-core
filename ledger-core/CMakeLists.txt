@@ -39,6 +39,11 @@ endif()
 
 enable_testing()
 
+if (SYS_OPENSSL)
+    # Here instead of in lib/CMakeLists to get all variables in this scope.
+    # set(... PARENT_SCOPE) for find_package to find.
+    find_package(OpenSSL REQUIRED)
+endif()
 add_subdirectory(lib)
 add_subdirectory(src)
 
@@ -74,6 +79,24 @@ install(
     DESTINATION ${ledger-core-pkg-location}
 )
 
+if (SYS_OPENSSL)
+  install( TARGETS blake
+    EXPORT ledger-core
+    ARCHIVE       DESTINATION lib/ledger-core
+    LIBRARY       DESTINATION lib/ledger-core
+    FRAMEWORK     DESTINATION lib/ledger-core )
+else()
+  install(
+    TARGETS
+    crypto
+    ssl
+    EXPORT ledger-core
+    ARCHIVE       DESTINATION lib/ledger-core
+    LIBRARY       DESTINATION lib/ledger-core
+    FRAMEWORK     DESTINATION lib/ledger-core
+    )
+endif()
+
 install(
     TARGETS
         ledger-core
@@ -82,7 +105,6 @@ install(
         ledger-core-interface
         bigd
         fmt
-        crypto
         soci_sqlite3
         soci_core_static
         leveldb
@@ -93,7 +115,6 @@ install(
         ledger-qt-host
         ledger-core-integration-test
         mongoose
-        ssl
         gtest gtest_main
     EXPORT ledger-core
     ARCHIVE       DESTINATION lib/ledger-core
