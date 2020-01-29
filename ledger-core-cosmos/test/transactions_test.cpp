@@ -253,7 +253,8 @@ TEST(CosmosTransaction, EncodeToJSON) {
    EXPECT_EQ(sendMessage.amount.front().amount, "1000000");
    EXPECT_EQ(sendMessage.amount.front().denom, "uatom");
 
-   EXPECT_EQ(tx->serialize(), strTx);
+   EXPECT_EQ(tx->serialize(), strTx) << "The expected value for this test has not been "
+       "re-validated for cosmoshub-3 (currently fails because value amount is not an array)";
 }
 
 TEST(CosmosTransaction, ParseSignedRawMsgSendTransaction) {
