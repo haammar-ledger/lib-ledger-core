@@ -106,10 +106,10 @@ namespace ledger {
             template <class T>
             void parseAccount(const T& accountNode,
                     cosmos::Account& account) {
-                const auto& node = accountNode["value"].GetObject();
-                account.accountNumber = node["account_number"].GetString();
-                account.sequence = node["sequence"].GetString();
-                account.address = node["address"].GetString();
+                const auto& node = accountNode[cosmos::constants::kValue].GetObject();
+                account.accountNumber = node[cosmos::constants::kAccountNumber].GetString();
+                account.sequence = node[cosmos::constants::kSequence].GetString();
+                account.address = node[cosmos::constants::kAddress].GetString();
                 account.type = accountNode["type"].GetString();
                 const auto& balances = node["coins"].GetArray();
                 parseCoinVector(balances, account.balances);
