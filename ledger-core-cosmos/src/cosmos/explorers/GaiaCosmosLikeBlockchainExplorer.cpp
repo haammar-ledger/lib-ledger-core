@@ -75,7 +75,8 @@ namespace ledger {
             return _http->GET(fmt::format("/auth/accounts/{}", account)).json(true).mapPtr<cosmos::Account>(getContext(), [=] (const HttpRequest::JsonResult& response) {
                 auto result = std::make_shared<cosmos::Account>();
                 const auto& document = std::get<1>(response)->GetObject();
-                rpcs_parsers::parseAccount(document, *result);
+                // TODO : raise a clean exception when document has no "result" member
+                rpcs_parsers::parseAccount(document["result"], *result);
                 return result;
             });
         }
@@ -96,10 +97,13 @@ namespace ledger {
                                                                                               int page, int limit) {
             return _http->GET(fmt::format("/txs?{}{}&page={}&limit={}", filter, address, page, limit)).json(true).map<cosmos::TransactionList>(getContext(), [=] (const HttpRequest::JsonResult& response) {
                 cosmos::TransactionList result;
-                const auto& document = std::get<1>(response)->GetArray();
-                for (const auto& node : document) {
+                const auto& document = std::get<1>(response)->GetObject();
+                // TODO : raise a clean exception when document has no "txs" member
+                const auto& transactions = document["txs"].GetArray();
+                for (const auto& node : transactions) {
                     auto tx = std::make_shared<cosmos::Transaction>();
-                    rpcs_parsers::parseTransaction(node, *tx);
+                    // TODO : raise a clean exception when document has no "result" member
+                    rpcs_parsers::parseTransaction(node["result"], *tx);
                     result.emplace_back(tx);
                 }
                 return result;
