@@ -82,13 +82,16 @@ namespace ledger {
             template <class T>
             void parseBlock(const T& node, const std::string& currencyName, Block& out) {
                 out.currencyName = currencyName;
-                out.hash = node["block_meta"].GetObject()["block_id"].GetObject()["hash"].GetString();
-                out.height = BigInt::fromString(node["block_meta"].GetObject()["header"].GetObject()["height"].GetString()).toUint64();
-                out.time = DateUtils::fromJSON(node["block_meta"].GetObject()["header"].GetObject()["time"].GetString());
+                out.hash = node[kBlockMeta].GetObject()[kBlockId].GetObject()[kHash].GetString();
+                out.height = BigInt::fromString(node[kBlockMeta].GetObject()[kHeader].GetObject()[kHeight].GetString()).toUint64();
+                out.time = DateUtils::fromJSON(node[kBlockMeta].GetObject()[kHeader].GetObject()[kTime].GetString());
             }
 
             template <typename T>
             void parseProposalContent(const T& node, cosmos::ProposalContent& out) {
+                assert((node.HasMember(kType)));
+                assert((node.HasMember(kDescription)));
+                assert((node.HasMember(kTitle)));
                 out.type = node[kType].GetString();
                 out.description = node[kDescription].GetString();
                 out.title = node[kTitle].GetString();
@@ -96,9 +99,11 @@ namespace ledger {
 
             template <typename T>
             void parseFee(const T& node, cosmos::Fee& out) {
-                out.gas = BigInt::fromString(node["gas"].GetString());
-                if (node["amount"].IsArray()) {
-                    const auto& amountArray = node["amount"].GetArray();
+                assert((node.HasMember(kGas)));
+                assert((node.HasMember(kAmount)));
+                out.gas = BigInt::fromString(node[kGas].GetString());
+                if (node[kAmount].IsArray()) {
+                    const auto& amountArray = node[kAmount].GetArray();
                     out.amount.assign((std::size_t) amountArray.Capacity(), cosmos::Coin());
                     auto index = 0;
                     for (const auto& aNode : amountArray) {
@@ -131,6 +136,8 @@ namespace ledger {
             void parseMsgSend(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgSend msg;
 
+                assert((n.HasMember(kFromAddress)));
+                assert((n.HasMember(kToAddress)));
                 msg.fromAddress = n[kFromAddress].GetString();
                 msg.toAddress = n[kToAddress].GetString();
                 parseCoinVector(n[kAmount].GetArray(), msg.amount);
@@ -141,6 +148,8 @@ namespace ledger {
             void parseMsgDelegate(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgDelegate msg;
 
+                assert((n.HasMember(kDelegatorAddress)));
+                assert((n.HasMember(kValidatorAddress)));
                 msg.delegatorAddress = n[kDelegatorAddress].GetString();
                 msg.validatorAddress = n[kValidatorAddress].GetString();
                 parseCoin(n[kAmount].GetObject(), msg.amount);
@@ -267,12 +276,12 @@ namespace ledger {
                     transaction.memo = vNode[kMemo].GetString();
                 }
 
-                assert((vNode.HasMember(kSingleMessage)));
-                if (vNode[kSingleMessage].IsArray()) {
-                    const auto& msgArray = vNode[kSingleMessage].GetArray();
+                assert((vNode.HasMember(kMessage)));
+                if (vNode[kMessage].IsArray()) {
+                    const auto& msgArray = vNode[kMessage].GetArray();
                     transaction.messages.assign((std::size_t) msgArray.Capacity(), cosmos::Message());
                     auto index = 0;
-                    for (const auto &mNode : vNode[kSingleMessage].GetArray()) {
+                    for (const auto &mNode : vNode[kMessage].GetArray()) {
                         parseMessage(mNode, transaction.messages[index]);
                     }
                 }
