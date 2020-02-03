@@ -74,7 +74,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
 
     auto account = ::wait(explorer->getAccount(DEFAULT_ADDRESS));
     ASSERT_EQ(account->address, DEFAULT_ADDRESS);
-    ASSERT_EQ(account->accountNumber, "1000");
+    ASSERT_EQ(account->accountNumber, "12850");
 
 }
 
