@@ -226,7 +226,6 @@ namespace ledger {
             vString.SetString(_memo.c_str(), static_cast<rapidjson::SizeType>(_memo.length()), allocator);
             document.AddMember(kMemo, vString, allocator);
 
-            //cosmos-sdk/MsgSend
             Value msgArray(kArrayType);
             for (auto msg: _messages) {
                 msgArray.PushBack(std::dynamic_pointer_cast<CosmosLikeMessage>(msg)->toJson(allocator), allocator);

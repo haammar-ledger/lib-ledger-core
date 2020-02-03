@@ -48,6 +48,7 @@
 
 namespace ledger {
     namespace core {
+        using namespace cosmos::constants;
         namespace rpcs_parsers {
 
             template <class T>
@@ -62,10 +63,10 @@ namespace ledger {
 
             template <class T>
             void parseCoin(const T& node, cosmos::Coin& out) {
-                assert((node.HasMember(cosmos::constants::kAmount)));
-                assert((node.HasMember(cosmos::constants::kDenom)));
-                out.amount = node[cosmos::constants::kAmount].GetString();
-                out.denom = node[cosmos::constants::kDenom].GetString();
+                assert((node.HasMember(kAmount)));
+                assert((node.HasMember(kDenom)));
+                out.amount = node[kAmount].GetString();
+                out.denom = node[kDenom].GetString();
             }
 
             template <typename T>
@@ -88,9 +89,9 @@ namespace ledger {
 
             template <typename T>
             void parseProposalContent(const T& node, cosmos::ProposalContent& out) {
-                out.type = node[cosmos::constants::kType].GetString();
-                out.description = node[cosmos::constants::kDescription].GetString();
-                out.title = node[cosmos::constants::kTitle].GetString();
+                out.type = node[kType].GetString();
+                out.description = node[kDescription].GetString();
+                out.title = node[kTitle].GetString();
             }
 
             template <typename T>
@@ -110,19 +111,19 @@ namespace ledger {
             template <class T>
             void parseAccount(const T& accountNode,
                     cosmos::Account& account) {
-                assert((accountNode.HasMember(cosmos::constants::kValue)));
-                assert((accountNode.HasMember(cosmos::constants::kType)));
-                const auto& node = accountNode[cosmos::constants::kValue].GetObject();
-                account.type = accountNode[cosmos::constants::kType].GetString();
+                assert((accountNode.HasMember(kValue)));
+                assert((accountNode.HasMember(kType)));
+                const auto& node = accountNode[kValue].GetObject();
+                account.type = accountNode[kType].GetString();
 
-                assert((node.HasMember(cosmos::constants::kAccountNumber)));
-                assert((node.HasMember(cosmos::constants::kSequence)));
-                assert((node.HasMember(cosmos::constants::kAddress)));
-                assert((node.HasMember(cosmos::constants::kCoins)));
-                account.accountNumber = node[cosmos::constants::kAccountNumber].GetString();
-                account.sequence = node[cosmos::constants::kSequence].GetString();
-                account.address = node[cosmos::constants::kAddress].GetString();
-                const auto& balances = node[cosmos::constants::kCoins].GetArray();
+                assert((node.HasMember(kAccountNumber)));
+                assert((node.HasMember(kSequence)));
+                assert((node.HasMember(kAddress)));
+                assert((node.HasMember(kCoins)));
+                account.accountNumber = node[kAccountNumber].GetString();
+                account.sequence = node[kSequence].GetString();
+                account.address = node[kAddress].GetString();
+                const auto& balances = node[kCoins].GetArray();
                 parseCoinVector(balances, account.balances);
             }
 
@@ -130,9 +131,9 @@ namespace ledger {
             void parseMsgSend(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgSend msg;
 
-                msg.fromAddress = n[cosmos::constants::kFromAddress].GetString();
-                msg.toAddress = n[cosmos::constants::kToAddress].GetString();
-                parseCoinVector(n[cosmos::constants::kAmount].GetArray(), msg.amount);
+                msg.fromAddress = n[kFromAddress].GetString();
+                msg.toAddress = n[kToAddress].GetString();
+                parseCoinVector(n[kAmount].GetArray(), msg.amount);
                 out = msg;
             }
 
@@ -140,9 +141,9 @@ namespace ledger {
             void parseMsgDelegate(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgDelegate msg;
 
-                msg.delegatorAddress = n[cosmos::constants::kDelegatorAddress].GetString();
-                msg.validatorAddress = n[cosmos::constants::kValidatorAddress].GetString();
-                parseCoin(n[cosmos::constants::kAmount].GetObject(), msg.amount);
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                parseCoin(n[kAmount].GetObject(), msg.amount);
                 out = msg;
             }
 
@@ -150,10 +151,10 @@ namespace ledger {
             void parseMsgRedelegate(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgRedelegate msg;
 
-                msg.delegatorAddress = n[cosmos::constants::kDelegatorAddress].GetString();
-                msg.validatorSourceAddress = n[cosmos::constants::kValidatorSrcAddress].GetString();
-                msg.validatorDestinationAddress = n[cosmos::constants::kValidatorDstAddress].GetString();
-                parseCoin(n[cosmos::constants::kAmount].GetObject(), msg.amount);
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.validatorSourceAddress = n[kValidatorSrcAddress].GetString();
+                msg.validatorDestinationAddress = n[kValidatorDstAddress].GetString();
+                parseCoin(n[kAmount].GetObject(), msg.amount);
                 out = msg;
             }
 
@@ -161,9 +162,9 @@ namespace ledger {
             void parseMsgUndelegate(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgUndelegate msg;
 
-                msg.delegatorAddress = n[cosmos::constants::kDelegatorAddress].GetString();
-                msg.validatorAddress = n[cosmos::constants::kValidatorAddress].GetString();
-                parseCoin(n[cosmos::constants::kAmount].GetObject(), msg.amount);
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                parseCoin(n[kAmount].GetObject(), msg.amount);
                 out = msg;
             }
 
@@ -171,9 +172,9 @@ namespace ledger {
             void parseMsgSubmitProposal(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgSubmitProposal msg;
 
-                msg.proposer = n[cosmos::constants::kProposer].GetString();
-                parseProposalContent(n[cosmos::constants::kContent].GetObject(), msg.content);
-                parseCoinVector(n[cosmos::constants::kInitialDeposit].GetArray(), msg.initialDeposit);
+                msg.proposer = n[kProposer].GetString();
+                parseProposalContent(n[kContent].GetObject(), msg.content);
+                parseCoinVector(n[kInitialDeposit].GetArray(), msg.initialDeposit);
                 out = msg;
             }
 
@@ -181,9 +182,9 @@ namespace ledger {
             void parseMsgVote(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgVote msg;
 
-                msg.voter = n[cosmos::constants::kVoter].GetString();
-                msg.proposalId = n[cosmos::constants::kProposalId].GetString();
-                const auto& option = n[cosmos::constants::kOption].GetString();
+                msg.voter = n[kVoter].GetString();
+                msg.proposalId = n[kProposalId].GetString();
+                const auto& option = n[kOption].GetString();
                 if (option == "Yes") {
                     msg.option = cosmos::VoteOption::YES;
                 } else if (option == "No") {
@@ -200,9 +201,9 @@ namespace ledger {
             void parseMsgDeposit(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgDeposit msg;
 
-                msg.depositor = n[cosmos::constants::kDepositor].GetString();
-                msg.proposalId = n[cosmos::constants::kProposalId].GetString();
-                parseCoinVector(n[cosmos::constants::kAmount].GetArray(), msg.amount);
+                msg.depositor = n[kDepositor].GetString();
+                msg.proposalId = n[kProposalId].GetString();
+                parseCoinVector(n[kAmount].GetArray(), msg.amount);
                 out = msg;
             }
 
@@ -210,15 +211,15 @@ namespace ledger {
             void parseMsgWithdrawDelegationReward(const T& n, cosmos::MessageContent &out) {
                 cosmos::MsgWithdrawDelegationReward msg;
 
-                msg.delegatorAddress = n[cosmos::constants::kDelegatorAddress].GetString();
-                msg.validatorAddress = n[cosmos::constants::kValidatorAddress].GetString();
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.validatorAddress = n[kValidatorAddress].GetString();
                 out = msg;
             }
 
             template <typename T>
             void parseMessage(const T& messageNode, cosmos::Message& out) {
-                out.type = messageNode["type"].GetString();
-                const auto& contentNode = messageNode["value"].GetObject();
+                out.type = messageNode[kType].GetString();
+                const auto& contentNode = messageNode[kValue].GetObject();
                 COSMOS_PARSE_MSG_CONTENT(MsgSend)
                 COSMOS_PARSE_MSG_CONTENT(MsgDelegate)
                 COSMOS_PARSE_MSG_CONTENT(MsgRedelegate)
@@ -232,51 +233,51 @@ namespace ledger {
             template <class T>
             void parseTransaction(const T& node,
                     cosmos::Transaction& transaction) {
-                assert((node.HasMember(cosmos::constants::kTxHash)));
-                transaction.hash = node[cosmos::constants::kTxHash].GetString();
-                if (node.HasMember(cosmos::constants::kHeight)) {
+                assert((node.HasMember(kTxHash)));
+                transaction.hash = node[kTxHash].GetString();
+                if (node.HasMember(kHeight)) {
                     Block block;
-                    block.height = BigInt::fromString(node[cosmos::constants::kHeight].GetString()).toUint64();
+                    block.height = BigInt::fromString(node[kHeight].GetString()).toUint64();
                     transaction.block = block;
                 }
-                if (node.HasMember(cosmos::constants::kGasUsed)) {
-                    transaction.gasUsed = Option<BigInt>(BigInt::fromString(node[cosmos::constants::kGasUsed].GetString()));
+                if (node.HasMember(kGasUsed)) {
+                    transaction.gasUsed = Option<BigInt>(BigInt::fromString(node[kGasUsed].GetString()));
                 }
 
-                assert((node.HasMember(cosmos::constants::kLogs)));
-				for (const auto& lNode : node[cosmos::constants::kLogs].GetArray()) {
+                assert((node.HasMember(kLogs)));
+                for (const auto& lNode : node[kLogs].GetArray()) {
                     cosmos::MessageLog log;
-                    assert((lNode.HasMember(cosmos::constants::kLog)));
-                    assert((lNode.HasMember(cosmos::constants::kSuccess)));
-                    assert((lNode.HasMember(cosmos::constants::kMsgIndex)));
-                    log.success = lNode[cosmos::constants::kSuccess].GetBool();
-                    log.log = lNode[cosmos::constants::kLog].GetString();
-                    log.messageIndex = BigInt::fromString(lNode[cosmos::constants::kMsgIndex].GetString()).toInt();
+                    assert((lNode.HasMember(kLog)));
+                    assert((lNode.HasMember(kSuccess)));
+                    assert((lNode.HasMember(kMsgIndex)));
+                    log.success = lNode[kSuccess].GetBool();
+                    log.log = lNode[kLog].GetString();
+                    log.messageIndex = BigInt::fromString(lNode[kMsgIndex].GetString()).toInt();
                     transaction.logs.emplace_back(log);
                 }
-                assert((node.HasMember(cosmos::constants::kTimestamp)));
-                transaction.timestamp = DateUtils::fromJSON(node[cosmos::constants::kTimestamp].GetString());
+                assert((node.HasMember(kTimestamp)));
+                transaction.timestamp = DateUtils::fromJSON(node[kTimestamp].GetString());
 
-                assert((node.HasMember(cosmos::constants::kTx)));
-                const auto& tNode = node[cosmos::constants::kTx].GetObject();
-                assert((tNode.HasMember(cosmos::constants::kValue)));
-                const auto& vNode = tNode[cosmos::constants::kValue].GetObject();
+                assert((node.HasMember(kTx)));
+                const auto& tNode = node[kTx].GetObject();
+                assert((tNode.HasMember(kValue)));
+                const auto& vNode = tNode[kValue].GetObject();
 
-                if (vNode.HasMember(cosmos::constants::kMemo)) {
-                    transaction.memo = vNode[cosmos::constants::kMemo].GetString();
+                if (vNode.HasMember(kMemo)) {
+                    transaction.memo = vNode[kMemo].GetString();
                 }
 
-                assert((vNode.HasMember(cosmos::constants::kSingleMessage)));
-                if (vNode[cosmos::constants::kSingleMessage].IsArray()) {
-                    const auto& msgArray = vNode[cosmos::constants::kSingleMessage].GetArray();
+                assert((vNode.HasMember(kSingleMessage)));
+                if (vNode[kSingleMessage].IsArray()) {
+                    const auto& msgArray = vNode[kSingleMessage].GetArray();
                     transaction.messages.assign((std::size_t) msgArray.Capacity(), cosmos::Message());
                     auto index = 0;
-                    for (const auto &mNode : vNode[cosmos::constants::kSingleMessage].GetArray()) {
+                    for (const auto &mNode : vNode[kSingleMessage].GetArray()) {
                         parseMessage(mNode, transaction.messages[index]);
                     }
                 }
-                assert((vNode.HasMember(cosmos::constants::kFee)));
-                parseFee(vNode[cosmos::constants::kFee].GetObject(), transaction.fee);
+                assert((vNode.HasMember(kFee)));
+                parseFee(vNode[kFee].GetObject(), transaction.fee);
             }
 
         }
