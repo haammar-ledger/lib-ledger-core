@@ -79,7 +79,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
 }
 
 
-TEST_F(CosmosLikeWalletSynchronization, GetTransactionsWithExplorer) {
+TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer) {
     auto context = this->dispatcher->getSerialExecutionContext("context");
     auto services = this->newDefaultServices();
 
@@ -91,29 +91,64 @@ TEST_F(CosmosLikeWalletSynchronization, GetTransactionsWithExplorer) {
     );
     CosmosLikeBlockchainExplorer::TransactionFilter filter {"recipient="};
     auto transactions = ::wait(explorer->getTransactions(DEFAULT_ADDRESS, filter, 1, 10));
+    ASSERT_TRUE(transactions.size() >= 1) << "At least 1 transaction must be fetched looking at the REST response manually.";
     bool foundTx = false;
     for (const auto& tx : transactions) {
-        if (tx->hash == "A1E44688B429AF17322EC33CE62876FA415EFC8D9244A2F51454BD025F416594") {
+        if (tx->hash == "0DBFC4E8E9E5A64C2C9B5EAAAA0422D99A61CFC5354E15002A061E91200DC2D6") {
             foundTx = true;
-            ASSERT_EQ(tx->block->height, 168801);
+            ASSERT_EQ(tx->block->height, 237691);
             ASSERT_EQ(tx->logs.size(), 1);
             ASSERT_TRUE(tx->logs[0].success);
-            ASSERT_EQ(tx->messages[0].type, "cosmos-sdk/MsgSend");
-            const cosmos::MsgSend& msg = boost::get<cosmos::MsgSend>(tx->messages[0].content);
-            ASSERT_EQ(msg.fromAddress, "cosmos155svs6sgxe55rnvs6ghprtqu0mh69kehrn0dqr");
-            ASSERT_EQ(msg.toAddress, "cosmos1sd4tl9aljmmezzudugs7zlaya7pg2895tyn79r");
-            ASSERT_EQ(msg.amount[0].amount, "900000");
-            ASSERT_EQ(msg.amount[0].denom, "uatom");
-            ASSERT_EQ(tx->fee.gas.toInt64(), 30000);
+            ASSERT_EQ(tx->messages[0].type, "cosmos-sdk/MsgWithdrawDelegationReward");
+            const cosmos::MsgWithdrawDelegationReward& msg = boost::get<cosmos::MsgWithdrawDelegationReward>(tx->messages[0].content);
+            ASSERT_EQ(msg.delegatorAddress, DEFAULT_ADDRESS);
+            ASSERT_EQ(msg.validatorAddress, "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs");
+            ASSERT_EQ(tx->fee.gas.toInt64(), 200000);
             ASSERT_EQ(tx->fee.amount[0].denom, "uatom");
-            ASSERT_EQ(tx->fee.amount[0].amount, "30");
-            ASSERT_EQ(tx->gasUsed, Option<std::string>("26826"));
+            ASSERT_EQ(tx->fee.amount[0].amount, "5000");
+            ASSERT_EQ(tx->gasUsed, Option<std::string>("104477"));
             break;
         }
     }
-    ASSERT_TRUE(foundTx);
-    ASSERT_TRUE(transactions.size() >= 3);
+    ASSERT_TRUE(foundTx) << "The transaction we need to test has not been found in the REST request.";
 }
+
+// TODO : GetSendWithExplorer
+// TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
+//     auto context = this->dispatcher->getSerialExecutionContext("context");
+//     auto services = this->newDefaultServices();
+
+//     auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
+//             services->getDispatcher()->getSerialExecutionContext("explorer"),
+//             services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+//             COSMOS,
+//             std::make_shared<DynamicObject>()
+//     );
+//     CosmosLikeBlockchainExplorer::TransactionFilter filter {"recipient="};
+//     auto transactions = ::wait(explorer->getTransactions(DEFAULT_ADDRESS, filter, 1, 10));
+//     bool foundTx = false;
+//     for (const auto& tx : transactions) {
+//         if (tx->hash == "0DBFC4E8E9E5A64C2C9B5EAAAA0422D99A61CFC5354E15002A061E91200DC2D6") {
+//             foundTx = true;
+//             ASSERT_EQ(tx->block->height, 237691);
+//             ASSERT_EQ(tx->logs.size(), 1);
+//             ASSERT_TRUE(tx->logs[0].success);
+//             ASSERT_EQ(tx->messages[0].type, "cosmos-sdk/MsgWithdrawDelegationReward");
+//             const cosmos::MsgSend& msg = boost::get<cosmos::MsgSend>(tx->messages[0].content);
+//             ASSERT_EQ(msg.fromAddress, DEFAULT_ADDRESS);
+//             ASSERT_EQ(msg.toAddress, "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs");
+//             ASSERT_EQ(msg.amount[0].amount, "900000");
+//             ASSERT_EQ(msg.amount[0].denom, "uatom");
+//             ASSERT_EQ(tx->fee.gas.toInt64(), 200000);
+//             ASSERT_EQ(tx->fee.amount[0].denom, "uatom");
+//             ASSERT_EQ(tx->fee.amount[0].amount, "5000");
+//             ASSERT_EQ(tx->gasUsed, Option<std::string>("104477"));
+//             break;
+//         }
+//     }
+//     ASSERT_TRUE(foundTx);
+//     ASSERT_TRUE(transactions.size() >= 3);
+// }
 
 
 TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
