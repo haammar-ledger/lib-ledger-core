@@ -109,5 +109,17 @@ namespace ledger {
                 return result;
             });
         }
+
+        Future<std::shared_ptr<cosmos::Transaction>>
+        GaiaCosmosLikeBlockchainExplorer::getTransactionByHash(const std::string &hash) {
+            return _http->GET(fmt::format("/txs/{}", hash))
+                .json(true)
+                .mapPtr<cosmos::Transaction>(getContext(), [=] (const HttpRequest::JsonResult& response) {
+                    const auto& document = std::get<1>(response)->GetObject();
+                    auto tx = std::make_shared<cosmos::Transaction>();
+                    rpcs_parsers::parseTransaction(document, *tx);
+                    return tx;
+                });
+        }
     }
 }

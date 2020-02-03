@@ -55,6 +55,8 @@ namespace ledger {
             FuturePtr<ledger::core::Block> getCurrentBlock() override;
             Future<TransactionList>
             getTransactions(const std::string &address, TransactionFilter &filter, int page, int limit) override;
+            Future<std::shared_ptr<cosmos::Transaction>>
+            getTransactionByHash(const std::string &hash);
 
         private:
             std::shared_ptr<HttpClient> _http;

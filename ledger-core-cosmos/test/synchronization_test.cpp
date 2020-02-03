@@ -113,43 +113,75 @@ TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer)
     ASSERT_TRUE(foundTx) << "The transaction we need to test has not been found in the REST request.";
 }
 
-// TODO : GetSendWithExplorer
-// TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
-//     auto context = this->dispatcher->getSerialExecutionContext("context");
-//     auto services = this->newDefaultServices();
+TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
+    auto context = this->dispatcher->getSerialExecutionContext("context");
+    auto services = this->newDefaultServices();
+    auto tx_hash = "F4B8CB550B498F744CCC420907B80D0B068250972F975354A873CD1CCF9B000A";
+    auto receiver = "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u";
+    // Note : the sender of the message is also the sender of the funds in this transaction.
+    auto sender = "cosmos15v50ymp6n5dn73erkqtmq0u8adpl8d3ujv2e74";
 
-//     auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
-//             services->getDispatcher()->getSerialExecutionContext("explorer"),
-//             services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
-//             COSMOS,
-//             std::make_shared<DynamicObject>()
-//     );
-//     CosmosLikeBlockchainExplorer::TransactionFilter filter {"recipient="};
-//     auto transactions = ::wait(explorer->getTransactions(DEFAULT_ADDRESS, filter, 1, 10));
-//     bool foundTx = false;
-//     for (const auto& tx : transactions) {
-//         if (tx->hash == "0DBFC4E8E9E5A64C2C9B5EAAAA0422D99A61CFC5354E15002A061E91200DC2D6") {
-//             foundTx = true;
-//             ASSERT_EQ(tx->block->height, 237691);
-//             ASSERT_EQ(tx->logs.size(), 1);
-//             ASSERT_TRUE(tx->logs[0].success);
-//             ASSERT_EQ(tx->messages[0].type, "cosmos-sdk/MsgWithdrawDelegationReward");
-//             const cosmos::MsgSend& msg = boost::get<cosmos::MsgSend>(tx->messages[0].content);
-//             ASSERT_EQ(msg.fromAddress, DEFAULT_ADDRESS);
-//             ASSERT_EQ(msg.toAddress, "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs");
-//             ASSERT_EQ(msg.amount[0].amount, "900000");
-//             ASSERT_EQ(msg.amount[0].denom, "uatom");
-//             ASSERT_EQ(tx->fee.gas.toInt64(), 200000);
-//             ASSERT_EQ(tx->fee.amount[0].denom, "uatom");
-//             ASSERT_EQ(tx->fee.amount[0].amount, "5000");
-//             ASSERT_EQ(tx->gasUsed, Option<std::string>("104477"));
-//             break;
-//         }
-//     }
-//     ASSERT_TRUE(foundTx);
-//     ASSERT_TRUE(transactions.size() >= 3);
-// }
+    auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
+            services->getDispatcher()->getSerialExecutionContext("explorer"),
+            services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+            COSMOS,
+            std::make_shared<DynamicObject>()
+    );
+    auto tx = ::wait(explorer->getTransactionByHash(tx_hash));
+    ASSERT_EQ(tx->hash, tx_hash);
+    EXPECT_EQ(tx->block->height, 453223);
+    EXPECT_EQ(tx->logs.size(), 1);
+    EXPECT_TRUE(tx->logs[0].success);
+    EXPECT_EQ(tx->messages[0].type, "cosmos-sdk/MsgSend");
+    const cosmos::MsgSend& msg = boost::get<cosmos::MsgSend>(tx->messages[0].content);
+    EXPECT_EQ(msg.fromAddress, sender);
+    EXPECT_EQ(msg.toAddress, receiver);
+    EXPECT_EQ(msg.amount[0].amount, "270208360");
+    EXPECT_EQ(msg.amount[0].denom, "uatom");
+    EXPECT_EQ(tx->fee.gas.toInt64(), 200000);
+    EXPECT_EQ(tx->fee.amount[0].denom, "uatom");
+    EXPECT_EQ(tx->fee.amount[0].amount, "30");
+    EXPECT_EQ(tx->gasUsed, Option<std::string>("41014"));
+}
 
+
+TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
+    auto context = this->dispatcher->getSerialExecutionContext("context");
+    auto services = this->newDefaultServices();
+    auto delegator = "cosmos1ytpz9gt59hssp5m5sknuzrwse88glqhgcrypxj";
+    auto validator = "cosmosvaloper1ey69r37gfxvxg62sh4r0ktpuc46pzjrm873ae8";
+
+    auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
+            services->getDispatcher()->getSerialExecutionContext("explorer"),
+            services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+            COSMOS,
+            std::make_shared<DynamicObject>()
+    );
+    CosmosLikeBlockchainExplorer::TransactionFilter filter {"message.action=delegate&message.sender="};
+    auto transactions = ::wait(explorer->getTransactions(delegator, filter, 1, 10));
+    ASSERT_TRUE(transactions.size() >= 1);
+    bool foundTx = false;
+    for (const auto& tx : transactions) {
+        if (tx->hash == "BD77DF6A76066AA79DAA7705B9F0DC6B66B7E6FBB3D1FD28A07D6A0EED7AE6B5") {
+            foundTx = true;
+            EXPECT_EQ(tx->block->height, 660081);
+            EXPECT_EQ(tx->logs.size(), 1);
+            EXPECT_TRUE(tx->logs[0].success);
+            EXPECT_EQ(tx->messages[0].type, "cosmos-sdk/MsgDelegate");
+            const cosmos::MsgDelegate& msg = boost::get<cosmos::MsgDelegate>(tx->messages[0].content);
+            EXPECT_EQ(msg.delegatorAddress, delegator);
+            EXPECT_EQ(msg.validatorAddress, validator);
+            EXPECT_EQ(msg.amount.amount, "25257508");
+            EXPECT_EQ(msg.amount.denom, "uatom");
+            EXPECT_EQ(tx->fee.gas.toInt64(), 300000);
+            EXPECT_EQ(tx->fee.amount[0].denom, "uatom");
+            EXPECT_EQ(tx->fee.amount[0].amount, "2500");
+            EXPECT_EQ(tx->gasUsed, Option<std::string>("104477"));
+            break;
+        }
+    }
+    ASSERT_TRUE(foundTx);
+}
 
 TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
     std::string address = "cosmos16xkkyj97z7r83sx45xwk9uwq0mj0zszlf6c6mq";
