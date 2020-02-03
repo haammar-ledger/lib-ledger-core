@@ -181,49 +181,49 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
                                  "44'/<coin_type>'/<account>'/<node>/<address>");
         auto wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
                 wait(walletStore->createWallet(
-                             "e847815f-488a-4301-b67c-378a5e9c8a61", "cosmos", configuration)));
+                             "e847815f-488a-4301-b67c-378a5e9c8a61", "atom", configuration)));
         std::set<std::string> emittedOperations;
         {
-			auto accountInfo = wait(wallet->getNextAccountCreationInfo());
-			EXPECT_EQ(accountInfo.index, 0);
-			accountInfo.publicKeys.push_back(hex::toByteArray(DEFAULT_HEX_PUB_KEY));
+            auto accountInfo = wait(wallet->getNextAccountCreationInfo());
+            EXPECT_EQ(accountInfo.index, 0);
+            accountInfo.publicKeys.push_back(hex::toByteArray(DEFAULT_HEX_PUB_KEY));
                         auto account = ledger::testing::cosmos::createCosmosLikeAccount(
                                 wallet, accountInfo.index, accountInfo);
 
-			auto receiver = make_receiver([&](const std::shared_ptr<api::Event> &event) {
-			    if (event->getCode() == api::EventCode::NEW_OPERATION) {
-					auto uid = event->getPayload()->getString(api::Account::EV_NEW_OP_UID).value();
-					EXPECT_EQ(emittedOperations.find(uid), emittedOperations.end());
-				}
-			});
-			auto address = wait(account->getFreshPublicAddresses())[0]->toString();
-			EXPECT_EQ(address, DEFAULT_ADDRESS);
-			services->getEventBus()->subscribe(dispatcher->getMainExecutionContext(), receiver);
+            auto receiver = make_receiver([&](const std::shared_ptr<api::Event> &event) {
+                if (event->getCode() == api::EventCode::NEW_OPERATION) {
+                    auto uid = event->getPayload()->getString(api::Account::EV_NEW_OP_UID).value();
+                    EXPECT_EQ(emittedOperations.find(uid), emittedOperations.end());
+                }
+            });
+            auto address = wait(account->getFreshPublicAddresses())[0]->toString();
+            EXPECT_EQ(address, DEFAULT_ADDRESS);
+            services->getEventBus()->subscribe(dispatcher->getMainExecutionContext(), receiver);
 
-			receiver.reset();
-			receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
-			    fmt::print("Received event {}\n", api::to_string(event->getCode()));
-				if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED)
-					return;
-				EXPECT_NE(event->getCode(), api::EventCode::SYNCHRONIZATION_FAILED);
-				EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
+            receiver.reset();
+            receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
+                fmt::print("Received event {}\n", api::to_string(event->getCode()));
+                if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED)
+                    return;
+                EXPECT_NE(event->getCode(), api::EventCode::SYNCHRONIZATION_FAILED);
+                EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
 
-				auto balance = wait(account->getBalance());
-				std::cout << "Balance: " << balance->toString() << std::endl;
-				auto txBuilder = std::dynamic_pointer_cast<CosmosLikeTransactionBuilder>(account->buildTransaction());
-				dispatcher->stop();
-			});
+                auto balance = wait(account->getBalance());
+                std::cout << "Balance: " << balance->toString() << std::endl;
+                auto txBuilder = std::dynamic_pointer_cast<CosmosLikeTransactionBuilder>(account->buildTransaction());
+                dispatcher->stop();
+            });
 
-			auto restoreKey = account->getRestoreKey();
-			account->synchronize()->subscribe(
-				dispatcher->getMainExecutionContext(), receiver);
+            auto restoreKey = account->getRestoreKey();
+            account->synchronize()->subscribe(
+                dispatcher->getMainExecutionContext(), receiver);
 
-			dispatcher->waitUntilStopped();
+            dispatcher->waitUntilStopped();
 
-			auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
-			std::cout << "Ops: " << ops.size() << std::endl;
-			auto block = wait(account->getLastBlock());
-			auto blockHash = block.blockHash;
+            auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
+            std::cout << "Ops: " << ops.size() << std::endl;
+            auto block = wait(account->getLastBlock());
+            auto blockHash = block.blockHash;
         }
     }
 }
