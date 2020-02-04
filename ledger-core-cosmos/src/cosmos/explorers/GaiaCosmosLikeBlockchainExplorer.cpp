@@ -35,15 +35,49 @@
 
 #include <cosmos/explorers/RpcsParsers.hpp>
 
+#include <numeric>
+
 namespace ledger {
     namespace core {
 
         using MsgType = cosmos::MsgType;
 
+        static CosmosLikeBlockchainExplorer::TransactionFilter eventAttribute(
+            const char eventType[], const char attributeKey[]) {
+            return fmt::format("{}.{}", eventType, attributeKey);
+        }
+
+        CosmosLikeBlockchainExplorer::TransactionFilter
+        GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+            const char eventType[], const char attributeKey[], const std::string& value) {
+            return fmt::format("{}={}", eventAttribute(eventType, attributeKey), value);
+        }
+
+        CosmosLikeBlockchainExplorer::TransactionFilter
+        GaiaCosmosLikeBlockchainExplorer::fuseFilters(
+            std::initializer_list<std::experimental::string_view> filters) {
+            std::string filter;
+            return std::accumulate(filters.begin(), filters.end(), filter,
+                                   [](std::string acc, std::experimental::string_view val) {
+                                       if (acc.empty()) {
+                                           return std::string(val.data());
+                                       }
+                                       return acc + "&" + val.data();
+                                   });
+        }
+
+        // Address at the end of the filter is...
         static const std::vector<CosmosLikeBlockchainExplorer::TransactionFilter> GAIA_FILTER {
-            "recipient=",
-            "sender=",
-            "delegator="
+            "transfer.recipient=",
+            "message.sender=",
+            // ... the delegator of a MsgDelegate
+            // We're sure that the message.sender of a message.action=delegate is the delegator at least using
+            // this source code
+            // https://github.com/cosmos/cosmos-sdk/blob/43137ee893cefbdb2aacd25ef4ec39eacf6ae70c/x/staking/handler.go#L196
+            "message.action=delegate&message.sender=",
+            // ... the target of the delegation in a MsgDelegate
+            // https://github.com/cosmos/cosmos-sdk/blob/43137ee893cefbdb2aacd25ef4ec39eacf6ae70c/x/staking/handler.go#L190
+            "delegate.validator="
         };
 
         GaiaCosmosLikeBlockchainExplorer::GaiaCosmosLikeBlockchainExplorer(
@@ -92,10 +126,9 @@ namespace ledger {
              });
         }
 
-        Future<cosmos::TransactionList> GaiaCosmosLikeBlockchainExplorer::getTransactions(const std::string &address,
-                                                                                          CosmosLikeBlockchainExplorer::TransactionFilter &filter,
+        Future<cosmos::TransactionList> GaiaCosmosLikeBlockchainExplorer::getTransactions(CosmosLikeBlockchainExplorer::TransactionFilter &filter,
                                                                                               int page, int limit) {
-            return _http->GET(fmt::format("/txs?{}{}&page={}&limit={}", filter, address, page, limit)).json(true).map<cosmos::TransactionList>(getContext(), [=] (const HttpRequest::JsonResult& response) {
+            return _http->GET(fmt::format("/txs?{}&page={}&limit={}", filter, page, limit)).json(true).map<cosmos::TransactionList>(getContext(), [=] (const HttpRequest::JsonResult& response) {
                 cosmos::TransactionList result;
                 const auto& document = std::get<1>(response)->GetObject();
                 // TODO : raise a clean exception when document has no "txs" member

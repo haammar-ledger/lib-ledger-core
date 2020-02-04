@@ -55,8 +55,8 @@ namespace ledger {
 
         class CosmosLikeBlockchainExplorer : public ConfigurationMatchable {
         public:
-            typedef ledger::core::Block Block;
-            typedef std::string TransactionFilter;
+            using Block = ledger::core::Block;
+            using TransactionFilter = std::string;
 
             using TransactionList = std::list<std::shared_ptr<cosmos::Transaction>>;
 
@@ -71,7 +71,7 @@ namespace ledger {
             virtual FuturePtr<cosmos::Account> getAccount(const std::string& account) = 0;
             virtual FuturePtr<cosmos::Block> getCurrentBlock() = 0;
 			virtual Future<cosmos::TransactionList> getTransactions(
-			        const std::string& address, TransactionFilter& filter,
+			        TransactionFilter& filter,
 			        int page, int limit) = 0;
             virtual Future<std::shared_ptr<cosmos::Transaction>>
             getTransactionByHash(const std::string &hash) = 0;

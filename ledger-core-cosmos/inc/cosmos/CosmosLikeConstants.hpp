@@ -96,7 +96,15 @@ namespace ledger {
 
                                 // cosmos/cosmos-sdk Event / Attribute types as of
                                 // https://github.com/cosmos/cosmos-sdk/tree/43137ee893cefbdb2aacd25ef4ec39eacf6ae70c
-                                //
+
+                                // Common in all messages
+                                constexpr const char kEventTypeMessage[] = "message";
+
+                                constexpr const char kAttributeKeyAction[] = "action";
+                                constexpr const char kAttributeKeyModule[] = "module";
+                                constexpr const char kAttributeKeySender[] = "sender";
+                                constexpr const char kAttributeKeyAmount[] = "amount";
+
                                 // Staking
                                 constexpr const char kEventTypeCompleteUnbonding[] =
                                     "complete_unbonding";
@@ -171,7 +179,6 @@ namespace ledger {
                                 constexpr const char kEventTypeTransfer[] = "transfer";
 
                                 constexpr const char kAttributeKeyRecipient[] = "recipient";
-                                constexpr const char kAttributeKeySender[] = "sender";
 
                                 constexpr const char kAttributeValueBankCategory[] = "bank";
 

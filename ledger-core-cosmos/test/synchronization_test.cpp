@@ -50,6 +50,7 @@
 #include <cosmos/transaction_builders/CosmosLikeTransactionBuilder.hpp>
 #include <cosmos/CosmosLikeWallet.hpp>
 #include <cosmos/CosmosLikeOperationQuery.hpp>
+#include <cosmos/CosmosLikeConstants.hpp>
 
 using namespace std;
 using namespace ledger::core;
@@ -78,6 +79,30 @@ TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
 
 }
 
+TEST(CosmosLikeBlockchainExplorer, FilterBuilder) {
+    auto filter = GaiaCosmosLikeBlockchainExplorer::fuseFilters(
+        {GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+             cosmos::constants::kEventTypeMessage,
+             cosmos::constants::kAttributeKeyAction,
+             cosmos::constants::kEventTypeDelegate),
+         GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+             cosmos::constants::kEventTypeMessage,
+             cosmos::constants::kAttributeKeySender,
+             "cosmostestaddress")});
+
+    ASSERT_STREQ(filter.c_str(), "message.action=delegate&message.sender=cosmostestaddress" );
+
+    filter = GaiaCosmosLikeBlockchainExplorer::fuseFilters({
+        GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+            cosmos::constants::kEventTypeTransfer,
+            cosmos::constants::kAttributeKeyRecipient,
+            "cosmosvalopertestaddress")});
+
+
+    ASSERT_STREQ(filter.c_str(), "transfer.recipient=cosmosvalopertestaddress");
+}
+
+
 
 TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer) {
     auto context = this->dispatcher->getSerialExecutionContext("context");
@@ -89,8 +114,14 @@ TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer)
             COSMOS,
             std::make_shared<DynamicObject>()
     );
-    CosmosLikeBlockchainExplorer::TransactionFilter filter {"recipient="};
-    auto transactions = ::wait(explorer->getTransactions(DEFAULT_ADDRESS, filter, 1, 10));
+
+    auto filter = GaiaCosmosLikeBlockchainExplorer::fuseFilters({
+        GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+            cosmos::constants::kEventTypeTransfer,
+            cosmos::constants::kAttributeKeyRecipient,
+            DEFAULT_ADDRESS)
+    });
+    auto transactions = ::wait(explorer->getTransactions(filter, 1, 10));
     ASSERT_TRUE(transactions.size() >= 1) << "At least 1 transaction must be fetched looking at the REST response manually.";
     bool foundTx = false;
     for (const auto& tx : transactions) {
@@ -144,7 +175,6 @@ TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
     EXPECT_EQ(tx->gasUsed, Option<std::string>("41014"));
 }
 
-
 TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
     auto context = this->dispatcher->getSerialExecutionContext("context");
     auto services = this->newDefaultServices();
@@ -157,8 +187,16 @@ TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
             COSMOS,
             std::make_shared<DynamicObject>()
     );
-    CosmosLikeBlockchainExplorer::TransactionFilter filter {"message.action=delegate&message.sender="};
-    auto transactions = ::wait(explorer->getTransactions(delegator, filter, 1, 10));
+    auto filter = GaiaCosmosLikeBlockchainExplorer::fuseFilters(
+        {GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+             cosmos::constants::kEventTypeMessage,
+             cosmos::constants::kAttributeKeyAction,
+             cosmos::constants::kEventTypeDelegate),
+         GaiaCosmosLikeBlockchainExplorer::filterWithAttribute(
+             cosmos::constants::kEventTypeMessage,
+             cosmos::constants::kAttributeKeySender,
+             delegator)});
+    auto transactions = ::wait(explorer->getTransactions(filter, 1, 10));
     ASSERT_TRUE(transactions.size() >= 1);
     bool foundTx = false;
     for (const auto& tx : transactions) {
