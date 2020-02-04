@@ -56,7 +56,7 @@ namespace ledger {
             Future<TransactionList>
             getTransactions(const std::string &address, TransactionFilter &filter, int page, int limit) override;
             Future<std::shared_ptr<cosmos::Transaction>>
-            getTransactionByHash(const std::string &hash);
+            getTransactionByHash(const std::string &hash) override;
 
         private:
             std::shared_ptr<HttpClient> _http;

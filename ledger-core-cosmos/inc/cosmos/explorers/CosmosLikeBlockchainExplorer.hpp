@@ -73,6 +73,8 @@ namespace ledger {
 			virtual Future<cosmos::TransactionList> getTransactions(
 			        const std::string& address, TransactionFilter& filter,
 			        int page, int limit) = 0;
+            virtual Future<std::shared_ptr<cosmos::Transaction>>
+            getTransactionByHash(const std::string &hash) = 0;
         };
     }
 }
