@@ -36,43 +36,63 @@ namespace ledger {
                 namespace cosmos {
                         namespace constants {
                                 // use raw char array here to be compliant with rapidjson
-                                constexpr const char kMsgSend[] = "cosmos-sdk/MsgSend";
                                 constexpr const char kMsgDelegate[] = "cosmos-sdk/MsgDelegate";
-                                constexpr const char kMsgUndelegate[] = "cosmos-sdk/MsgUndelegate";
-                                constexpr const char kMsgRedelegate[] = "cosmos-sdk/MsgBeginRedelegate";
-                                constexpr const char kMsgSubmitProposal[] = "cosmos-sdk/MsgSubmitProposal";
-                                constexpr const char kMsgVote[] = "cosmos-sdk/MsgVote";
                                 constexpr const char kMsgDeposit[] = "cosmos-sdk/MsgDeposit";
-                                constexpr const char kMsgWithdrawDelegationReward[] = "cosmos-sdk/MsgWithdrawDelegationReward";
+                                constexpr const char kMsgRedelegate[] = "cosmos-sdk/MsgBeginRedelegate";
+                                constexpr const char kMsgSend[] = "cosmos-sdk/MsgSend";
+                                constexpr const char kMsgSubmitProposal[] = "cosmos-sdk/MsgSubmitProposal";
+                                constexpr const char kMsgUndelegate[] = "cosmos-sdk/MsgUndelegate";
+                                constexpr const char kMsgVote[] = "cosmos-sdk/MsgVote";
+                                constexpr const char kMsgWithdrawDelegationReward[] = "cosmos-sdk/MsgWithdrawDelegatorReward";
 
-                                constexpr const char kType[] = "type";
-                                constexpr const char kValue[] = "value";
-                                constexpr const char kFromAddress[] = "from_address";
-                                constexpr const char kToAddress[] = "to_address";
-                                constexpr const char kAmount[] = "amount";
-                                constexpr const char kDenom[] = "denom";
-                                constexpr const char kDelegatorAddress[] = "delegator_address";
-                                constexpr const char kValidatorAddress[] = "validator_address";
-                                constexpr const char kValidatorSrcAddress[] = "validator_src_address";
-                                constexpr const char kValidatorDstAddress[] = "validator_dst_address";
-                                constexpr const char kContent[] = "content";
-                                constexpr const char kTitle[] = "title";
-                                constexpr const char kDescription[] = "description";
-                                constexpr const char kProposer[] = "proposer";
-                                constexpr const char kInitialDeposit[] = "initial_deposit";
-                                constexpr const char kVoter[] = "voter";
-                                constexpr const char kProposalId[] = "proposal_id";
-                                constexpr const char kOption[] = "option";
-                                constexpr const char kDepositor[] = "depositor";
-                                constexpr const char kFee[] = "fee";
-                                constexpr const char kMessages[] = "msgs";
-                                constexpr const char kGas[] = "gas";
-                                constexpr const char kMemo[] = "memo";
-                                constexpr const char kSequence[] = "sequence";
                                 constexpr const char kAccountNumber[] = "account_number";
+                                constexpr const char kAddress[] = "address";
+                                constexpr const char kAmount[] = "amount";
                                 constexpr const char kChainId[] = "chain_id";
+                                constexpr const char kCoins[] = "coins";
+                                constexpr const char kContent[] = "content";
+                                constexpr const char kDelegatorAddress[] = "delegator_address";
+                                constexpr const char kDenom[] = "denom";
+                                constexpr const char kDepositor[] = "depositor";
+                                constexpr const char kDescription[] = "description";
+                                constexpr const char kFee[] = "fee";
+                                constexpr const char kFromAddress[] = "from_address";
+                                constexpr const char kGas[] = "gas";
+                                constexpr const char kGasUsed[] = "gas_used";
+                                constexpr const char kHeight[] = "height";
+                                constexpr const char kInitialDeposit[] = "initial_deposit";
+                                constexpr const char kLog[] = "log";
+                                constexpr const char kLogs[] = "logs";
+                                constexpr const char kMemo[] = "memo";
+                                constexpr const char kMessage[] = "msg";
+                                constexpr const char kMessages[] = "msgs";
+                                constexpr const char kMsgIndex[] = "msg_index";
+                                constexpr const char kOption[] = "option";
+                                constexpr const char kProposalId[] = "proposal_id";
+                                constexpr const char kProposer[] = "proposer";
                                 constexpr const char kPubKey[] = "pub_key";
+                                constexpr const char kSequence[] = "sequence";
                                 constexpr const char kSignature[] = "signature";
+                                constexpr const char kSuccess[] = "success";
+                                constexpr const char kTimestamp[] = "timestamp";
+                                constexpr const char kTitle[] = "title";
+                                constexpr const char kToAddress[] = "to_address";
+                                constexpr const char kTxArray[] = "txs";
+                                constexpr const char kTxHash[] = "txhash";
+                                constexpr const char kTx[] = "tx";
+                                constexpr const char kType[] = "type";
+                                constexpr const char kValidatorAddress[] = "validator_address";
+                                constexpr const char kValidatorDstAddress[] = "validator_dst_address";
+                                constexpr const char kValidatorSrcAddress[] = "validator_src_address";
+                                constexpr const char kValue[] = "value";
+                                constexpr const char kVoter[] = "voter";
+
+                                // Explorer specific constants
+                                constexpr const char kBlockMeta[] = "block_meta";
+                                constexpr const char kBlockId[] = "block_id";
+                                constexpr const char kHash[] = "hash";
+                                constexpr const char kHeader[] = "header";
+                                constexpr const char kTime[] = "time";
                         }
 
                         static constexpr const char* msgTypeToChars(MsgType type) {
