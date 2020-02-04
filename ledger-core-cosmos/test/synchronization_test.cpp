@@ -239,6 +239,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
 }
 
 TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
+    auto walletName = "e847815f-488a-4301-b67c-378a5e9c8a61";
     auto services = newDefaultServices();
     auto walletStore = newWalletStore(services);
     walletStore->addCurrency(currencies::ATOM);
@@ -250,8 +251,7 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
         configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME,
                                  "44'/<coin_type>'/<account>'/<node>/<address>");
         auto wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
-                wait(walletStore->createWallet(
-                             "e847815f-488a-4301-b67c-378a5e9c8a61", "atom", configuration)));
+                wait(walletStore->createWallet(walletName, currencies::ATOM.name, configuration)));
         std::set<std::string> emittedOperations;
         {
             auto accountInfo = wait(wallet->getNextAccountCreationInfo());
