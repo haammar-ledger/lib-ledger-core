@@ -77,6 +77,19 @@ namespace ledger {
             //     return object[fieldName].GetObject();
             // }
 
+            // TODO ?
+            /*
+            template <typename T>
+            api::CosmosLikeMsgSend parseMsgSend(const T& n) {
+                cosmos::MsgSend msg;
+
+                msg.fromAddress = n[cosmos::constants::kFromAddress].GetString();
+                msg.toAddress = n[cosmos::constants::kToAddress].GetString();
+                parseCoinVector(n[cosmos::constants::kAmount].GetArray(), msg.amount);
+                return msg;
+            }
+            */
+
             api::CosmosLikeMsgSend buildMsgSendFromRawMessage(Object const& object) {
                 std::vector<api::CosmosLikeAmount> amounts;
 
@@ -115,121 +128,103 @@ namespace ledger {
                     }
 
                     return {
-                    getString(object[kValue].GetObject(), kFromAddress),
-                    getString(object[kValue].GetObject(), kToAddress),
-                    amounts
-                };
+                        getString(object[kValue].GetObject(), kFromAddress),
+                        getString(object[kValue].GetObject(), kToAddress),
+                        amounts
+                    };
                 }
             }
 
             api::CosmosLikeMsgDelegate buildMsgDelegateFromRawMessage(Object const& object) {
-                auto amount = api::CosmosLikeAmount{};
-
-                if (object[kAmount].IsObject()) {
-                    auto amountObject = object[kAmount].GetObject();
-
-                    amount.amount = getString(amountObject, kAmount);
-                    amount.denom = getString(amountObject, kDenom);
-                }
+                auto valueObject = object[kValue].GetObject();
+                auto amountObject = valueObject[kAmount].GetObject();
 
                 return {
-                    getString(object, kDelegatorAddress),
-                    getString(object, kValidatorAddress),
-                    amount
+                    getString(valueObject, kDelegatorAddress),
+                    getString(valueObject, kValidatorAddress),
+                    api::CosmosLikeAmount(
+                        getString(amountObject, kAmount),
+                        getString(amountObject, kDenom)
+                    )
                 };
             }
 
             api::CosmosLikeMsgUndelegate buildMsgUndelegateFromRawMessage(Object const& object) {
-               auto amount = api::CosmosLikeAmount{};
-
-                if (object[kAmount].IsObject()) {
-                    auto amountObject = object[kAmount].GetObject();
-
-                    amount.amount = getString(amountObject, kAmount);
-                    amount.denom = getString(amountObject, kDenom);
-                }
+                auto valueObject = object[kValue].GetObject();
+                auto amountObject = valueObject[kAmount].GetObject();
 
                 return {
-                    getString(object, kDelegatorAddress),
-                    getString(object, kValidatorAddress),
-                    amount
+                    getString(valueObject, kDelegatorAddress),
+                    getString(valueObject, kValidatorAddress),
+                    api::CosmosLikeAmount(
+                        getString(amountObject, kAmount),
+                        getString(amountObject, kDenom)
+                    )
                 };
             }
 
              api::CosmosLikeMsgRedelegate buildMsgRedelegateFromRawMessage(Object const& object) {
-               auto amount = api::CosmosLikeAmount{};
-
-                if (object[kAmount].IsObject()) {
-                    auto amountObject = object[kAmount].GetObject();
-
-                    amount.amount = getString(amountObject, kAmount);
-                    amount.denom = getString(amountObject, kDenom);
-                }
+                auto valueObject = object[kValue].GetObject();
+                auto amountObject = valueObject[kAmount].GetObject();
 
                 return {
-                    getString(object, kDelegatorAddress),
-                    getString(object, kValidatorSrcAddress),
-                    getString(object, kValidatorDstAddress),
-                    amount
+                    getString(valueObject, kDelegatorAddress),
+                    getString(valueObject, kValidatorSrcAddress),
+                    getString(valueObject, kValidatorDstAddress),
+                    api::CosmosLikeAmount(
+                        getString(amountObject, kAmount),
+                        getString(amountObject, kDenom)
+                    )
                 };
             }
 
              api::CosmosLikeMsgSubmitProposal buildMsgSubmitProposalFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                auto contentObject = valueObject[kContent].GetObject();
+                auto initialDepositArray = valueObject[kInitialDeposit].GetArray();
+
+                auto content = api::CosmosLikeContent(
+                    getString(contentObject, kType),
+                    getString(contentObject, kTitle),
+                    getString(contentObject, kDescription)
+                );
+
                 std::vector<api::CosmosLikeAmount> amounts;
-                auto content = api::CosmosLikeContent{};
-
-                if (object[kContent].IsObject()) {
-                    auto contentObject = object[kContent].GetObject();
-
-                    content.type = getString(contentObject, kType);
-
-                    if (contentObject[kValue].IsObject()) {
-                        auto valueObject = contentObject[kValue].GetObject();
-
-                        content.title = getString(valueObject, kTitle);
-                        content.description = getString(valueObject, kDescription);
-                    }
-                }
-
-                if (object[kInitialDeposit].IsArray()) {
-                    // the size of the array of amount should be frequently equals to one
-                    amounts.reserve(object[kInitialDeposit].GetArray().Size());
-
-                    for (auto& amount : object[kInitialDeposit].GetArray()) {
-                        if (amount.IsObject()) {
-                            auto amountObject = amount.GetObject();
-
-                            amounts.push_back(api::CosmosLikeAmount{
-                                getString(amountObject, kAmount),
-                                getString(amountObject, kDenom)
-                            });
-                        }
-                    }
+                // the size of the array of amounts should be frequently equal to one
+                amounts.reserve(initialDepositArray.Size());
+                for (auto& amount : initialDepositArray) {
+                    auto amountObject = amount.GetObject();
+                    amounts.push_back(api::CosmosLikeAmount(
+                        getString(amountObject, kAmount),
+                        getString(amountObject, kDenom)
+                    ));
                 }
 
                 return {
                     content,
-                    getString(object, kProposer),
+                    getString(valueObject, kProposer),
                     amounts
                 };
             }
 
             api::CosmosLikeMsgVote buildMsgVoteFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
                 return {
-                    getString(object, kVoter),
-                    getString(object, kProposalId),
-                    api::from_string<api::CosmosLikeVoteOption>(getString(object, kOption))
+                    getString(valueObject, kVoter),
+                    getString(valueObject, kProposalId),
+                    api::from_string<api::CosmosLikeVoteOption>(getString(valueObject, kOption))
                 };
             }
 
             api::CosmosLikeMsgDeposit buildMsgDepositFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
                 std::vector<api::CosmosLikeAmount> amounts;
 
-                if (object[kAmount].IsArray()) {
+                if (valueObject[kAmount].IsArray()) {
                     // the size of the array of amount should be frequently equals to one
-                    amounts.reserve(object[kAmount].GetArray().Size());
+                    amounts.reserve(valueObject[kAmount].GetArray().Size());
 
-                    for (auto& amount : object[kAmount].GetArray()) {
+                    for (auto& amount : valueObject[kAmount].GetArray()) {
                         if (amount.IsObject()) {
                             auto amountObject = amount.GetObject();
 
@@ -242,16 +237,17 @@ namespace ledger {
                 }
 
                 return {
-                    getString(object, kDepositor),
-                    getString(object, kProposalId),
+                    getString(valueObject, kDepositor),
+                    getString(valueObject, kProposalId),
                     amounts
                };
             }
 
             api::CosmosLikeMsgWithdrawDelegationReward buildMsgWithdrawDelegatationRewardFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
                 return {
-                    getString(object, kDelegatorAddress),
-                    getString(object, kValidatorAddress)
+                    getString(valueObject, kDelegatorAddress),
+                    getString(valueObject, kValidatorAddress)
                 };
             }
         }

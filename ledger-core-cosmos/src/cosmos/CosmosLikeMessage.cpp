@@ -169,7 +169,7 @@ namespace ledger {
 			} else if (msgType == kMsgDelegate) {
 				return api::CosmosLikeMsgType::MSGDELEGATE;
 			} else if (msgType == kMsgUndelegate) {
-				return api::CosmosLikeMsgType::MSGDELEGATE;
+				return api::CosmosLikeMsgType::MSGUNDELEGATE;
 			} else if (msgType == kMsgRedelegate) {
 				return api::CosmosLikeMsgType::MSGREDELEGATE;
 			} else if (msgType == kMsgSubmitProposal) {
@@ -242,8 +242,7 @@ namespace ledger {
 			{
 				static const char* keys[] = { kAmount, kDenom };
 
-				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(
-					value->getArray(kAmount));
+				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(value->getArray(kAmount));
 
 				for (auto size = amounts->size(), i = decltype(size){0}; i < size; ++i) {
 					auto amount = amounts->getObject(i);
@@ -286,8 +285,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgDelegate{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 
 			{
 				static const char* keys[] = { kDelegatorAddress, kValidatorAddress, kAmount };
@@ -303,8 +301,7 @@ namespace ledger {
 			{
 				static const char* keys[] = { kAmount, kDenom };
 
-				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-					value->getObject(kAmount));
+				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(value->getObject(kAmount));
 
 				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
 					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDelegate: bad amount fields");
@@ -343,8 +340,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgUndelegate{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 
 			{
 				static const char* keys[] = { kDelegatorAddress, kValidatorAddress, kAmount };
@@ -360,8 +356,7 @@ namespace ledger {
 			{
 				static const char* keys[] = { kAmount, kDenom };
 
-				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-					value->getObject(kAmount));
+				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(value->getObject(kAmount));
 
 				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
 					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgUnDelegate: bad amount fields");
@@ -401,8 +396,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgRedelegate{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 
 			{
 				static const char* keys[] = { kDelegatorAddress, kValidatorSrcAddress, kValidatorDstAddress, kAmount };
@@ -419,8 +413,7 @@ namespace ledger {
 			{
 				static const char* keys[] = { kAmount, kDenom };
 
-				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-					value->getObject(kAmount));
+				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(value->getObject(kAmount));
 
 				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
 					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgRedelegate: bad amount fields");
@@ -454,10 +447,8 @@ namespace ledger {
 			});
 
 			content->putString(kType, msg.content.type);
-			content->putObject(kValue, contentValue);
-
-			contentValue->putString(kTitle, msg.content.title);
-			contentValue->putString(kDescription, msg.content.description);
+			content->putString(kTitle, msg.content.title);
+			content->putString(kDescription, msg.content.description);
 
 			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
 		}
@@ -472,9 +463,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgSubmitProposal{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 			{
 				static const char* keys[] = { kContent, kProposer, kInitialDeposit };
 
@@ -482,41 +471,27 @@ namespace ledger {
 					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad value fields");
 				}
 
-				underlyingMsg.proposer = value->getString(kFromAddress).value();
+				underlyingMsg.proposer = value->getString(kProposer).value();
 			}
 
-			auto content = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				value->getObject(kContent));
+			auto content = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(value->getObject(kContent));
 
 			{
-				static const char* keys[] = { kType, kValue };
+				static const char* keys[] = { kType, kTitle, kDescription };
 
 				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(content))) {
 					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad content fields");
 				}
 
 				underlyingMsg.content.type = content->getString(kType).value();
-			}
-
-			auto contentValue = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kTitle, kDescription };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(contentValue))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad content value fields");
-				}
-
-				underlyingMsg.content.title = contentValue->getString(kTitle).value();
-				underlyingMsg.content.description = contentValue->getString(kDescription).value();
+				underlyingMsg.content.title = content->getString(kTitle).value();
+				underlyingMsg.content.description = content->getString(kDescription).value();
 			}
 
 			{
 				static const char* keys[] = { kAmount, kDenom };
 
-				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(
-					value->getArray(kAmount));
+				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(value->getArray(kInitialDeposit));
 
 				for (auto size = amounts->size(), i = decltype(size){0}; i < size; ++i) {
 					auto amount = amounts->getObject(i);
@@ -560,8 +535,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgVote{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 
 			{
 				static const char* keys[] = { kVoter, kProposalId, kOption };
@@ -606,8 +580,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgDeposit{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 
 			{
 				static const char* keys[] = { kDepositor, kProposalId, kAmount };
@@ -623,8 +596,7 @@ namespace ledger {
 			{
 				static const char* keys[] = { kAmount, kDenom };
 
-				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(
-					value->getArray(kAmount));
+				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(value->getArray(kAmount));
 
 				for (auto size = amounts->size(), i = decltype(size){0}; i < size; ++i) {
 					auto amount = amounts->getObject(i);
@@ -667,8 +639,7 @@ namespace ledger {
 			}
 
 			auto underlyingMsg = api::CosmosLikeMsgWithdrawDelegationReward{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
+			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(implMsg->_content->getObject(kValue));
 
 			{
 				static const char* keys[] = { kDelegatorAddress, kValidatorAddress };
