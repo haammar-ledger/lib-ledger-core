@@ -93,7 +93,118 @@ namespace ledger {
                                 constexpr const char kHash[] = "hash";
                                 constexpr const char kHeader[] = "header";
                                 constexpr const char kTime[] = "time";
-                        }
+
+                                // cosmos/cosmos-sdk Event / Attribute types as of
+                                // https://github.com/cosmos/cosmos-sdk/tree/43137ee893cefbdb2aacd25ef4ec39eacf6ae70c
+                                //
+                                // Staking
+                                constexpr const char kEventTypeCompleteUnbonding[] =
+                                    "complete_unbonding";
+                                constexpr const char kEventTypeCompleteRedelegation[] =
+                                    "complete_redelegation";
+                                constexpr const char kEventTypeCreateValidator[] =
+                                    "create_validator";
+                                constexpr const char kEventTypeEditValidator[] = "edit_validator";
+                                constexpr const char kEventTypeDelegate[] = "delegate";
+                                constexpr const char kEventTypeUnbond[] = "unbond";
+                                constexpr const char kEventTypeRedelegate[] = "redelegate";
+
+                                constexpr const char kAttributeKeyValidator[] = "validator";
+                                constexpr const char kAttributeKeyCommissionRate[] =
+                                    "commission_rate";
+                                constexpr const char kAttributeKeyMinSelfDelegation[] =
+                                    "min_self_delegation";
+                                constexpr const char kAttributeKeySrcValidator[] =
+                                    "source_validator";
+                                constexpr const char kAttributeKeyDstValidator[] =
+                                    "destination_validator";
+                                constexpr const char kAttributeKeyDelegator[] = "delegator";
+                                constexpr const char kAttributeKeyCompletionTime[] =
+                                    "completion_time";
+                                constexpr const char kAttributeValueStakingCategory[] = "staking";
+
+                                // Distribution
+                                constexpr const char kEventTypeSetWithdrawAddress[] =
+                                    "set_withdraw_address";
+                                constexpr const char kEventTypeRewards[] = "rewards";
+                                constexpr const char kEventTypeCommission[] = "commission";
+                                constexpr const char kEventTypeWithdrawRewards[] =
+                                    "withdraw_rewards";
+                                constexpr const char kEventTypeWithdrawCommission[] =
+                                    "withdraw_commission";
+                                constexpr const char kEventTypeProposerReward[] = "proposer_reward";
+
+                                constexpr const char kAttributeKeyWithdrawAddress[] =
+                                    "withdraw_address";
+
+                                constexpr const char kAttributeValueDistributionCategory[] =
+                                    "distribution";
+
+                                // gov
+                                constexpr const char kEventTypeSubmitProposal[] = "submit_proposal";
+                                constexpr const char kEventTypeProposalDeposit[] =
+                                    "proposal_deposit";
+                                constexpr const char kEventTypeProposalVote[] = "proposal_vote";
+                                constexpr const char kEventTypeInactiveProposal[] =
+                                    "inactive_proposal";
+                                constexpr const char kEventTypeActiveProposal[] = "active_proposal";
+
+                                constexpr const char kAttributeKeyProposalResult[] =
+                                    "proposal_result";
+                                constexpr const char kAttributeKeyOption[] = "option";
+                                constexpr const char kAttributeKeyProposalID[] = "proposal_id";
+                                constexpr const char kAttributeKeyVotingPeriodStart[] =
+                                    "voting_period_start";
+                                constexpr const char kAttributeValueGovernanceCategory[] =
+                                    "governance";
+                                constexpr const char kAttributeValueProposalDropped[] =
+                                    "proposal_dropped";  // didn't meet min deposit
+                                constexpr const char kAttributeValueProposalPassed[] =
+                                    "proposal_passed";  // met vote quorum
+                                constexpr const char kAttributeValueProposalRejected[] =
+                                    "proposal_rejected";  // didn't meet vote quorum
+                                constexpr const char kAttributeValueProposalFailed[] =
+                                    "proposal_failed";  // error on proposal handler
+                                constexpr const char kAttributeKeyProposalType[] = "proposal_type";
+
+                                // bank
+                                constexpr const char kEventTypeTransfer[] = "transfer";
+
+                                constexpr const char kAttributeKeyRecipient[] = "recipient";
+                                constexpr const char kAttributeKeySender[] = "sender";
+
+                                constexpr const char kAttributeValueBankCategory[] = "bank";
+
+                                // crisis
+                                constexpr const char kEventTypeInvariant[] = "invariant";
+
+                                constexpr const char kAttributeValueCrisis[] = "crisis";
+                                constexpr const char kAttributeKeyRoute[] = "route";
+
+                                // slashing
+                                constexpr const char kEventTypeSlash[] = "slash";
+                                constexpr const char kEventTypeLiveness[] = "liveness";
+
+                                constexpr const char kAttributeKeyAddress[] = "address";
+                                constexpr const char kAttributeKeyHeight[] = "height";
+                                constexpr const char kAttributeKeyPower[] = "power";
+                                constexpr const char kAttributeKeyReason[] = "reason";
+                                constexpr const char kAttributeKeyJailed[] = "jailed";
+                                constexpr const char kAttributeKeyMissedBlocks[] = "missed_blocks";
+
+                                constexpr const char kAttributeValueDoubleSign[] = "double_sign";
+                                constexpr const char kAttributeValueMissingSignature[] =
+                                    "missing_signature";
+                                constexpr const char kAttributeValueSlashingCategory[] = "slashing";
+
+                                // mint
+                                constexpr const char kEventTypeMint[] = "mint";
+
+                                constexpr const char kAttributeKeyBondedRatio[] = "bonded_ratio";
+                                constexpr const char kAttributeKeyInflation[] = "inflation";
+                                constexpr const char kAttributeKeyAnnualProvisions[] =
+                                    "annual_provisions";
+                                }  // namespace constants
 
                         static constexpr const char* msgTypeToChars(MsgType type) {
                                 switch (type) {
