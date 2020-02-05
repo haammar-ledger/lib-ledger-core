@@ -39,7 +39,7 @@ namespace ledger {
                         const api::CosmosLikeNetworkParameters getCosmosLikeNetworkParameters(const std::string& chainID) {
                                 if (chainID == "atom") {
                                 static const api::CosmosLikeNetworkParameters COSMOSHUB_3(
-                                        "ATOM",
+                                        "atom",
                                         "ATOM signed message:\n",
                                         {0x04, 0x88, 0xB2, 0x1E},
                                         {0xEB, 0x5A, 0xE9, 0x87},
@@ -51,7 +51,7 @@ namespace ledger {
                                 }
                                 if (chainID == "atom-cosmoshub-2") {
                                 static const api::CosmosLikeNetworkParameters COSMOSHUB_2(
-                                        "ATOM",
+                                        "atom",
                                         "ATOM signed message:\n",
                                         {0x04, 0x88, 0xB2, 0x1E},
                                         {0xEB, 0x5A, 0xE9, 0x87},
@@ -64,6 +64,11 @@ namespace ledger {
                         throw make_exception(api::ErrorCode::INVALID_ARGUMENT, "No network parameters set for chain {}", chainID);
                         }
 
+                        // TODO : check that having 2 "atom" networkParamters.Identifiers is ok
+                        // Because of the way CosmosLikeWalletFactory::build() finds out if a currency is supported,
+                        // it's possible that :
+                        // - the order of NetworkParameters in the ALL_COSMOS vector actually matters
+                        // - having 2 chain_ids with the same currency is wrong
             const std::vector<api::CosmosLikeNetworkParameters> ALL_COSMOS
                     ({
                              getCosmosLikeNetworkParameters("atom"),

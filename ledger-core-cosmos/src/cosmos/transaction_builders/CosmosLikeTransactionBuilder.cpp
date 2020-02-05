@@ -374,7 +374,6 @@ namespace ledger {
                     for (auto& amount : feeObject[kAmount].GetArray()) {
                         if (amount.IsObject()) {
                             fee = fee +  BigInt(getAmount(amount.GetObject()).toString());
-                            std::cerr << "Current Fees : " << fee.toString() << std::endl;
                         }
                     }
 

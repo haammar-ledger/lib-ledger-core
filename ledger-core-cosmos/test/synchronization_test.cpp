@@ -242,7 +242,7 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
     auto walletName = "e847815f-488a-4301-b67c-378a5e9c8a61";
     auto services = newDefaultServices();
     auto walletStore = newWalletStore(services);
-    walletStore->addCurrency(currencies::ATOM);
+    wait(walletStore->addCurrency(currencies::ATOM));
 
     auto factory = std::make_shared<CosmosLikeWalletFactory>(currencies::ATOM, services);
     walletStore->registerFactory(currencies::ATOM, factory);
@@ -279,7 +279,7 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
                 EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
 
                 auto balance = wait(account->getBalance());
-                std::cout << "Balance: " << balance->toString() << std::endl;
+                fmt::print("Balance: {}\n", balance->toString());
                 auto txBuilder = std::dynamic_pointer_cast<CosmosLikeTransactionBuilder>(account->buildTransaction());
                 dispatcher->stop();
             });
@@ -291,7 +291,7 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
             dispatcher->waitUntilStopped();
 
             auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
-            std::cout << "Ops: " << ops.size() << std::endl;
+            fmt::print("Ops: {}\n", ops.size());
             auto block = wait(account->getLastBlock());
             auto blockHash = block.blockHash;
         }
