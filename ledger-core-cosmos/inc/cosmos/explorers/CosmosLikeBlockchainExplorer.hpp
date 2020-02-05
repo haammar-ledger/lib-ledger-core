@@ -39,6 +39,7 @@
 #include <core/api/ExecutionContext.hpp>
 #include <core/async/DedicatedContext.hpp>
 #include <core/collections/DynamicObject.hpp>
+#include <core/explorers/AbstractBlockchainExplorer.hpp>
 #include <core/math/BigInt.hpp>
 #include <core/net/HttpClient.hpp>
 #include <core/utils/ConfigurationMatchable.hpp>
@@ -48,12 +49,15 @@
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
 #include <cosmos/cosmos.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>
-#include <cosmos/api/CosmosLikeTransaction.hpp>
+#include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 
 namespace ledger {
     namespace core {
 
-        class CosmosLikeBlockchainExplorer : public ConfigurationMatchable {
+        using ExternalApiBlockchainExplorer = AbstractBlockchainExplorer<CosmosLikeTransactionApi>;
+
+        class CosmosLikeBlockchainExplorer : public ConfigurationMatchable,
+                                             public ExternalApiBlockchainExplorer {
         public:
             using Block = ledger::core::Block;
             using TransactionFilter = std::string;

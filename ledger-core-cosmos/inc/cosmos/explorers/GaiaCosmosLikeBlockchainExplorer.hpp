@@ -62,6 +62,8 @@ namespace ledger {
             getTransactions(TransactionFilter &filter, int page, int limit) override;
             Future<std::shared_ptr<cosmos::Transaction>>
             getTransactionByHash(const std::string &hash) override;
+            Future<void *> startSession() override;
+            Future<Unit> killSession(void* session) override;
 
         private:
             std::shared_ptr<HttpClient> _http;

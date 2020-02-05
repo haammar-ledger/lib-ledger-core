@@ -49,7 +49,8 @@ namespace ledger {
 
         using CosmosBlockchainAccountSynchronizer = AbstractBlockchainExplorerAccountSynchronizer<CosmosLikeAccount, CosmosLikeAddress, CosmosLikeKeychain, CosmosLikeBlockchainExplorer>;
 
-        class CosmosLikeBlockchainExplorerAccountSynchronizer : public CosmosLikeAccountSynchronizer,
+        class CosmosLikeBlockchainExplorerAccountSynchronizer : public CosmosBlockchainAccountSynchronizer,
+                                                                public CosmosLikeAccountSynchronizer,
                                                                 public DedicatedContext,
                                                                 public std::enable_shared_from_this<CosmosLikeBlockchainExplorerAccountSynchronizer> {
         public:
@@ -65,12 +66,23 @@ namespace ledger {
 
             bool isSynchronizing() const override;
 
+            void updateCurrentBlock(
+                    std::shared_ptr <AbstractBlockchainExplorerAccountSynchronizer::SynchronizationBuddy> &buddy,
+                    const std::shared_ptr <api::ExecutionContext> &context) override;
+
+            void updateTransactionsToDrop(soci::session &sql,
+                                          std::shared_ptr <SynchronizationBuddy> &buddy,
+                                          const std::string &accountUid) override;
 
         private:
             std::shared_ptr<CosmosLikeBlockchainExplorer> _explorer;
             std::shared_ptr<ProgressNotifier<Unit>> _notifier;
             std::shared_ptr<DatabaseSessionPool> _database;
             std::mutex _lock;
+
+            std::shared_ptr <CosmosBlockchainAccountSynchronizer> getSharedFromThis() override;
+
+            std::shared_ptr <api::ExecutionContext> getSynchronizerContext() override;
         };
     }
 }
