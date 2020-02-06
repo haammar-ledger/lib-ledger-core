@@ -157,5 +157,53 @@ namespace ledger {
                     return tx;
                 });
         }
-    }
+
+        FuturePtr<CosmosLikeBlockchainExplorer::TransactionsBulk>
+        GaiaCosmosLikeBlockchainExplorer::getTransactions(
+            const std::vector<std::string>& addresses,
+            Option<std::string> fromBlockHash,
+            Option<void*> session) {
+            auto sent_transactions_filter = fuseFilters(
+                {filterWithAttribute(kEventTypeMessage, kAttributeKeySender, addresses.front())});
+            return getTransactions(sent_transactions_filter, 1, 50)
+                    .mapPtr<GaiaCosmosLikeBlockchainExplorer::TransactionsBulk>(
+                        getContext(), [](auto& transaction_list) {
+                            std::vector<cosmos::Transaction> c_transaction_list;
+                            auto result = std::make_shared<CosmosLikeBlockchainExplorer::TransactionsBulk>();
+                            std::transform(
+                                transaction_list.begin(),
+                                transaction_list.end(),
+                                std::back_inserter(c_transaction_list),
+                                [] (auto transaction) -> cosmos::Transaction {
+                                    return *transaction;
+                                });
+                            result->transactions = c_transaction_list;
+                            result->hasNext = false;
+                            result->marker = "";
+                            return result;
+                        });
+        }
+
+        Future<void *> GaiaCosmosLikeBlockchainExplorer::startSession() {
+            return Future<void *>::successful(new std::string("", 0));
+        }
+
+        Future<Unit> GaiaCosmosLikeBlockchainExplorer::killSession(void* session) {
+            return Future<Unit>::successful(unit);
+        }
+
+        FuturePtr<cosmos::Block> GaiaCosmosLikeBlockchainExplorer::getCurrentBlock() const {}
+
+        Future<Bytes> GaiaCosmosLikeBlockchainExplorer::getRawTransaction(
+            const String& transactionHash) {}
+
+        FuturePtr<cosmos::Transaction> GaiaCosmosLikeBlockchainExplorer::getTransactionByHash(
+            const String& transactionHash) const {}
+
+        Future<String> GaiaCosmosLikeBlockchainExplorer::pushTransaction(
+            const std::vector<uint8_t>& transaction) {}
+
+        Future<int64_t> GaiaCosmosLikeBlockchainExplorer::getTimestamp() const {}
+
+        }  // namespace core
 }

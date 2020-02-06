@@ -62,21 +62,21 @@ struct NameComparator {
 };
 
 // Recursively sort the dictionnaries in the given json
-static void sortJson(Value& val) {
-	// This code assumes that
-	// only "objects" ({key: Value}) and "arrays" ([Value]) can have nested
-	// dictionnaries to sort
-	// Therefore the base case is reaching a "primitive" type as inner Value
-	if (val.IsObject()){
-		std::sort(val.MemberBegin(), val.MemberEnd(), NameComparator());
-		for (auto subValue = val.MemberBegin(); subValue != val.MemberEnd(); subValue++) {
-			sortJson(subValue->value);
-		}
-	} else if (val.IsArray()) {
-		for (auto subValue = val.Begin(); subValue != val.End(); subValue++) {
-			sortJson(*subValue);
-		}
-	}
+static void sortJson(Value &val) {
+    // This code assumes that
+    // only "objects" ({key: Value}) and "arrays" ([Value]) can have nested
+    // dictionnaries to sort
+    // Therefore the base case is reaching a "primitive" type as inner Value
+    if (val.IsObject()) {
+        std::sort(val.MemberBegin(), val.MemberEnd(), NameComparator());
+        for (auto subValue = val.MemberBegin(); subValue != val.MemberEnd(); subValue++) {
+            sortJson(subValue->value);
+        }
+    } else if (val.IsArray()) {
+        for (auto subValue = val.Begin(); subValue != val.End(); subValue++) {
+            sortJson(*subValue);
+        }
+    }
 }
 
 namespace ledger {

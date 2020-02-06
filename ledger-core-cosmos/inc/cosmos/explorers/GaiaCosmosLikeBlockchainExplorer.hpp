@@ -64,6 +64,19 @@ namespace ledger {
             getTransactionByHash(const std::string &hash) override;
             Future<void *> startSession() override;
             Future<Unit> killSession(void* session) override;
+            // struct TransactionsBulk {
+            //     std::vector<Transaction> transactions;
+            //     bool hasNext;
+            //     std::string marker; //Needed for pagination for XRP: https://developers.ripple.com/markers-and-pagination.html
+            // };
+            FuturePtr<TransactionsBulk> getTransactions(const std::vector<std::string>& addresses,
+                                                                Option<std::string> fromBlockHash = Option<std::string>(),
+                                                                Option<void*> session = Option<void *>()) override;
+            FuturePtr<cosmos::Block> getCurrentBlock() const override;
+            Future<Bytes> getRawTransaction(const String& transactionHash) override;
+            FuturePtr<cosmos::Transaction> getTransactionByHash(const String& transactionHash) const override;
+            Future<String> pushTransaction(const std::vector<uint8_t>& transaction) override;
+            Future<int64_t> getTimestamp() const override;
 
         private:
             std::shared_ptr<HttpClient> _http;
