@@ -34,6 +34,8 @@
 
 #include <vector>
 
+#include <cosmos/cosmos.hpp>
+
 #include <core/operation/Operation.hpp>
 #include <core/api/Amount.hpp>
 #include <core/api/Currency.hpp>
@@ -51,6 +53,7 @@ namespace ledger {
         public:
             explicit CosmosLikeTransactionApi(const api::Currency& currency);
             explicit CosmosLikeTransactionApi(const std::shared_ptr<CosmosLikeOperation>& operation);
+            CosmosLikeTransactionApi(const cosmos::Transaction& tx) : _tx(tx) {}
 
             std::string getHash() const override;
             std::shared_ptr<api::Amount> getFee() const override;
@@ -72,19 +75,12 @@ namespace ledger {
             CosmosLikeTransactionApi & setAccountNumber(const std::string &accountNumber);
 
         private:
-            std::chrono::system_clock::time_point _time;
-            std::shared_ptr<CosmosLikeBlockApi> _block;
-            std::string _hash;
             api::Currency _currency;
-            std::vector<std::shared_ptr<api::CosmosLikeMessage>> _messages;
-            std::shared_ptr<api::Amount> _fee;
-            std::shared_ptr<api::Amount> _gas;
-            std::string _accountNumber;
-            std::string _sequence;
-            std::string _memo;
             std::vector<uint8_t> _rSignature;
             std::vector<uint8_t> _sSignature;
             std::vector<uint8_t> _signingPubKey;
+            cosmos::Transaction _tx;
+            cosmos::Account _account;
         };
     }
 }

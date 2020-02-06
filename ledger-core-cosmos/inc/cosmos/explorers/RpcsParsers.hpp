@@ -42,6 +42,8 @@
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
+#include <cosmos/CosmosLikeMessage.hpp>
+#include <cosmos/cosmos.hpp>
 
 #define COSMOS_PARSE_MSG_CONTENT(MsgType) if (out.type == "cosmos-sdk/"#MsgType) return parse##MsgType(contentNode, out.content);
 
@@ -80,9 +82,9 @@ namespace ledger {
             }
 
             template <class T>
-            void parseBlock(const T& node, const std::string& currencyName, Block& out) {
+            void parseBlock(const T& node, const std::string& currencyName, cosmos::Block& out) {
                 out.currencyName = currencyName;
-                out.hash = node[kBlockMeta].GetObject()[kBlockId].GetObject()[kHash].GetString();
+                out.blockHash = node[kBlockMeta].GetObject()[kBlockId].GetObject()[kHash].GetString();
                 out.height = BigInt::fromString(node[kBlockMeta].GetObject()[kHeader].GetObject()[kHeight].GetString()).toUint64();
                 out.time = DateUtils::fromJSON(node[kBlockMeta].GetObject()[kHeader].GetObject()[kTime].GetString());
             }
@@ -245,7 +247,7 @@ namespace ledger {
                 assert((node.HasMember(kTxHash)));
                 transaction.hash = node[kTxHash].GetString();
                 if (node.HasMember(kHeight)) {
-                    Block block;
+                    cosmos::Block block;
                     block.height = BigInt::fromString(node[kHeight].GetString()).toUint64();
                     transaction.block = block;
                 }

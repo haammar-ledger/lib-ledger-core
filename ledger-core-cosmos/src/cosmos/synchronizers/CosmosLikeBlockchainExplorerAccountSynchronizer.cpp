@@ -61,13 +61,13 @@ namespace ledger {
             std::shared_ptr<AbstractBlockchainExplorerAccountSynchronizer::SynchronizationBuddy>
                 &buddy,
             const std::shared_ptr<api::ExecutionContext> &context) {
-            _explorer->getCurrentBlock().onComplete(
-                context, [buddy](const TryPtr<api::Block> &block) {
-                    if (block.isSuccess()) {
-                        soci::session sql(buddy->account->getWallet()->getDatabase()->getPool());
-                        buddy->account->putBlock(sql, *block.getValue());
-                    }
-                });
+            // _explorer->getCurrentBlock().onComplete(
+            //     context, [buddy](const TryPtr<api::Block> &block) {
+            //         if (block.isSuccess()) {
+            //          soci::session sql(buddy->account->getWallet()->getDatabase()->getPool());
+            //          buddy->account->putBlock(sql, *block.getValue());
+            //         }
+            //     });
         }
 
         void CosmosLikeBlockchainExplorerAccountSynchronizer::updateTransactionsToDrop(

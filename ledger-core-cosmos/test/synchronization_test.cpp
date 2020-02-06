@@ -234,7 +234,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
     );
 
     auto block = ::wait(explorer->getCurrentBlock());
-    EXPECT_TRUE(block->hash.size() > 0);
+    EXPECT_TRUE(block->blockHash.size() > 0);
     EXPECT_TRUE(block->height > 0);
 }
 

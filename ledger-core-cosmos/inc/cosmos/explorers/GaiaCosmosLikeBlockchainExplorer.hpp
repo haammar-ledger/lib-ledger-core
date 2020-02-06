@@ -55,11 +55,11 @@ namespace ledger {
                 const char eventType[], const char attributeKey[], const std::string &value);
             static TransactionFilter fuseFilters(std::initializer_list<std::experimental::string_view> filters);
             const std::vector<TransactionFilter> &getTransactionFilters() override;
-            FuturePtr<ledger::core::Block> getBlock(uint64_t &blockHeight) override;
+            FuturePtr<cosmos::Block> getBlock(uint64_t &blockHeight) override;
             FuturePtr<ledger::core::cosmos::Account> getAccount(const std::string &account) override;
-            FuturePtr<ledger::core::Block> getCurrentBlock() override;
+            FuturePtr<cosmos::Block> getCurrentBlock() override;
             Future<TransactionList>
-            getTransactions(TransactionFilter &filter, int page, int limit) override;
+            getTransactions(const TransactionFilter &filter, int page, int limit) override;
             Future<std::shared_ptr<cosmos::Transaction>>
             getTransactionByHash(const std::string &hash) override;
             Future<void *> startSession() override;

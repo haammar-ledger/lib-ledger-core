@@ -78,6 +78,14 @@ namespace ledger {
 
 		}
 
+		CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& rawStruct) : _content() {
+
+		}
+
+		cosmos::Message CosmosLikeMessage::toRawMessage() const {
+			return {};
+		}
+
 		api::CosmosLikeMsgType CosmosLikeMessage::getMessageType() const {
 			auto msgType = getRawMessageType();
 

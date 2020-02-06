@@ -36,6 +36,7 @@
 #include <cosmos/explorers/RpcsParsers.hpp>
 
 #include <numeric>
+#include <algorithm>
 
 namespace ledger {
     namespace core {
@@ -95,7 +96,7 @@ namespace ledger {
             return GAIA_FILTER;
         }
 
-        FuturePtr<ledger::core::Block> GaiaCosmosLikeBlockchainExplorer::getBlock(uint64_t &blockHeight) {
+        FuturePtr<cosmos::Block> GaiaCosmosLikeBlockchainExplorer::getBlock(uint64_t &blockHeight) {
             return _http->GET(fmt::format("/blocks/{}", blockHeight)).json(true).mapPtr<cosmos::Block>(getContext(), [=] (const HttpRequest::JsonResult& response) {
                 auto result = std::make_shared<cosmos::Block>();
                 const auto& document = std::get<1>(response)->GetObject();
@@ -115,7 +116,7 @@ namespace ledger {
             });
         }
 
-        FuturePtr<ledger::core::Block> GaiaCosmosLikeBlockchainExplorer::getCurrentBlock() {
+        FuturePtr<cosmos::Block> GaiaCosmosLikeBlockchainExplorer::getCurrentBlock() {
             return _http->GET(fmt::format("/blocks/latest")).json(true)
             .map<std::shared_ptr<Block>>(getContext(),
              [=] (const HttpRequest::JsonResult& response) {
@@ -126,21 +127,23 @@ namespace ledger {
              });
         }
 
-        Future<cosmos::TransactionList> GaiaCosmosLikeBlockchainExplorer::getTransactions(CosmosLikeBlockchainExplorer::TransactionFilter &filter,
-                                                                                              int page, int limit) {
-            return _http->GET(fmt::format("/txs?{}&page={}&limit={}", filter, page, limit)).json(true).map<cosmos::TransactionList>(getContext(), [=] (const HttpRequest::JsonResult& response) {
-                cosmos::TransactionList result;
-                const auto& document = std::get<1>(response)->GetObject();
-                // TODO : raise a clean exception when document has no "txs" member
-                const auto& transactions = document["txs"].GetArray();
-                for (const auto& node : transactions) {
-                    auto tx = std::make_shared<cosmos::Transaction>();
-                    // TODO : raise a clean exception when document has no "result" member
-                    rpcs_parsers::parseTransaction(node["result"], *tx);
-                    result.emplace_back(tx);
-                }
-                return result;
-            });
+        Future<cosmos::TransactionList> GaiaCosmosLikeBlockchainExplorer::getTransactions(
+            const CosmosLikeBlockchainExplorer::TransactionFilter& filter, int page, int limit) {
+            return _http->GET(fmt::format("/txs?{}&page={}&limit={}", filter, page, limit))
+                .json(true)
+                .map<cosmos::TransactionList>(
+                    getContext(), [=](const HttpRequest::JsonResult& response) {
+                        cosmos::TransactionList result;
+                        const auto& document = std::get<1>(response)->GetObject();
+                        // TODO : raise a clean exception when document has no "txs" member
+                        const auto& transactions = document["txs"].GetArray();
+                        for (const auto& node : transactions) {
+                            auto tx = std::make_shared<cosmos::Transaction>();
+                            rpcs_parsers::parseTransaction(node, *tx);
+                            result.emplace_back(tx);
+                        }
+                        return result;
+                    });
         }
 
         Future<std::shared_ptr<cosmos::Transaction>>

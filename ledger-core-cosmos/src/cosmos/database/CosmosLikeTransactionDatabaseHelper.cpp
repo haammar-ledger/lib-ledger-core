@@ -91,7 +91,7 @@ namespace ledger {
             if (row.get_indicator(7) != i_null) {
                 CosmosLikeBlockchainExplorer::Block block;
                 block.height = get_number<uint64_t>(row, 8);
-                block.hash = row.get<std::string>(9);
+                block.blockHash = row.get<std::string>(9);
                 block.time = row.get<std::chrono::system_clock::time_point>(10);
                 block.currencyName = row.get<std::string>(11);
                 tx.block = block;
@@ -244,8 +244,8 @@ namespace ledger {
         static void insertTransaction(soci::session& sql, const std::string& uid, const cosmos::Transaction& tx) {
             Option<std::string> blockUid;
             Option<uint64_t> blockHeight;
-            if (tx.block.nonEmpty() && !tx.block.getValue().hash.empty()) {
-                blockUid = BlockDatabaseHelper::createBlockUid(tx.block.getValue().toApiBlock());
+            if (tx.block.nonEmpty() && !tx.block.getValue().blockHash.empty()) {
+                blockUid = BlockDatabaseHelper::createBlockUid(tx.block.getValue());
             } else if (tx.block.nonEmpty()) {
                 blockHeight = tx.block.getValue().height;
             }
@@ -267,14 +267,14 @@ namespace ledger {
                                                                         const std::string &accountUid,
                                                                         const cosmos::Transaction &tx) {
             auto blockUid = tx.block.map<std::string>([](const CosmosLikeBlockchainExplorer::Block &block) {
-                return block.getUid();
+                return block.uid;
             });
 
             auto cosmosTxUid = createCosmosTransactionUid(accountUid, tx.hash);
 
             if (transactionExists(sql, cosmosTxUid)) {
                 // UPDATE (we only update block information and gasUsed)
-                if (tx.block.nonEmpty() && tx.block.getValue().hash.size() > 0) {
+                if (tx.block.nonEmpty() && tx.block.getValue().blockHash.size() > 0) {
                     auto gasUsed = tx.gasUsed.flatMap<std::string>([] (const BigInt& g) {
                         return g.toString();
                     });
@@ -285,8 +285,8 @@ namespace ledger {
                 return cosmosTxUid;
             } else {
                 // Insert
-                if (tx.block.nonEmpty() && !tx.block.getValue().hash.empty()) {
-                    BlockDatabaseHelper::putBlock(sql, tx.block.getValue().toApiBlock());
+                if (tx.block.nonEmpty() && !tx.block.getValue().blockHash.empty()) {
+                    BlockDatabaseHelper::putBlock(sql, tx.block.getValue());
                 }
                 // Insert transaction
                 insertTransaction(sql, cosmosTxUid, tx);
@@ -294,7 +294,7 @@ namespace ledger {
                 auto index = 0;
                 for (const auto& message : tx.messages) {
                     const auto& log = tx.logs[index];
-                    insertMessage(sql, cosmosTxUid, index, message, log);
+                    // insertMessage(sql, cosmosTxUid, index, message, log);
                     index += 1;
                 }
                 return cosmosTxUid;

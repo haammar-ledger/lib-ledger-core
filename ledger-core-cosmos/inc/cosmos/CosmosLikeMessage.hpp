@@ -48,6 +48,8 @@
 #include <cosmos/api/CosmosLikeMessage.hpp>
 #include <cosmos/api/CosmosLikeMsgType.hpp>
 
+#include <cosmos/cosmos.hpp>
+
 namespace ledger {
 	namespace core {
 		class CosmosLikeMessage : public api::CosmosLikeMessage {
@@ -55,10 +57,13 @@ namespace ledger {
 
 		public:
 			CosmosLikeMessage(const std::shared_ptr<DynamicObject>& content);
+			CosmosLikeMessage(const cosmos::Message& rawStruct);
 			virtual api::CosmosLikeMsgType getMessageType() const override;
 			virtual std::string getRawMessageType() const override;
 
 			rapidjson::Value toJson(rapidjson::Document::AllocatorType& allocator) const;
+
+			cosmos::Message toRawMessage() const;
 
 		private:
 			std::shared_ptr<DynamicObject> _content;

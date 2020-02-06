@@ -84,7 +84,7 @@ namespace ledger {
                                                          const cosmos::Transaction &tx) {
                         // TODO COSMOS Implement inflateOperation
                         out.accountUid = getAccountUid();
-                        out.block = tx.block->toApiBlock();
+                        out.block = tx.block;
                         // TODO : find out if out.cosmosTransaction is necessary
                         // out.cosmosTransaction = Option<cosmos::Transaction>(tx);
                         out.currencyName = getWallet()->getCurrency().name;
@@ -107,7 +107,7 @@ namespace ledger {
                         }
 
                         if (tx.block.nonEmpty()) {
-                                putBlock(sql, tx.block.getValue().toApiBlock());
+                                putBlock(sql, tx.block.getValue());
                         }
 
                         int result = FLAG_TRANSACTION_IGNORED;

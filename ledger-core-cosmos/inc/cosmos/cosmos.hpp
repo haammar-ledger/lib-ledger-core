@@ -30,26 +30,34 @@
 
 #pragma once
 
+#include <list>
+#include <boost/variant.hpp>
+
 #include <core/math/BigInt.hpp>
 #include <core/wallet/Block.hpp>
+#include <core/utils/Option.hpp>
 
-#include <cosmos/CosmosLikeMessage.hpp>
-#include <cosmos/api/CosmosLikeMsgType.hpp>
-#include <cosmos/api/CosmosLikeMsgSend.hpp>
+#include <cosmos/api/CosmosLikeAmount.hpp>
+#include <cosmos/api/CosmosLikeContent.hpp>
+#include <cosmos/api/CosmosLikeMessage.hpp>
 #include <cosmos/api/CosmosLikeMsgDelegate.hpp>
-#include <cosmos/api/CosmosLikeMsgRedelegate.hpp>
-#include <cosmos/api/CosmosLikeMsgUndelegate.hpp>
-#include <cosmos/api/CosmosLikeMsgSubmitProposal.hpp>
-#include <cosmos/api/CosmosLikeMsgVote.hpp>
 #include <cosmos/api/CosmosLikeMsgDeposit.hpp>
+#include <cosmos/api/CosmosLikeMsgDeposit.hpp>
+#include <cosmos/api/CosmosLikeMsgRedelegate.hpp>
+#include <cosmos/api/CosmosLikeMsgSend.hpp>
+#include <cosmos/api/CosmosLikeMsgSubmitProposal.hpp>
+#include <cosmos/api/CosmosLikeMsgType.hpp>
+#include <cosmos/api/CosmosLikeMsgUndelegate.hpp>
+#include <cosmos/api/CosmosLikeMsgVote.hpp>
 #include <cosmos/api/CosmosLikeMsgWithdrawDelegationReward.hpp>
+#include <cosmos/api/CosmosLikeVoteOption.hpp>
 
 
 namespace ledger {
         namespace core {
                 namespace cosmos {
 
-                        using Block = ledger::core::Block;
+                        using Block = ledger::core::api::Block;
 
                         using ProposalContent = api::CosmosLikeContent;
                         using VoteOption = api::CosmosLikeVoteOption;
@@ -107,22 +115,22 @@ namespace ledger {
                                 std::chrono::system_clock::time_point timestamp;
                                 std::vector<Message> messages;
                                 std::string memo;
-				std::vector<MessageLog> logs;
-			};
+                                std::vector<MessageLog> logs;
+                        };
 
-			struct Account {
-				std::string type;
-				std::string address;
-				std::vector<Coin> balances;
-				std::string accountNumber;
-				std::string sequence;
+                        struct Account {
+                                std::string type;
+                                std::string address;
+                                std::vector<Coin> balances;
+                                std::string accountNumber;
+                                std::string sequence;
                                 std::chrono::system_clock::time_point lastUpdate;
-			};
+                        };
 
 
-			// Small helpers to avoid very long types
-			using TransactionList = std::list<std::shared_ptr<Transaction>>;
-			using MsgType = ::ledger::core::api::CosmosLikeMsgType;
-		}
-	}
+                        // Small helpers to avoid very long types
+                        using TransactionList = std::list<std::shared_ptr<Transaction>>;
+                        using MsgType = ::ledger::core::api::CosmosLikeMsgType;
+                }
+        }
 }
