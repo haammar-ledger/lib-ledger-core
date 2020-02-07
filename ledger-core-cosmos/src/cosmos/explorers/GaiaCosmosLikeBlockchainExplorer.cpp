@@ -102,7 +102,7 @@ namespace ledger {
             return _http->GET(fmt::format("/blocks/{}", blockHeight)).json(true).mapPtr<cosmos::Block>(getContext(), [=] (const HttpRequest::JsonResult& response) {
                 auto result = std::make_shared<cosmos::Block>();
                 const auto& document = std::get<1>(response)->GetObject();
-                rpcs_parsers::parseBlock(document, "cosmos", *result);
+                rpcs_parsers::parseBlock(document, currencies::ATOM.name, *result);
                 return result;
             });
         }
@@ -124,7 +124,7 @@ namespace ledger {
              [=] (const HttpRequest::JsonResult& response) {
                  auto result = std::make_shared<Block>();
                  const auto& document = std::get<1>(response)->GetObject();
-                 rpcs_parsers::parseBlock(document, "cosmos", *result);
+                 rpcs_parsers::parseBlock(document, currencies::ATOM.name, *result);
                  return result;
              });
         }
