@@ -281,11 +281,10 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
                 fmt::print("Received event {}\n", api::to_string(event->getCode()));
                 if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED)
                     return;
-                EXPECT_NE(event->getCode(), api::EventCode::SYNCHRONIZATION_FAILED);
                 EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
 
                 auto balance = wait(account->getBalance());
-                fmt::print("Balance: {}\n", balance->toString());
+                fmt::print("Balance: {} uatom\n", balance->toString());
                 auto txBuilder = std::dynamic_pointer_cast<CosmosLikeTransactionBuilder>(account->buildTransaction());
                 dispatcher->stop();
             });
@@ -296,10 +295,10 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
 
             dispatcher->waitUntilStopped();
 
+            auto block = wait(account->getLastBlock());
+            fmt::print("Block height: {}\n", block.height);
             auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
             fmt::print("Ops: {}\n", ops.size());
-            auto block = wait(account->getLastBlock());
-            auto blockHash = block.blockHash;
         }
     }
 }
