@@ -59,7 +59,13 @@ api::CosmosLikeNetworkParameters COSMOS = networks::getCosmosLikeNetworkParamete
 std::string DEFAULT_ADDRESS = "cosmos1sd4tl9aljmmezzudugs7zlaya7pg2895tyn79r";
 std::string DEFAULT_HEX_PUB_KEY = "03d672c1b90c84d9d97522e9a73252a432b77d90a78bf81cdbe35270d9d3dc1c34";
 
-class CosmosLikeWalletSynchronization : public BaseFixture {};
+class CosmosLikeWalletSynchronization : public BaseFixture {
+public:
+    void SetUp() override {
+        BaseFixture::SetUp();
+        backend->enableQueryLogging(true);
+    }
+};
 
 TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
 
