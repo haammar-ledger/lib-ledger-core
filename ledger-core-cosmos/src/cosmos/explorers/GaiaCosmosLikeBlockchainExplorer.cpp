@@ -32,8 +32,10 @@
 #include <cosmos/explorers/GaiaCosmosLikeBlockchainExplorer.hpp>
 
 #include <core/api/Configuration.hpp>
+#include <core/utils/Exception.hpp>
 
 #include <cosmos/explorers/RpcsParsers.hpp>
+#include <cosmos/CosmosLikeCurrencies.hpp>
 
 #include <numeric>
 #include <algorithm>
@@ -146,7 +148,7 @@ namespace ledger {
                     });
         }
 
-        Future<std::shared_ptr<cosmos::Transaction>>
+        FuturePtr<cosmos::Transaction>
         GaiaCosmosLikeBlockchainExplorer::getTransactionByHash(const std::string &hash) {
             return _http->GET(fmt::format("/txs/{}", hash))
                 .json(true)
@@ -192,18 +194,37 @@ namespace ledger {
             return Future<Unit>::successful(unit);
         }
 
-        FuturePtr<cosmos::Block> GaiaCosmosLikeBlockchainExplorer::getCurrentBlock() const {}
+        FuturePtr<cosmos::Block> GaiaCosmosLikeBlockchainExplorer::getCurrentBlock() const {
+            return _http->GET("/blocks/latest")
+                .json(true)
+                .mapPtr<cosmos::Block>(getContext(), [=](const HttpRequest::JsonResult& response) {
+                    const auto& document = std::get<1>(response)->GetObject();
+                    auto block = std::make_shared<cosmos::Block>();
+                    rpcs_parsers::parseBlock(document, currencies::ATOM.name, *block);
+                    return block;
+                });
+        }
 
         Future<Bytes> GaiaCosmosLikeBlockchainExplorer::getRawTransaction(
-            const String& transactionHash) {}
+            const String& transactionHash) {
+            throw(Exception(
+                api::ErrorCode::IMPLEMENTATION_IS_MISSING, "Get Raw Transaction is unimplemented"));
+        }
 
         FuturePtr<cosmos::Transaction> GaiaCosmosLikeBlockchainExplorer::getTransactionByHash(
-            const String& transactionHash) const {}
+            const String& transactionHash) const {
+            return getTransactionByHash(transactionHash);
+        }
 
         Future<String> GaiaCosmosLikeBlockchainExplorer::pushTransaction(
-            const std::vector<uint8_t>& transaction) {}
+            const std::vector<uint8_t>& transaction) {
+            return Future<String>::failure(Exception(
+                api::ErrorCode::IMPLEMENTATION_IS_MISSING, "Push Transaction is unimplemented"));
+        }
 
-        Future<int64_t> GaiaCosmosLikeBlockchainExplorer::getTimestamp() const {}
+        Future<int64_t> GaiaCosmosLikeBlockchainExplorer::getTimestamp() const {
+            return Future<int64_t>::successful(0);
+        }
 
         }  // namespace core
 }

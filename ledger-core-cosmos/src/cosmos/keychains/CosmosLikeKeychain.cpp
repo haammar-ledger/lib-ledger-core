@@ -75,7 +75,7 @@ namespace ledger {
 		}
 
 	        std::vector<CosmosLikeKeychain::Address> CosmosLikeKeychain::getAllObservableAddresses(uint32_t from, uint32_t to) {
-			return {};
+			return {_address};
 		}
 
 		std::shared_ptr<CosmosLikeKeychain>

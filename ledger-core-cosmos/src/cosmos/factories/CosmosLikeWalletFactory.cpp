@@ -148,9 +148,11 @@ namespace ledger {
             } else {
                 throw Exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeWalletFactory using non supported explorer");
             }
-            if (explorer)
+            if (explorer) {
                 _runningExplorers.push_back(explorer);
-            return explorer;
+                return explorer;
+            }
+            throw Exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeWalletFactory using non supported explorer");
 
         }
 

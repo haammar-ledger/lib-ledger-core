@@ -329,8 +329,13 @@ namespace ledger {
                                      "CosmosLikeTransactionApi::setGasPrice: Invalid fee");
             }
             // Assumes uatom
-            _tx.fee.amount[0].amount = rhs_fee->toString();
-            _tx.fee.amount[0].denom = _currency.units.front().name;
+            if (_tx.fee.amount.size() > 0) {
+                _tx.fee.amount[0].amount = rhs_fee->toString();
+                _tx.fee.amount[0].denom = _currency.units.front().name;
+            } else {
+                _tx.fee.amount.emplace_back(rhs_fee->toString(), _currency.units.front().name);
+            }
+
             return *this;
         }
 

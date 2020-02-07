@@ -60,7 +60,7 @@ namespace ledger {
             FuturePtr<cosmos::Block> getCurrentBlock() override;
             Future<TransactionList>
             getTransactions(const TransactionFilter &filter, int page, int limit) override;
-            Future<std::shared_ptr<cosmos::Transaction>>
+            FuturePtr<cosmos::Transaction>
             getTransactionByHash(const std::string &hash) override;
             Future<void *> startSession() override;
             Future<Unit> killSession(void* session) override;
@@ -73,7 +73,7 @@ namespace ledger {
                                                                 Option<std::string> fromBlockHash = Option<std::string>(),
                                                                 Option<void*> session = Option<void *>()) override;
             FuturePtr<cosmos::Block> getCurrentBlock() const override;
-            Future<Bytes> getRawTransaction(const String& transactionHash) override;
+            [[ noreturn ]] Future<Bytes> getRawTransaction(const String& transactionHash) override;
             FuturePtr<cosmos::Transaction> getTransactionByHash(const String& transactionHash) const override;
             Future<String> pushTransaction(const std::vector<uint8_t>& transaction) override;
             Future<int64_t> getTimestamp() const override;

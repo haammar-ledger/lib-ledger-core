@@ -75,10 +75,7 @@ namespace ledger {
                                           const std::string &accountUid) override;
 
         private:
-            std::shared_ptr<CosmosLikeBlockchainExplorer> _explorer;
-            std::shared_ptr<ProgressNotifier<Unit>> _notifier;
             std::shared_ptr<DatabaseSessionPool> _database;
-            std::mutex _lock;
 
             std::shared_ptr <CosmosBlockchainAccountSynchronizer> getSharedFromThis() override;
 
