@@ -257,10 +257,10 @@ namespace ledger {
                 return g.toString();
             });
             sql << "INSERT INTO cosmos_transactions("
-                   "transaction_uid, hash, block_uid, time, fee_amount, gas, block_height, gas_used, memo"
-                   ") VALUE(:uid, :hash, :buid, :time, :fee, :gas, :bheight, :gas_used, :memo)",
+                   "transaction_uid, hash, block_uid, time, fee_amount, gas, gas_used, memo"
+                   ") VALUES(:uid, :hash, :buid, :time, :fee, :gas, :gas_used, :memo)",
                     use(uid), use(tx.hash), use(blockUid), use(date), use(fee), use(gas),
-                    use(blockHeight), use(gasUsed), use(tx.memo);
+                    use(gasUsed), use(tx.memo);
         }
 
         std::string CosmosLikeTransactionDatabaseHelper::putTransaction(soci::session &sql,
