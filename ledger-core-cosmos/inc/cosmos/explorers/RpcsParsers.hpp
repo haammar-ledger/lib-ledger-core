@@ -249,6 +249,7 @@ namespace ledger {
                 if (node.HasMember(kHeight)) {
                     cosmos::Block block;
                     block.height = BigInt::fromString(node[kHeight].GetString()).toUint64();
+                    block.currencyName = currencies::ATOM.name;
                     transaction.block = block;
                 }
                 if (node.HasMember(kGasUsed)) {
