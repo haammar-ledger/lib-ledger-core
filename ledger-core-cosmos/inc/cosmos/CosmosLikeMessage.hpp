@@ -66,6 +66,9 @@ namespace ledger {
 			cosmos::Message toRawMessage() const;
 
 		private:
+			// TODO : use cosmos::Message as data type instead of the content.
+			// The constructor using DynamicObject should disappear, and
+			// the toJson method should do the type-dispatch to build the json dynamically
 			std::shared_ptr<DynamicObject> _content;
 		};
 	}

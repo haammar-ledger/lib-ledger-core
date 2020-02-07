@@ -182,15 +182,6 @@ namespace ledger {
 
                 bool CosmosLikeAccount::putBlock(soci::session &sql,
                                                  const api::Block &block) {
-                        // Block abstractBlock;
-                        // abstractBlock.hash = block.blockHash;
-                        // abstractBlock.currencyName = getWallet()->getCurrency().name;
-                        // abstractBlock.height = block.height;
-                        // abstractBlock.time = block.time;
-                        // if (BlockDatabaseHelper::putBlock(sql, abstractBlock)) {
-                        //         emitNewBlockEvent(abstractBlock);
-                        //         return true;
-                        // }
                         if (BlockDatabaseHelper::putBlock(sql, block)) {
                                 emitNewBlockEvent(block);
                                 return true;
