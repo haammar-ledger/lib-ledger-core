@@ -75,7 +75,7 @@ namespace ledger {
             virtual FuturePtr<cosmos::Account> getAccount(const std::string& account) = 0;
             virtual FuturePtr<Block> getCurrentBlock() = 0;
             virtual Future<cosmos::TransactionList> getTransactions(
-                const TransactionFilter& filter, int page, int limit) = 0;
+                const TransactionFilter& filter, int page, int limit) const = 0;
             virtual Future<std::shared_ptr<cosmos::Transaction>> getTransactionByHash(
                 const std::string& hash) = 0;
             virtual FuturePtr<TransactionsBulk> getTransactions(const std::vector<std::string>& addresses,
