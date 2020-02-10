@@ -273,6 +273,6 @@ CosmosLikeAccount = interface +c {
 }
 
 CosmosConfigurationDefaults = interface +c {
-        const COSMOS_DEFAULT_API_ENDPOINT: string = "https://lcd.nylira.net/";
+        const COSMOS_DEFAULT_API_ENDPOINT: string = "https://atom.dev.aws.ledger.fr/";
         const COSMOS_OBSERVER_WS_ENDPOINT: string = "";
 }
