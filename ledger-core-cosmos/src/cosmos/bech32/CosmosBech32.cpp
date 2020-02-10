@@ -34,24 +34,6 @@
 
 namespace ledger {
     namespace core {
-        CosmosBech32::CosmosBech32(api::CosmosBech32Type type, size_t offsetConversion) :
-            _offsetConversion(0) {
-            switch (type) {
-                case api::CosmosBech32Type::PUBLIC_KEY :
-                    _bech32Params = COSMOS_PUB;
-                    break;
-                case api::CosmosBech32Type::PUBLIC_KEY_VAL :
-                    _bech32Params = COSMOS_PUB_VAL;
-                    break;
-                case api::CosmosBech32Type::ADDRESS :
-                    _bech32Params = COSMOS;
-                    break;
-                case api::CosmosBech32Type::ADDRESS_VAL :
-                    _bech32Params = COSMOS_VAL;
-                    break;
-            }
-        }
-
         std::pair<std::vector<uint8_t>, std::vector<uint8_t>> CosmosBech32::decode(const std::string& str) {
             auto decoded = decodeBech32(str);
             if (decoded.first != _bech32Params.hrp || decoded.second.size() < 1) {
