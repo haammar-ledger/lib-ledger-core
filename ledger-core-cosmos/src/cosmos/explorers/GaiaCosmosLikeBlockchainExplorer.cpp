@@ -72,16 +72,6 @@ namespace ledger {
 
         // Address at the end of the filter is...
         static const std::vector<CosmosLikeBlockchainExplorer::TransactionFilter> GAIA_FILTER {
-            "transfer.recipient=",
-            "message.sender=",
-            // ... the delegator of a MsgDelegate
-            // We're sure that the message.sender of a message.action=delegate is the delegator at least using
-            // this source code
-            // https://github.com/cosmos/cosmos-sdk/blob/43137ee893cefbdb2aacd25ef4ec39eacf6ae70c/x/staking/handler.go#L196
-            "message.action=delegate&message.sender=",
-            // ... the target of the delegation in a MsgDelegate
-            // https://github.com/cosmos/cosmos-sdk/blob/43137ee893cefbdb2aacd25ef4ec39eacf6ae70c/x/staking/handler.go#L190
-            "delegate.validator="
         };
 
         GaiaCosmosLikeBlockchainExplorer::GaiaCosmosLikeBlockchainExplorer(
