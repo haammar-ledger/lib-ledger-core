@@ -275,7 +275,10 @@ namespace ledger {
         }
 
         Future<int64_t> GaiaCosmosLikeBlockchainExplorer::getTimestamp() const {
-            return Future<int64_t>::successful(0);
+            return Future<int64_t>::successful(
+                std::chrono::duration_cast<std::chrono::seconds>(
+                    std::chrono::system_clock::now().time_since_epoch())
+                    .count());
         }
 
         }  // namespace core
