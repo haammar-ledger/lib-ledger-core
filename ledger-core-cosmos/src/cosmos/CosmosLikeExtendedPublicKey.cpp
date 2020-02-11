@@ -114,11 +114,11 @@ namespace ledger {
                                                 const std::string& bech32PubKey,
                                                 const Option<std::string>& path) {
             auto &params = networks::getCosmosLikeNetworkParameters(currency.name);
-            if (bech32PubKey.find(COSMOS_PUB.hrp) == std::string::npos) {
+            if (bech32PubKey.find(cosmos::getBech32Params(api::CosmosBech32Type::PUBLIC_KEY).hrp) == std::string::npos) {
                 throw Exception(api::ErrorCode::INVALID_ARGUMENT, "Invalid Bech32 public Key: should be prefixed with \"cosmospub\"");
             }
             // From bech32 pubKey to pubKeyHash160
-            auto type = bech32PubKey.find(COSMOS_PUB_VAL.hrp) == std::string::npos ? api::CosmosBech32Type::PUBLIC_KEY : api::CosmosBech32Type::PUBLIC_KEY_VAL;
+            auto type = bech32PubKey.find(cosmos::getBech32Params(api::CosmosBech32Type::PUBLIC_KEY_VAL).hrp) == std::string::npos ? api::CosmosBech32Type::PUBLIC_KEY : api::CosmosBech32Type::PUBLIC_KEY_VAL;
             auto pkBech32 = std::make_shared<CosmosBech32>(type);
             auto decodedPk = pkBech32->decode(bech32PubKey);
 

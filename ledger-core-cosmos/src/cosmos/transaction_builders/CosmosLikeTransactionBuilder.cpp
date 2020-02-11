@@ -303,8 +303,8 @@ namespace ledger {
             return shared_from_this();
         }
 
-        void CosmosLikeTransactionBuilder::build(const std::function<void(std::shared_ptr<api::CosmosLikeTransaction>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
-            build().callback(_context, callback);
+        void CosmosLikeTransactionBuilder::build(const std::shared_ptr<api::CosmosLikeTransactionCallback> &callback) {
+            // build().callback(_context, callback);
         }
 
         Future<std::shared_ptr<api::CosmosLikeTransaction>> CosmosLikeTransactionBuilder::build() {
