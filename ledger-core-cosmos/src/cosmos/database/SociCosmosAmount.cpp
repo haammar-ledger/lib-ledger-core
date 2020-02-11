@@ -30,16 +30,45 @@
  */
 
 #include <cosmos/database/SociCosmosAmount.hpp>
+#include <cosmos/CosmosLikeConstants.hpp>
+
 
 namespace soci {
+    using namespace rapidjson;
+
+    std::string coinToString(const ledger::core::cosmos::Coin &coin) {
+        Document d;
+        auto& allocator = d.GetAllocator();
+        auto& object = d.SetObject();
+
+        Value vStringAmount(rapidjson::kStringType);
+        vStringAmount.SetString(coin.amount.c_str(), static_cast<rapidjson::SizeType>(coin.amount.length()), allocator);
+        object.AddMember(ledger::core::cosmos::constants::kAmount, vStringAmount, allocator);
+
+        Value vStringDenom(rapidjson::kStringType);
+        vStringDenom.SetString(coin.denom.c_str(), static_cast<rapidjson::SizeType>(coin.denom.length()), allocator);
+        object.AddMember(ledger::core::cosmos::constants::kDenom, vStringDenom, allocator);
+
+        StringBuffer buffer;
+        Writer<StringBuffer> writer(buffer);
+        d.Accept(writer);
+        return std::string(buffer.GetString());
+    }
+
+    void stringToCoin(const std::string &str, ledger::core::cosmos::Coin &out) {
+        Document d;
+        d.Parse(str.data());
+        out.amount = d[ledger::core::cosmos::constants::kAmount].GetString();
+        out.denom = d[ledger::core::cosmos::constants::kDenom].GetString();
+    }
+
     std::string coinsToString(const std::vector<ledger::core::cosmos::Coin> &coins) {
-        using namespace rapidjson;
         Document d;
         auto& allocator = d.GetAllocator();
         auto& array = d.SetArray();
         for (const auto& coin : coins) {
             Value tuple(kArrayType);
-            soci::cosmos_coin_to_json_tuple(coin, tuple, allocator);
+            cosmos_coin_to_json_tuple(coin, tuple, allocator);
             array.PushBack(tuple.Move(), allocator);
         }
 
@@ -50,7 +79,6 @@ namespace soci {
     }
 
     void stringToCoins(const std::string &str, std::vector<ledger::core::cosmos::Coin> &out) {
-        using namespace rapidjson;
         Document d;
         d.Parse(str.data());
         const auto& list = d.GetArray();

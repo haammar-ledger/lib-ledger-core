@@ -226,6 +226,17 @@ namespace ledger {
                     .execute(sql);
             }
 
+/* (From tezos)
+            soci::rowset<soci::row> TezosLikeOperationQuery::performExecute(soci::session &sql) {
+                return _builder.select("o.account_uid, o.uid, o.wallet_uid, o.type, o.date, o.senders, o.recipients,"
+                                                "o.amount, o.fees, o.currency_name, o.trust, b.hash, b.height, b.time, orig_op.uid"
+                        )
+                        .from("operations").to("o")
+                        .outerJoin("blocks AS b", "o.block_uid = b.uid")
+                        .outerJoin("tezos_originated_operations AS orig_op", "o.uid = orig_op.uid")
+                        .execute(sql);
+            }
+*/
             QueryBuilder _builder;
             std::shared_ptr<api::QueryFilter> _headFilter;
             bool _fetchCompleteOperation;

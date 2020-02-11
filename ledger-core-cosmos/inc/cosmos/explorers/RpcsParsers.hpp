@@ -38,8 +38,8 @@
 
 #include <core/utils/Option.hpp>
 #include <core/utils/DateUtils.hpp>
+#include <core/api/Block.hpp>
 
-#include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <cosmos/CosmosLikeMessage.hpp>
@@ -244,12 +244,19 @@ namespace ledger {
             template <class T>
             void parseTransaction(const T& node,
                     cosmos::Transaction& transaction) {
+<<<<<<< HEAD
                 assert((node.HasMember(kTxHash)));
                 transaction.hash = node[kTxHash].GetString();
                 if (node.HasMember(kHeight)) {
                     cosmos::Block block;
                     block.height = BigInt::fromString(node[kHeight].GetString()).toUint64();
                     block.currencyName = currencies::ATOM.name;
+=======
+                transaction.hash = node["txhash"].GetString();
+                if (node.HasMember("height")) {
+                    api::Block block;
+                    block.height = BigInt::fromString(node["height"].GetString()).toUint64();
+>>>>>>> Rebase + enable to read/write cosmos transactions from/to DB
                     transaction.block = block;
                 }
                 if (node.HasMember(kGasUsed)) {

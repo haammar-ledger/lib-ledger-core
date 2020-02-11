@@ -99,8 +99,7 @@ namespace ledger {
                         out.trust = std::make_shared<TrustIndicator>();
                 }
 
-                int CosmosLikeAccount::putTransaction(soci::session &sql,
-                                                      const cosmos::Transaction &tx) {
+                int CosmosLikeAccount::putTransaction(soci::session &sql, const cosmos::Transaction &tx) {
                         auto wallet = getWallet();
                         if (wallet == nullptr) {
                                 throw Exception(api::ErrorCode::RUNTIME_ERROR, "Wallet reference is dead.");

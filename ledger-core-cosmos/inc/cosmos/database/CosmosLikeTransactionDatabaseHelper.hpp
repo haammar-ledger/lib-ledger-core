@@ -43,10 +43,15 @@ namespace ledger {
     namespace core {
         class CosmosLikeTransactionDatabaseHelper {
         public:
+            // Tx --> DB
+            static std::string putTransaction(soci::session &sql,
+                                              const std::string &accountUid,
+                                              const cosmos::Transaction &tx);
+
             static bool getTransactionByHash(soci::session &sql,
                                              const std::string &hash,
                                              cosmos::Transaction &tx);
-
+            // DB --> Tx
             static bool inflateTransaction(soci::session &sql,
                                            const soci::row &row,
                                            cosmos::Transaction &tx);
@@ -59,11 +64,6 @@ namespace ledger {
 
             static std::string createCosmosMessageUid(const std::string &txUid,
                                                       uint64_t msgIndex);
-
-            static std::string putTransaction(soci::session &sql,
-                                              const std::string &accountUid,
-                                              const cosmos::Transaction &tx);
-
         };
     }
 }

@@ -40,6 +40,16 @@ namespace ledger {
                 "memo TEXT"
                 ")";
 
+            // TODO
+            // ** MsgUndelegate
+            // // MsgUndelegate - struct for unbonding transactions
+            // type MsgUndelegate struct {
+            //  DelegatorAddress sdk.AccAddress `json:"delegator_address"`
+            //  ValidatorAddress sdk.ValAddress `json:"validator_address"`
+            //  SharesAmount     sdk.Dec        `json:"shares_amount"`
+            // }
+            //
+
             // * TODO : handle missing Msg types
             // ** MsgMultiSend
             // // MsgMultiSend - high level transaction of the coin module
@@ -85,14 +95,6 @@ namespace ledger {
             //  MinSelfDelegation *sdk.Int `json:"min_self_delegation"`
             // }
             //
-            // ** MsgUndelegate
-            // // MsgUndelegate - struct for unbonding transactions
-            // type MsgUndelegate struct {
-            //  DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-            //  ValidatorAddress sdk.ValAddress `json:"validator_address"`
-            //  SharesAmount     sdk.Dec        `json:"shares_amount"`
-            // }
-            //
             // ** MsgUnjail
             // // MsgUnjail - struct for unjailing jailed validator
             // type MsgUnjail struct {
@@ -121,7 +123,9 @@ namespace ledger {
             sql << "CREATE TABLE cosmos_messages("
                 "uid VARCHAR(255) PRIMARY KEY NOT NULL,"
                 "transaction_uid VARCHAR(255) NOT NULL "
-                "REFERENCES cosmos_transactions(transaction_uid) ON DELETE CASCADE ON UPDATE CASCADE,"
+                    "REFERENCES cosmos_transactions(transaction_uid) ON DELETE CASCADE ON UPDATE CASCADE,"
+                //"operation_uid VARCHAR(255) NOT NULL"
+                //    "REFERENCES operations(uid) ON DELETE CASCADE,"
                 "message_type VARCHAR(255) NOT NULL,"
                 "log TEXT,"
                 "success INTEGER,"
@@ -129,8 +133,8 @@ namespace ledger {
                 // MsgSend
                 "from_address VARCHAR(255),"
                 "to_address VARCHAR(255),"
-                "amount_value VARCHAR(255),"
-                // MsgDelegate
+                "amount VARCHAR(255),"
+                // MsgDelegate & MsgUndelegate
                 "delegator_address VARCHAR(255),"
                 "validator_address VARCHAR(255),"
                 // MsgRedelegate

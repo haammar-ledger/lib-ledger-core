@@ -54,11 +54,9 @@
 
 using namespace std;
 using namespace ledger::core;
+using namespace ledger::testing::cosmos;
 
 api::CosmosLikeNetworkParameters COSMOS = networks::getCosmosLikeNetworkParameters("atom");
-std::string DEFAULT_ADDRESS = "cosmos1sd4tl9aljmmezzudugs7zlaya7pg2895tyn79r";
-std::string DEFAULT_HEX_PUB_KEY = "03d672c1b90c84d9d97522e9a73252a432b77d90a78bf81cdbe35270d9d3dc1c34";
-std::string BIG_SYNC_ADDRESS = "cosmos1y6yvdel7zys8x60gz9067fjpcpygsn62ae9x46";
 
 class CosmosLikeWalletSynchronization : public BaseFixture {
 public:

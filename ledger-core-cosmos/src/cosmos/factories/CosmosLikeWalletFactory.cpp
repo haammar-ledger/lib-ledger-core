@@ -54,6 +54,7 @@ namespace ledger {
                                                          const std::shared_ptr<Services> &services):
             AbstractWalletFactory(currency, services) {
             _keychainFactories = {{api::KeychainEngines::BIP49_P2SH, std::make_shared<CosmosLikeKeychainFactory>()}};
+            // create the DB structure if not already created
             services->getDatabaseSessionPool()->forwardMigration<CosmosMigration>();
         }
 

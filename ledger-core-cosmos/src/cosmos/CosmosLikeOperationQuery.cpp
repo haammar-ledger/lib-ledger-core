@@ -33,47 +33,44 @@
 #include <cosmos/database/CosmosLikeTransactionDatabaseHelper.hpp>
 
 namespace ledger {
-        namespace core {
+    namespace core {
 
-                CosmosLikeOperationQuery::CosmosLikeOperationQuery(
-                        const std::shared_ptr<api::QueryFilter>& headFilter,
-                        const std::shared_ptr<DatabaseSessionPool>& pool,
-                        const std::shared_ptr<api::ExecutionContext>& context,
-                        const std::shared_ptr<api::ExecutionContext>& mainContext)
-                        : OperationQuery(headFilter, pool, context, mainContext) {
+        CosmosLikeOperationQuery::CosmosLikeOperationQuery(
+            const std::shared_ptr<api::QueryFilter>& headFilter,
+            const std::shared_ptr<DatabaseSessionPool>& pool,
+            const std::shared_ptr<api::ExecutionContext>& context,
+            const std::shared_ptr<api::ExecutionContext>& mainContext)
+            : OperationQuery(headFilter, pool, context, mainContext) {
 
-                }
-
-                soci::rowset<soci::row> CosmosLikeOperationQuery::performExecute(soci::session &sql) {
-                        // TODO : fix this Tezos copy-pasta
-                        // return _builder.select("o.account_uid, o.uid, o.wallet_uid, o.type, o.date, o.senders, o.recipients,"
-                        //                        "o.amount, o.fees, o.currency_name, o.trust, b.hash, b.height, b.time, orig_op.uid"
-                        // )
-                        //         .from("operations").to("o")
-                        //         .outerJoin("blocks AS b", "o.block_uid = b.uid")
-                        //         .outerJoin("tezos_originated_operations AS orig_op", "o.uid = orig_op.uid")
-                        //         .execute(sql);
-                }
-
-                void CosmosLikeOperationQuery::inflateCompleteTransaction(
-                        soci::session &sql, const std::string &accountUid, CosmosLikeOperation& operation) {
-                        // TODO : fix this Tezos copy-pasta
-                        // CosmosLikeBlockchainExplorerTransaction tx;
-
-                        // operation.setExplorerTransaction(tx);
-                        // std::string transactionHash;
-                        // sql << "SELECT transaction_hash FROM tezos_operations WHERE uid = :uid"
-                        //         , soci::use(operation.getUid())
-                        //         , soci::into(transactionHash);
-                        // CosmosLikeTransactionDatabaseHelper::getTransactionByHash(
-                        //         sql, transactionHash, operation.getUid(), operation.getExplorerTransaction());
-                }
-
-                std::shared_ptr<CosmosLikeOperation> CosmosLikeOperationQuery::createOperation(std::shared_ptr<AbstractAccount> &account) {
-                        // TODO : fix this Tezos copy-pasta
-                        // CosmosLikeBlockchainExplorerTransaction tx;
-
-                        // return std::make_shared<CosmosLikeOperation>(account->getWallet(), tx);
-                }
         }
+
+        // FIXME Test this
+        void CosmosLikeOperationQuery::inflateCompleteTransaction(soci::session &sql,
+                                                                  const std::string &accountUid,
+                                                                  CosmosLikeOperation& operation) {
+
+            ledger::core::cosmos::Transaction tx;
+
+            std::string txHash;
+            sql << "SELECT tx.hash"
+                   "FROM cosmos_transactions AS tx"
+                   "LEFT JOIN cosmos_messages AS msg ON msg.transaction_uid = tx.uid"
+                   "LEFT JOIN cosmos_operations AS op ON op.message_uid = msg.uid"
+                   "WHERE op.uid = :uid",
+                   soci::use(operation.getUid()),
+                   soci::into(txHash);
+
+            CosmosLikeTransactionDatabaseHelper::getTransactionByHash(
+                sql,
+                txHash,
+                tx);
+
+            operation.setTransactionData(tx);
+        }
+
+        std::shared_ptr<CosmosLikeOperation> CosmosLikeOperationQuery::createOperation(std::shared_ptr<AbstractAccount> &account) {
+            ledger::core::cosmos::Transaction tx;
+            return std::make_shared<CosmosLikeOperation>(account->getWallet()->getCurrency(), tx);
+        }
+    }
 }

@@ -33,30 +33,61 @@
 
 #include <core/api/ErrorCode.hpp>
 #include <core/utils/Exception.hpp>
+#include <core/operation/OperationDatabaseHelper.hpp>
 
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 
 namespace ledger {
     namespace core {
 
-        CosmosLikeOperation::CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp) {
-            auto cosmosBaseOp = std::dynamic_pointer_cast<CosmosLikeOperation>(baseOp);
-            if (cosmosBaseOp) {
-                _transaction = std::make_shared<CosmosLikeTransactionApi>(cosmosBaseOp);
-            }
+        CosmosLikeOperation::CosmosLikeOperation(const api::Currency& currency,
+                                                 ledger::core::cosmos::Transaction const& txData) :
+            _txApi(std::make_shared<CosmosLikeTransactionApi>(currency)),
+            _msgApi(nullptr), // FIXME
+            _txData(txData)
+        {}
+
+        CosmosLikeOperation::CosmosLikeOperation(const std::shared_ptr<CosmosLikeOperation> &copy,
+                                                 ledger::core::cosmos::Transaction const& txData) :
+            _txApi(std::make_shared<CosmosLikeTransactionApi>(copy)),
+            _msgApi(nullptr), // FIXME
+            _txData(txData)
+        {}
+
+        void CosmosLikeOperation::setTransactionData(ledger::core::cosmos::Transaction const& txData) {
+            _txData = txData;
         }
 
+        ledger::core::cosmos::Transaction& CosmosLikeOperation::getTransactionData() {
+            return _txData;
+        }
+
+        // TODO ?
+        /*
+        void CosmosLikeOperation::setMessageData(ledger::core::cosmos::Message const& msgData) {
+            _msgData = msgData;
+        }
+
+        ledger::core::cosmos::Message& CosmosLikeOperation::getMessageData() {
+            return _msgData;
+        }
+        */
+
 		std::shared_ptr<api::CosmosLikeTransaction> CosmosLikeOperation::getTransaction() {
-            return _transaction;
+            return _txApi;
         }
 
 		std::shared_ptr<api::CosmosLikeMessage> CosmosLikeOperation::getMessage() {
-			throw make_exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeOperation::getMessage");
+			return _msgApi;
 		}
 
+        // FIXME Test this
         void CosmosLikeOperation::refreshUid(const std::string &additional) {
-            // TODO: Add implementation
-            (void) additional;
+            auto final = fmt::format("{}+{}", _txApi->getHash(), api::to_string(_msgApi->getMessageType()));
+            if (!additional.empty()) {
+                final = fmt::format("{}+{}", final, additional);
+            }
+            uid = OperationDatabaseHelper::createUid(accountUid, final, getOperationType());
         }
 
     }
