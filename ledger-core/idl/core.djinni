@@ -3,6 +3,7 @@
 @import "amount.djinni"
 @import "block.djinni"
 @import "configuration.djinni"
+@import "callback.djinni"
 @import "crypto.djinni"
 @import "currency.djinni"
 @import "database.djinni"
@@ -24,6 +25,7 @@
 @import "trust.djinni"
 @import "tuples.djinni"
 @import "wallet.djinni"
+@import "wallet_store.djinni"
 @import "websocket_client.djinni"
 
 LedgerCore = interface +c {

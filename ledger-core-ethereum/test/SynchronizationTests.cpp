@@ -50,7 +50,10 @@
 
 #include <FakeHttpClient.hpp>
 
+#include "Fixtures.hpp"
+
 using namespace std;
+using namespace ledger::testing::eth_xpub;
 
 class EthereumLikeWalletSynchronization : public BaseFixture {
 };
@@ -62,7 +65,7 @@ TEST_F(EthereumLikeWalletSynchronization, MediumXpubSynchronization) {
         auto services = newDefaultServices();
 
         auto walletStore = newWalletStore(services);
-        walletStore->addCurrency(ledger::core::currencies::ethereum());
+        wait(walletStore->addCurrency(ledger::core::currencies::ethereum()));
 
         auto factory = std::make_shared<EthereumLikeWalletFactory>(ledger::core::currencies::ethereum(), services);
         walletStore->registerFactory(ledger::core::currencies::ethereum(), factory);
@@ -162,7 +165,7 @@ TEST_F(EthereumLikeWalletSynchronization, MediumXpubSynchronization) {
         auto services = newDefaultServices();
 
         auto walletStore = newWalletStore(services);
-        walletStore->addCurrency(ledger::core::currencies::ethereum());
+        wait(walletStore->addCurrency(ledger::core::currencies::ethereum()));
 
         auto factory = std::make_shared<EthereumLikeWalletFactory>(ledger::core::currencies::ethereum(), services);
         walletStore->registerFactory(ledger::core::currencies::ethereum(), factory);
@@ -181,7 +184,7 @@ TEST_F(EthereumLikeWalletSynchronization, BalanceHistory) {
     {
         auto services = newDefaultServices();
         auto walletStore = newWalletStore(services);
-        walletStore->addCurrency(ledger::core::currencies::ethereum());
+        wait(walletStore->addCurrency(ledger::core::currencies::ethereum()));
 
         auto factory = std::make_shared<EthereumLikeWalletFactory>(ledger::core::currencies::ethereum(), services);
         walletStore->registerFactory(ledger::core::currencies::ethereum(), factory);
@@ -239,7 +242,7 @@ TEST_F(EthereumLikeWalletSynchronization, XpubSynchronization) {
         //configuration->putString(api::Configuration::BLOCKCHAIN_EXPLORER_API_ENDPOINT, "http://eth-mainnet.explorers.dev.aws.ledger.fr:80");
 
         auto walletStore = newWalletStore(services);
-        walletStore->addCurrency(ledger::core::currencies::ethereum());
+        wait(walletStore->addCurrency(ledger::core::currencies::ethereum()));
 
         auto factory = std::make_shared<EthereumLikeWalletFactory>(ledger::core::currencies::ethereum(), services);
         walletStore->registerFactory(ledger::core::currencies::ethereum(), factory);
@@ -314,7 +317,7 @@ TEST_F(EthereumLikeWalletSynchronization, XpubETCSynchronization) {
         configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME,"44'/60'/0'/<account>");
 
         auto walletStore = newWalletStore(services);
-        walletStore->addCurrency(ledger::core::currencies::ethereum_classic());
+        wait(walletStore->addCurrency(ledger::core::currencies::ethereum_classic()));
 
         auto factory = std::make_shared<EthereumLikeWalletFactory>(ledger::core::currencies::ethereum_classic(), services);
         walletStore->registerFactory(ledger::core::currencies::ethereum_classic(), factory);
@@ -392,6 +395,8 @@ std::pair<std::shared_ptr<LambdaEventReceiver>, ledger::core::Future<bool>> crea
 TEST_F(EthereumLikeWalletSynchronization, ReorgLastBlock) {
     auto walletName = "e847815f-488a-4301-b67c-378a5e9c8a61";
     {
+        backend = std::static_pointer_cast<DatabaseBackend>(DatabaseBackend::getSqlite3Backend());
+
         auto fakeHttp = std::make_shared<test::FakeHttpClient>();
         auto services = Services::newInstance(
             "my_ppol",
@@ -407,7 +412,7 @@ TEST_F(EthereumLikeWalletSynchronization, ReorgLastBlock) {
         );
 
         auto walletStore = newWalletStore(services);
-        walletStore->addCurrency(ledger::core::currencies::ethereum());
+        wait(walletStore->addCurrency(ledger::core::currencies::ethereum()));
 
         auto factory = std::make_shared<EthereumLikeWalletFactory>(ledger::core::currencies::ethereum(), services);
         walletStore->registerFactory(ledger::core::currencies::ethereum(), factory);

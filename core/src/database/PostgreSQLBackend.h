@@ -1,8 +1,8 @@
 /*
  *
- * Bech32Factory
+ * PostgreSQL
  *
- * Created by El Khalil Bellakrid on 18/02/2019.
+ * Created by El Khalil Bellakrid on 06/12/2019.
  *
  * The MIT License (MIT)
  *
@@ -30,19 +30,35 @@
 
 #pragma once
 
-#include <string>
+#include "DatabaseBackend.hpp"
 #include <memory>
-
-#include <core/utils/Option.hpp>
-
-#include <bitcoin/bech32/Bech32.hpp>
-
+#include <mutex>
 namespace ledger {
     namespace core {
-        class Bech32Factory {
+        class PostgreSQLBackend : public DatabaseBackend {
         public:
-            static Option<std::shared_ptr<Bech32>> newBech32Instance(const std::string &networkIdentifier);
+            PostgreSQLBackend();
+            PostgreSQLBackend(int32_t connectionPoolSize);
+
+            int32_t getConnectionPoolSize() override;
+
+            void init(const std::shared_ptr<api::PathResolver> &resolver,
+                      const std::string &dbName,
+                      const std::string &password,
+                      soci::session &session) override;
+
+            void setPassword(const std::string &password,
+                             soci::session &session) override;
+
+            void changePassword(const std::string & oldPassword,
+                                const std::string & newPassword,
+                                soci::session &session) override;
+            static std::once_flag sslFlag;
+            static void initSSLLibraries();
+        private:
+            // Resolved path to db
+            std::string _dbName;
+            int32_t _connectionPoolSize;
         };
     }
 }
-
