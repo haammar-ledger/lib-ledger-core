@@ -36,6 +36,7 @@
 
 #include <core/api/Address.hpp>
 #include <core/api/Event.hpp>
+#include <core/api/ErrorCodeCallback.hpp>
 #include <core/wallet/AbstractWallet.hpp>
 #include <core/wallet/AbstractAccount.hpp>
 #include <core/wallet/Amount.hpp>
@@ -98,17 +99,15 @@ namespace ledger {
 
                                 std::string getRestoreKey() override;
 
-                                void broadcastRawTransaction(const std::string &transaction,
-                                                             const std::function<void(std::experimental::optional<std::string>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
+                                void broadcastRawTransaction(const std::string &transaction, const std::shared_ptr<api::StringCallback> &callback) override;
 
-                                void broadcastTransaction(const std::shared_ptr<api::CosmosLikeTransaction> &transaction,
-                                                          const std::function<void(std::experimental::optional<std::string>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
+                                void broadcastTransaction(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::shared_ptr<api::StringCallback>&callback) override;
 
                                 std::shared_ptr<api::CosmosLikeTransactionBuilder> buildTransaction() override;
                                 std::shared_ptr<api::CosmosLikeTransactionBuilder> buildTransaction(const std::string &senderAddress);
 
                                 std::shared_ptr<api::OperationQuery> queryOperations() override;
-                                void getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::function<void(std::experimental::optional<std::shared_ptr<::ledger::core::api::BigInt>>, std::experimental::optional<::ledger::core::api::Error>)> & callback) override;
+                                void getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::shared_ptr<api::BigIntCallback> &callback) override;
                         private:
                                 std::shared_ptr<CosmosLikeAccount> getSelf();
 

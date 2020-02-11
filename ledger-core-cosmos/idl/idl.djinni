@@ -1,4 +1,5 @@
 @extern "../../ledger-core/idl/core.yaml"
 
+@import "callback.djinni"
 @import "addresses.djinni"
 @import "wallet.djinni"

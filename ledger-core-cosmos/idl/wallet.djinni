@@ -250,7 +250,7 @@ CosmosLikeTransactionBuilder = interface +c {
         setFee(fee: Amount): CosmosLikeTransactionBuilder;
 
         # Build a transaction from the given builder parameters.
-        build(callback: callback2<void, optional<CosmosLikeTransaction>, optional<Error>>);
+        build(callback: callback2<CosmosLikeTransaction>);
 
         # Creates a clone of this builder.
         # @return A copy of the current builder instance.
@@ -265,11 +265,11 @@ CosmosLikeTransactionBuilder = interface +c {
 
 #Class representing a Cosmos account
 CosmosLikeAccount = interface +c {
-        broadcastRawTransaction(transaction: string, callback: callback2<void, optional<string>, optional<Error>>);
-        broadcastTransaction(transaction: CosmosLikeTransaction, callback: callback2<void, optional<string>, optional<Error>>);
+        broadcastRawTransaction(transaction: string, callback: callback2<string>);
+        broadcastTransaction(transaction: CosmosLikeTransaction, callback: callback2<string>);
         buildTransaction(): CosmosLikeTransactionBuilder;
         # Get estimated gas limit to set so the transaction will succeed
-        getEstimatedGasLimit(transaction: CosmosLikeTransaction, callback: callback2<void, optional<BigInt>, optional<Error>>);
+        getEstimatedGasLimit(transaction: CosmosLikeTransaction, callback: callback2<BigInt>);
 }
 
 CosmosConfigurationDefaults = interface +c {

@@ -226,7 +226,7 @@ namespace ledger {
                         return query;
                 }
 
-                void CosmosLikeAccount::getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::function<void(std::experimental::optional<std::shared_ptr<::ledger::core::api::BigInt>>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
+                void CosmosLikeAccount::getEstimatedGasLimit(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::shared_ptr<api::BigIntCallback> &callback) {
                         // _explorer->getEstimatedGasLimit(transaction).mapPtr<api::BigInt>(getContext(), [] (const std::shared_ptr<BigInt> &gasLimit) -> std::shared_ptr<api::BigInt> {
                         //                 return std::make_shared<api::BigIntImpl>(*gasLimit);
                         //         }).callback(getContext(), callback);
@@ -410,8 +410,7 @@ namespace ledger {
                         return _keychain->getRestoreKey();
                 }
 
-                void CosmosLikeAccount::broadcastRawTransaction(const std::string &transaction,
-                                                                const std::function<void(std::experimental::optional<std::string>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
+                void CosmosLikeAccount::broadcastRawTransaction(const std::string &transaction, const std::shared_ptr<api::StringCallback>& callback) {
                         std::vector<uint8_t> tx{transaction.begin(), transaction.end()};
 //            _explorer->pushTransaction(tx).map<std::string>(getContext(),
 //                                                                     [](const String &seq) -> std::string {
@@ -420,8 +419,7 @@ namespace ledger {
 //                                                                     }).callback(getContext(), callback);
                 }
 
-                void CosmosLikeAccount::broadcastTransaction(const std::shared_ptr<api::CosmosLikeTransaction> &transaction,
-                                                             const std::function<void(std::experimental::optional<std::string>, std::experimental::optional<::ledger::core::api::Error>)> & callback) {
+                void CosmosLikeAccount::broadcastTransaction(const std::shared_ptr<api::CosmosLikeTransaction> &transaction, const std::shared_ptr<api::StringCallback>& callback) {
                         broadcastRawTransaction(transaction->serialize(), callback);
                 }
 
