@@ -178,7 +178,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
     EXPECT_EQ(tx->block->height, 453223);
     EXPECT_EQ(tx->logs.size(), 1);
     EXPECT_TRUE(tx->logs[0].success);
-    EXPECT_EQ(tx->messages[0].type, "cosmos-sdk/MsgSend");
+    EXPECT_EQ(tx->messages[0].type, cosmos::constants::kMsgSend);
     const cosmos::MsgSend& msg = boost::get<cosmos::MsgSend>(tx->messages[0].content);
     EXPECT_EQ(msg.fromAddress, sender);
     EXPECT_EQ(msg.toAddress, receiver);
@@ -191,7 +191,6 @@ TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
 }
 
 TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
-    auto context = this->dispatcher->getSerialExecutionContext("context");
     auto services = this->newDefaultServices();
     auto delegator = "cosmos1ytpz9gt59hssp5m5sknuzrwse88glqhgcrypxj";
     auto validator = "cosmosvaloper1ey69r37gfxvxg62sh4r0ktpuc46pzjrm873ae8";
@@ -220,7 +219,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
             EXPECT_EQ(tx->block->height, 660081);
             EXPECT_EQ(tx->logs.size(), 1);
             EXPECT_TRUE(tx->logs[0].success);
-            EXPECT_EQ(tx->messages[0].type, "cosmos-sdk/MsgDelegate");
+            EXPECT_EQ(tx->messages[0].type, cosmos::constants::kMsgDelegate);
             const cosmos::MsgDelegate& msg = boost::get<cosmos::MsgDelegate>(tx->messages[0].content);
             EXPECT_EQ(msg.delegatorAddress, delegator);
             EXPECT_EQ(msg.validatorAddress, validator);
