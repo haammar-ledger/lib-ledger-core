@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
   address_test.cpp
   transactions_test.cpp
   synchronization_test.cpp
+  AccountTests.cpp
   )
 
 target_link_libraries(${PROJECT_NAME} ledger-core-cosmos-static)
