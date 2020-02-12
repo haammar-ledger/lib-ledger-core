@@ -286,6 +286,7 @@ namespace ledger {
                     auto index = 0;
                     for (const auto &mNode : vNode[kMessage].GetArray()) {
                         parseMessage(mNode, transaction.messages[index]);
+                        index++;
                     }
                 }
                 assert((vNode.HasMember(kFee)));

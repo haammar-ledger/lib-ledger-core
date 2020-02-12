@@ -133,17 +133,28 @@ TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer)
     for (const auto& tx : transactions) {
         if (tx->hash == "0DBFC4E8E9E5A64C2C9B5EAAAA0422D99A61CFC5354E15002A061E91200DC2D6") {
             foundTx = true;
-            ASSERT_EQ(tx->block->height, 237691);
-            ASSERT_EQ(tx->logs.size(), 1);
-            ASSERT_TRUE(tx->logs[0].success);
-            ASSERT_EQ(tx->messages[0].type, "cosmos-sdk/MsgWithdrawDelegationReward");
+            EXPECT_EQ(tx->block->height, 237691);
+            EXPECT_EQ(tx->logs.size(), 2);
+            size_t withdraw_msg_index = 2;
+            // TODO : use cosmos::constants for this test
+            std::cerr << tx->messages[0].type << std::endl;
+            std::cerr << tx->messages[1].type << std::endl;
+            if (tx->messages[0].type == "cosmos-sdk/MsgWithdrawDelegationReward") {
+                withdraw_msg_index = 0;
+            } else if (tx->messages[1].type == "cosmos-sdk/MsgWithdrawDelegationReward") {
+                withdraw_msg_index = 1;
+            } else {
+                FAIL() << "cosmos-sdk/MsgWithdrawDelegationReward message not found in tx";
+            }
+            EXPECT_TRUE(tx->logs[withdraw_msg_index].success);
+            EXPECT_EQ(tx->messages[withdraw_msg_index].type, "cosmos-sdk/MsgWithdrawDelegationReward");
             const cosmos::MsgWithdrawDelegationReward& msg = boost::get<cosmos::MsgWithdrawDelegationReward>(tx->messages[0].content);
-            ASSERT_EQ(msg.delegatorAddress, DEFAULT_ADDRESS);
-            ASSERT_EQ(msg.validatorAddress, "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs");
-            ASSERT_EQ(tx->fee.gas.toInt64(), 200000);
-            ASSERT_EQ(tx->fee.amount[0].denom, "uatom");
-            ASSERT_EQ(tx->fee.amount[0].amount, "5000");
-            ASSERT_EQ(tx->gasUsed, Option<std::string>("104477"));
+            EXPECT_EQ(msg.delegatorAddress, DEFAULT_ADDRESS);
+            EXPECT_EQ(msg.validatorAddress, "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs");
+            EXPECT_EQ(tx->fee.gas.toInt64(), 200000);
+            EXPECT_EQ(tx->fee.amount[withdraw_msg_index].denom, "uatom");
+            EXPECT_EQ(tx->fee.amount[withdraw_msg_index].amount, "5000");
+            EXPECT_EQ(tx->gasUsed, Option<std::string>("104477"));
             break;
         }
     }
