@@ -35,7 +35,6 @@
 #include <spdlog/logger.h>
 
 #include <core/api/Currency.hpp>
-#include <core/api/ErrorCodeCallback.hpp>
 #include <core/api/ExecutionContext.hpp>
 #include <core/api/Amount.hpp>
 #include <core/wallet/Amount.hpp>
@@ -44,6 +43,7 @@
 
 #include <cosmos/api/CosmosLikeTransactionBuilder.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
+#include <cosmos/api/CosmosLikeTransactionCallback.hpp>
 
 namespace ledger {
     namespace core {
