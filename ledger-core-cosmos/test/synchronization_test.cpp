@@ -136,18 +136,15 @@ TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer)
             EXPECT_EQ(tx->block->height, 237691);
             EXPECT_EQ(tx->logs.size(), 2);
             size_t withdraw_msg_index = 2;
-            // TODO : use cosmos::constants for this test
-            std::cerr << tx->messages[0].type << std::endl;
-            std::cerr << tx->messages[1].type << std::endl;
-            if (tx->messages[0].type == "cosmos-sdk/MsgWithdrawDelegationReward") {
+            if (tx->messages[0].type == cosmos::constants::kMsgWithdrawDelegationReward) {
                 withdraw_msg_index = 0;
-            } else if (tx->messages[1].type == "cosmos-sdk/MsgWithdrawDelegationReward") {
+            } else if (tx->messages[1].type == cosmos::constants::kMsgWithdrawDelegationReward) {
                 withdraw_msg_index = 1;
             } else {
-                FAIL() << "cosmos-sdk/MsgWithdrawDelegationReward message not found in tx";
+                FAIL() << cosmos::constants::kMsgWithdrawDelegationReward << " message not found in tx";
             }
             EXPECT_TRUE(tx->logs[withdraw_msg_index].success);
-            EXPECT_EQ(tx->messages[withdraw_msg_index].type, "cosmos-sdk/MsgWithdrawDelegationReward");
+            EXPECT_EQ(tx->messages[withdraw_msg_index].type, cosmos::constants::kMsgWithdrawDelegationReward);
             const cosmos::MsgWithdrawDelegationReward& msg = boost::get<cosmos::MsgWithdrawDelegationReward>(tx->messages[0].content);
             EXPECT_EQ(msg.delegatorAddress, DEFAULT_ADDRESS);
             EXPECT_EQ(msg.validatorAddress, "cosmosvaloper1sd4tl9aljmmezzudugs7zlaya7pg2895ws8tfs");

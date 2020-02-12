@@ -43,7 +43,7 @@ namespace ledger {
                                 constexpr const char kMsgSubmitProposal[] = "cosmos-sdk/MsgSubmitProposal";
                                 constexpr const char kMsgUndelegate[] = "cosmos-sdk/MsgUndelegate";
                                 constexpr const char kMsgVote[] = "cosmos-sdk/MsgVote";
-                                constexpr const char kMsgWithdrawDelegationReward[] = "cosmos-sdk/MsgWithdrawDelegatorReward";
+                                constexpr const char kMsgWithdrawDelegationReward[] = "cosmos-sdk/MsgWithdrawDelegationReward";
 
                                 constexpr const char kAccountNumber[] = "account_number";
                                 constexpr const char kAddress[] = "address";
