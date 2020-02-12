@@ -74,9 +74,92 @@ namespace ledger {
 			}
 		}
 
-		CosmosLikeMessage::CosmosLikeMessage(const std::shared_ptr<DynamicObject> &content) : _content(content) {
+                CosmosLikeMessage::CosmosLikeMessage(const std::shared_ptr<DynamicObject>& content)
+                    : _content(content) {}
 
-		}
+                cosmos::Message CosmosLikeMessage::toRawMessage() const {
+			auto msgType = getRawMessageType();
+			cosmos::Message raw_message;
+			raw_message.type = msgType;
+
+                        if (raw_message.type == kMsgSend) {
+                            raw_message.content =
+                                unwrapMsgSend(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgDelegate) {
+                            raw_message.content =
+                                unwrapMsgDelegate(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgUndelegate) {
+                            raw_message.content =
+                                unwrapMsgUndelegate(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgRedelegate) {
+                            raw_message.content =
+                                unwrapMsgRedelegate(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgSubmitProposal) {
+                            raw_message.content =
+                                unwrapMsgSubmitProposal(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgVote) {
+                            raw_message.content =
+                                unwrapMsgVote(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgDeposit) {
+                            raw_message.content =
+                                unwrapMsgDeposit(std::make_shared<CosmosLikeMessage>(*this));
+                        } else if (raw_message.type == kMsgWithdrawDelegationReward) {
+                            raw_message.content = unwrapMsgWithdrawDelegationReward(
+                                std::make_shared<CosmosLikeMessage>(*this));
+                        }  // else the content stays empty
+                        return raw_message;
+                }
+
+                CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& rawStruct) : _content() {
+			auto msgType = rawStruct.type;
+			std::shared_ptr<DynamicObject> content = nullptr;
+
+                        if (msgType == kMsgSend) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgSend(
+                                              boost::get<cosmos::MsgSend>(rawStruct.content)))
+                                          ->_content;
+                        } else if (msgType == kMsgDelegate) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgDelegate(
+                                              boost::get<cosmos::MsgDelegate>(rawStruct.content)))
+                                          ->_content;
+                        } else if (msgType == kMsgUndelegate) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgUndelegate(
+                                              boost::get<cosmos::MsgUndelegate>(rawStruct.content)))
+                                          ->_content;
+                        } else if (msgType == kMsgRedelegate) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgRedelegate(
+                                              boost::get<cosmos::MsgRedelegate>(rawStruct.content)))
+                                          ->_content;
+                        } else if (msgType == kMsgSubmitProposal) {
+                            content =
+                                std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                    CosmosLikeMessage::wrapMsgSubmitProposal(
+                                        boost::get<cosmos::MsgSubmitProposal>(rawStruct.content)))
+                                    ->_content;
+                        } else if (msgType == kMsgVote) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgVote(
+                                              boost::get<cosmos::MsgVote>(rawStruct.content)))
+                                          ->_content;
+                        } else if (msgType == kMsgDeposit) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgDeposit(
+                                              boost::get<cosmos::MsgDeposit>(rawStruct.content)))
+                                          ->_content;
+                        } else if (msgType == kMsgWithdrawDelegationReward) {
+                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
+                                          CosmosLikeMessage::wrapMsgWithdrawDelegationReward(
+                                              boost::get<cosmos::MsgWithdrawDelegationReward>(
+                                                  rawStruct.content)))
+                                          ->_content;
+                        }  // else the content stays nullptr
+
+                        _content = content;
+                }
 
 		api::CosmosLikeMsgType CosmosLikeMessage::getMessageType() const {
 			auto msgType = getRawMessageType();

@@ -304,7 +304,7 @@ namespace ledger {
         }
 
         void CosmosLikeTransactionBuilder::build(const std::shared_ptr<api::CosmosLikeTransactionCallback> &callback) {
-            // build().callback(_context, callback);
+            build().callback(_context, callback);
         }
 
         Future<std::shared_ptr<api::CosmosLikeTransaction>> CosmosLikeTransactionBuilder::build() {
@@ -374,7 +374,6 @@ namespace ledger {
                     for (auto& amount : feeObject[kAmount].GetArray()) {
                         if (amount.IsObject()) {
                             fee = fee +  BigInt(getAmount(amount.GetObject()).toString());
-                            std::cerr << "Current Fees : " << fee.toString() << std::endl;
                         }
                     }
 

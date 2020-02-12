@@ -74,29 +74,29 @@ namespace ledger {
 
         FuturePtr<ledger::core::api::Account>
         CosmosLikeWallet::newAccountWithInfo(const api::AccountCreationInfo &info) {
-			auto self = getSelf();
-			return async<std::shared_ptr<api::Account>>([=] () {
-			   DerivationPath path(info.derivations[0]);
-			   if (info.publicKeys.size() == 0) {
-				   throw make_exception(api::ErrorCode::ILLEGAL_ARGUMENT, "Missing pubkey in account  creation info.");
-			   }
-			   soci::session sql(self->getDatabase()->getPool());
-			   {
-				   if (AccountDatabaseHelper::accountExists(sql, self->getWalletUid(), info.index)) {
-					   throw make_exception(api::ErrorCode::ILLEGAL_ARGUMENT, "Account {} already exists", info.index);
-				   }
-				   auto keychain = self->_keychainFactory->build(path,
-																 std::dynamic_pointer_cast<DynamicObject>(self->getConfiguration()),
-																 info,
-																 self->getAccountInternalPreferences(info.index),
-																 self->getCurrency());
-				   soci::transaction tr(sql);
-				   AccountDatabaseHelper::createAccount(sql, self->getWalletUid(), info.index);
-				   CosmosLikeAccountDatabaseHelper::createAccount(sql, self->getWalletUid(), info.index, keychain->getRestoreKey());
-				   tr.commit();
-			   }
-			   return self->createAccountInstance(sql, AccountDatabaseHelper::createAccountUid(self->getWalletUid(), info.index));
-		    });
+            auto self = getSelf();
+            return async<std::shared_ptr<api::Account>>([=] () {
+               DerivationPath path(info.derivations[0]);
+               if (info.publicKeys.size() == 0) {
+                   throw make_exception(api::ErrorCode::ILLEGAL_ARGUMENT, "Missing pubkey in account  creation info.");
+               }
+               soci::session sql(self->getDatabase()->getPool());
+               {
+                   if (AccountDatabaseHelper::accountExists(sql, self->getWalletUid(), info.index)) {
+                       throw make_exception(api::ErrorCode::ILLEGAL_ARGUMENT, "Account {} already exists", info.index);
+                   }
+                   auto keychain = self->_keychainFactory->build(path,
+                                                                 std::dynamic_pointer_cast<DynamicObject>(self->getConfiguration()),
+                                                                 info,
+                                                                 self->getAccountInternalPreferences(info.index),
+                                                                 self->getCurrency());
+                   soci::transaction tr(sql);
+                   AccountDatabaseHelper::createAccount(sql, self->getWalletUid(), info.index);
+                   CosmosLikeAccountDatabaseHelper::createAccount(sql, self->getWalletUid(), info.index, keychain->getRestoreKey());
+                   tr.commit();
+               }
+               return self->createAccountInstance(sql, AccountDatabaseHelper::createAccountUid(self->getWalletUid(), info.index));
+            });
         }
 
         FuturePtr<ledger::core::api::Account>
@@ -108,19 +108,19 @@ namespace ledger {
 
         Future<api::ExtendedKeyAccountCreationInfo>
         CosmosLikeWallet::getExtendedKeyAccountCreationInfo(int32_t accountIndex) {
-			throw make_exception(api::ErrorCode::UNSUPPORTED_OPERATION,
-								 "CosmosLike doesn't support account creation "
-								 "through extended key info.");
+            throw make_exception(api::ErrorCode::UNSUPPORTED_OPERATION,
+                                 "CosmosLike doesn't support account creation "
+                                 "through extended key info.");
         }
 
         Future<api::AccountCreationInfo> CosmosLikeWallet::getAccountCreationInfo(int32_t accountIndex) {
-			auto scheme = getDerivationScheme();
-			auto path = scheme.setCoinType(getCurrency().bip44CoinType)
-				.setAccountIndex(accountIndex)
-				.getPath();
-			api::AccountCreationInfo info{
-										  accountIndex, {"main"}, {path.toString()}, {}, {}};
-			return Future<api::AccountCreationInfo>::successful(info);
+            auto scheme = getDerivationScheme();
+            auto path = scheme.setCoinType(getCurrency().bip44CoinType)
+                .setAccountIndex(accountIndex)
+                .getPath();
+            api::AccountCreationInfo info{
+                                          accountIndex, {"main"}, {path.toString()}, {}, {}};
+            return Future<api::AccountCreationInfo>::successful(info);
         }
 
         std::shared_ptr<CosmosLikeWallet> CosmosLikeWallet::getSelf() {

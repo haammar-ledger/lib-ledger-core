@@ -40,6 +40,9 @@ endif()
 # Ledger-core dependency
 set(ledger-core_DIR "/usr/lib/ledger-core/cmake" CACHE PATH "Installation directory of ledger-core")
 
+if (SYS_OPENSSL)
+  find_package(OpenSSL REQUIRED)
+endif()
 add_subdirectory(src)
 
 string(FIND "${CMAKE_OSX_SYSROOT}" "iphone" IS_IOS)

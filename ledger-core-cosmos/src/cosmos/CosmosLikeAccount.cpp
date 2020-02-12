@@ -84,7 +84,7 @@ namespace ledger {
                                                          const cosmos::Transaction &tx) {
                         // TODO COSMOS Implement inflateOperation
                         out.accountUid = getAccountUid();
-                        out.block = tx.block->toApiBlock();
+                        out.block = tx.block;
                         // TODO : find out if out.cosmosTransaction is necessary
                         // out.cosmosTransaction = Option<cosmos::Transaction>(tx);
                         out.currencyName = getWallet()->getCurrency().name;
@@ -107,7 +107,7 @@ namespace ledger {
                         }
 
                         if (tx.block.nonEmpty()) {
-                                putBlock(sql, tx.block.getValue().toApiBlock());
+                                putBlock(sql, tx.block.getValue());
                         }
 
                         int result = FLAG_TRANSACTION_IGNORED;
@@ -182,15 +182,6 @@ namespace ledger {
 
                 bool CosmosLikeAccount::putBlock(soci::session &sql,
                                                  const api::Block &block) {
-                        // Block abstractBlock;
-                        // abstractBlock.hash = block.blockHash;
-                        // abstractBlock.currencyName = getWallet()->getCurrency().name;
-                        // abstractBlock.height = block.height;
-                        // abstractBlock.time = block.time;
-                        // if (BlockDatabaseHelper::putBlock(sql, abstractBlock)) {
-                        //         emitNewBlockEvent(abstractBlock);
-                        //         return true;
-                        // }
                         if (BlockDatabaseHelper::putBlock(sql, block)) {
                                 emitNewBlockEvent(block);
                                 return true;
@@ -203,15 +194,22 @@ namespace ledger {
                 }
 
                 FuturePtr<Amount> CosmosLikeAccount::getBalance() {
-                        auto currency = getWallet()->getCurrency();
-                        // return _explorer->getAccount(_keychain->getAddress()->toBech32())
-                        //         .mapPtr<Amount>(getContext(), [currency](const cosmos::Account &balance) {
-                        //                 //TODO: handle balanceS
-                        //                 return std::make_shared<Amount>(
-                        //                         currency,
-                        //                         0,
-                        //                         balance.balances.size() > 0 ? balance.balances[0] : BigInt::ZERO);
-                        // });
+                    auto currency = getWallet()->getCurrency();
+                    return _explorer->getAccount(_keychain->getAddress()->toBech32())
+                            .mapPtr<Amount>(
+                            getContext(),
+                            [currency](auto account) {
+                                // We get an array of balances because cosmos app wants to be
+                                // generalist. But there should always be only 1 element in the
+                                // array with the uatom denom
+                                // TODO : add exception / warning if above preconditions are false
+                                return std::make_shared<Amount>(
+                                    currency,
+                                    0,
+                                    account->balances.size() > 0
+                                        ? BigInt::fromDecimal(account->balances[0].amount)
+                                        : BigInt::ZERO);
+                            });
                 }
 
                 std::shared_ptr<api::OperationQuery> CosmosLikeAccount::queryOperations() {

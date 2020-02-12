@@ -112,7 +112,13 @@ else()
     target_link_libraries(ledger-core-interface INTERFACE fmt)
 endif(MINGW OR MSVC)
 
-target_link_libraries(ledger-core-interface INTERFACE crypto)
+if (SYS_OPENSSL)
+    target_link_libraries(ledger-core-interface INTERFACE OpenSSL::Crypto)
+    target_link_libraries(ledger-core-interface INTERFACE OpenSSL::SSL)
+    target_link_libraries(ledger-core-interface INTERFACE blake)
+else()
+    target_link_libraries(ledger-core-interface INTERFACE crypto)
+endif()
 target_link_libraries(ledger-core-interface INTERFACE soci_sqlite3)
 target_link_libraries(ledger-core-interface INTERFACE soci_core_static)
 target_link_libraries(ledger-core-interface INTERFACE leveldb)
@@ -132,6 +138,18 @@ target_link_libraries(ledger-core-interface INTERFACE ethash)
 
 target_link_libraries(ledger-core-interface INTERFACE ${SQLITE_LIB})
 
+if (SYS_OPENSSL)
+  target_include_directories(ledger-core-interface INTERFACE
+    ${OPENSSL_INCLUDE_DIR}
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/openssl/crypto/blake> $<INSTALL_INTERFACE:include/ledger-core/lib/openssl/crypto/blake>
+    )
+else()
+    target_include_directories(ledger-core-interface INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/openssl/include>      $<INSTALL_INTERFACE:include/ledger-core/lib/openssl/include>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/openssl/crypto/blake> $<INSTALL_INTERFACE:include/ledger-core/lib/openssl/crypto/blake>
+    )
+endif()
+
 target_include_directories(
     ledger-core-interface INTERFACE
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/inc>                      $<INSTALL_INTERFACE:include/ledger-core>
@@ -139,8 +157,6 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/rapidjson/include>    $<INSTALL_INTERFACE:include/ledger-core/lib/rapidjson/include>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/soci/core>            $<INSTALL_INTERFACE:include/ledger-core/lib/soci/core>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/soci_sqlite3>         $<INSTALL_INTERFACE:include/ledger-core/lib/soci_sqlite3>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/openssl/include>      $<INSTALL_INTERFACE:include/ledger-core/lib/openssl/include>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/openssl/crypto/blake> $<INSTALL_INTERFACE:include/ledger-core/lib/openssl/crypto/blake>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/leveldb/include>      $<INSTALL_INTERFACE:include/ledger-core/lib/leveldb/include>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/boost>                $<INSTALL_INTERFACE:include/ledger-core/lib/boost>
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/lib/cereal>               $<INSTALL_INTERFACE:include/ledger-core/lib/cereal>

@@ -39,6 +39,7 @@
 #include <core/api/ExecutionContext.hpp>
 #include <core/async/DedicatedContext.hpp>
 #include <core/collections/DynamicObject.hpp>
+#include <core/explorers/AbstractBlockchainExplorer.hpp>
 #include <core/math/BigInt.hpp>
 #include <core/net/HttpClient.hpp>
 #include <core/utils/ConfigurationMatchable.hpp>
@@ -48,15 +49,18 @@
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
 #include <cosmos/cosmos.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>
-#include <cosmos/api/CosmosLikeTransaction.hpp>
+#include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 
 namespace ledger {
     namespace core {
 
-        class CosmosLikeBlockchainExplorer : public ConfigurationMatchable {
+        using ExternalApiBlockchainExplorer = AbstractBlockchainExplorer<cosmos::Transaction>;
+
+        class CosmosLikeBlockchainExplorer : public ConfigurationMatchable,
+                                             public ExternalApiBlockchainExplorer {
         public:
-            typedef ledger::core::Block Block;
-            typedef std::string TransactionFilter;
+            using Block = cosmos::Block;
+            using TransactionFilter = std::string;
 
             using TransactionList = std::list<std::shared_ptr<cosmos::Transaction>>;
 
@@ -67,12 +71,16 @@ namespace ledger {
 
 
             virtual const std::vector<TransactionFilter>& getTransactionFilters() = 0;
-            virtual FuturePtr<cosmos::Block> getBlock(uint64_t& blockHeight) = 0;
+            virtual FuturePtr<Block> getBlock(uint64_t& blockHeight) = 0;
             virtual FuturePtr<cosmos::Account> getAccount(const std::string& account) = 0;
-            virtual FuturePtr<cosmos::Block> getCurrentBlock() = 0;
-			virtual Future<cosmos::TransactionList> getTransactions(
-			        const std::string& address, TransactionFilter& filter,
-			        int page, int limit) = 0;
+            virtual FuturePtr<Block> getCurrentBlock() = 0;
+            virtual Future<cosmos::TransactionList> getTransactions(
+                const TransactionFilter& filter, int page, int limit) const = 0;
+            virtual Future<std::shared_ptr<cosmos::Transaction>> getTransactionByHash(
+                const std::string& hash) = 0;
+            virtual FuturePtr<TransactionsBulk> getTransactions(const std::vector<std::string>& addresses,
+                                                                Option<std::string> fromBlockHash = Option<std::string>(),
+                                                                Option<void*> session = Option<void *>()) = 0;
         };
     }
 }

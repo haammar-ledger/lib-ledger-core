@@ -44,6 +44,7 @@
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
 #include <cosmos/api/CosmosConfigurationDefaults.hpp>
 #include <cosmos/CosmosNetworks.hpp>
+#include <cosmos/database/Migrations.hpp>
 
 #define STRING(key, def) entry.configuration->getString(key).value_or(def)
 
@@ -53,6 +54,7 @@ namespace ledger {
                                                          const std::shared_ptr<Services> &services):
             AbstractWalletFactory(currency, services) {
             _keychainFactories = {{api::KeychainEngines::BIP49_P2SH, std::make_shared<CosmosLikeKeychainFactory>()}};
+            services->getDatabaseSessionPool()->forwardMigration<CosmosMigration>();
         }
 
         std::shared_ptr<AbstractWallet> CosmosLikeWalletFactory::build(const WalletDatabaseEntry &entry)
@@ -146,9 +148,11 @@ namespace ledger {
             } else {
                 throw Exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeWalletFactory using non supported explorer");
             }
-            if (explorer)
+            if (explorer) {
                 _runningExplorers.push_back(explorer);
-            return explorer;
+                return explorer;
+            }
+            throw Exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeWalletFactory using non supported explorer");
 
         }
 

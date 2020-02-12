@@ -9,7 +9,22 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/leveldb")
 include(ProjectSecp256k1)
 add_subdirectory(bigd)
 add_subdirectory(fmt)
-add_subdirectory(openssl)
+if (SYS_OPENSSL)
+  add_definitions(-DBLAKE256 -DBLAKE244)
+  add_library( blake
+    openssl/crypto/blake/blake256.c
+    openssl/crypto/blake/blake2b.c
+    openssl/crypto/blake/blake256.h
+    openssl/crypto/blake/blake2b.h
+    )
+  target_include_directories(
+    blake PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    $<INSTALL_INTERFACE:include>
+    )
+else()
+  add_subdirectory(openssl)
+endif()
 add_subdirectory(ethash)
 add_subdirectory(snappy)
 add_subdirectory(leveldb)

@@ -87,7 +87,7 @@ namespace ledger {
                     bool shouldEmitNow = false;
                     {
                         soci::session sql(account->getWallet()->getDatabase()->getPool());
-                        shouldEmitNow = account->putBlock(sql, block.toApiBlock());
+                        shouldEmitNow = account->putBlock(sql, block);
                     }
                     if (shouldEmitNow)
                         account->emitEventsNow();

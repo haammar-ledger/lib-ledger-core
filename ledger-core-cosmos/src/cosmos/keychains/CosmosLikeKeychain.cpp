@@ -74,6 +74,10 @@ namespace ledger {
 			return _pubKey;
 		}
 
+	        std::vector<CosmosLikeKeychain::Address> CosmosLikeKeychain::getAllObservableAddresses(uint32_t from, uint32_t to) {
+			return {_address};
+		}
+
 		std::shared_ptr<CosmosLikeKeychain>
 		CosmosLikeKeychain::restore(const DerivationPath &path,
 									const api::Currency &currency,

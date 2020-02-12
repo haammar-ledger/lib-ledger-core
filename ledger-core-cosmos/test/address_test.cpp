@@ -48,7 +48,6 @@
 using namespace ledger::core::api;
 using namespace ledger::core;
 
-static api::Currency currency = currencies::ATOM;
 TEST(CosmosAddress, AddressFromPubKey) {
     {
         // Results returned by device
@@ -148,26 +147,26 @@ TEST(CosmosAddress, AddressFromPubKeys) {
 TEST(CosmosAddress, CosmosAddressFromBech32PubKey) {
     auto expectedResult = "cosmos16xkkyj97z7r83sx45xwk9uwq0mj0zszlf6c6mq";
     auto pubKey = "cosmospub1addwnpepqdtwj8njf68zedmfhzru54tg2475nnfjrrgtfd533prvs7sljk7nzxvtkpd";
-    auto pubKeyExt = ledger::core::CosmosLikeExtendedPublicKey::fromBech32(currency, pubKey, Option<std::string>("44'/118'/0'"));
+    auto pubKeyExt = ledger::core::CosmosLikeExtendedPublicKey::fromBech32(currencies::ATOM, pubKey, Option<std::string>("44'/118'/0'"));
     EXPECT_EQ(pubKeyExt->derive("")->toBech32(), expectedResult);
 }
 
 TEST(CosmosAddress, CosmosAddressFromBech32) {
     auto expectedResult = "cosmos102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl";
-    auto address = ledger::core::CosmosLikeAddress::fromBech32(expectedResult, currency, Option<std::string>("44'/118'/0'"));
+    auto address = ledger::core::CosmosLikeAddress::fromBech32(expectedResult, currencies::ATOM, Option<std::string>("44'/118'/0'"));
     EXPECT_EQ(address->toBech32(), expectedResult);
 }
 
 TEST(CosmosAddress, CosmosValAddressFromBech32) {
     auto expectedResult = "cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7";
-    auto address = ledger::core::CosmosLikeAddress::fromBech32(expectedResult, currency, Option<std::string>("44'/118'/0'"));
+    auto address = ledger::core::CosmosLikeAddress::fromBech32(expectedResult, currencies::ATOM, Option<std::string>("44'/118'/0'"));
     EXPECT_EQ(address->toBech32(), expectedResult);
 }
 
 TEST(CosmosAddress, SecpPubbKey) {
     std::vector<uint8_t> pubKey = hex::toByteArray("02c4becf6843868d9556ea43d46518b51a13cb1a48cd6c05a21c029ea4231fcde4");
     std::vector<uint8_t> chainCode = hex::toByteArray("");
-    auto zPub = ledger::core::CosmosLikeExtendedPublicKey::fromRaw(currency,
+    auto zPub = ledger::core::CosmosLikeExtendedPublicKey::fromRaw(currencies::ATOM,
                                                                    optional<std::vector<uint8_t >>(),
                                                                    pubKey,
                                                                    chainCode,
