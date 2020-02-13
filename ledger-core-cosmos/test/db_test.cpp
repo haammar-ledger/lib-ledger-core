@@ -125,7 +125,7 @@ TEST_F(CosmosDBTests, CosmosDBTest) {
     // Test writing into DB
     {
         soci::session sql(services->getDatabaseSessionPool()->getPool());
-        auto result = CosmosLikeTransactionDatabaseHelper::putTransaction(sql, account->getAccountUid(), tx);
+        CosmosLikeTransactionDatabaseHelper::putTransaction(sql, account->getAccountUid(), tx);
     }
 
     // Test reading from DB
@@ -185,7 +185,7 @@ TEST_F(CosmosDBTests, CosmosOperationQueryTest) {
 
     {
         soci::session sql(services->getDatabaseSessionPool()->getPool());
-        auto result = CosmosLikeTransactionDatabaseHelper::putTransaction(sql, account->getAccountUid(), tx);
+        CosmosLikeTransactionDatabaseHelper::putTransaction(sql, account->getAccountUid(), tx);
     }
 
     /*{

@@ -48,9 +48,10 @@
 //#include <core/wallet/Block.hpp>
 
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
-#include <cosmos/cosmos.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>
-#include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
+#include <cosmos/api/CosmosLikeTransaction.hpp>
+#include <cosmos/cosmos.hpp>
+#include <cosmos/CosmosLikeMessage.hpp>
 
 namespace ledger {
     namespace core {

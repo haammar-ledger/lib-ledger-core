@@ -48,29 +48,45 @@ namespace ledger {
         void CosmosLikeOperationQuery::inflateCompleteTransaction(soci::session &sql,
                                                                   const std::string &accountUid,
                                                                   CosmosLikeOperation& operation) {
+            {
+                ledger::core::cosmos::Transaction tx;
 
-            ledger::core::cosmos::Transaction tx;
+                std::string txHash;
+                sql << "SELECT tx.hash"
+                    "FROM cosmos_transactions AS tx"
+                    "LEFT JOIN cosmos_messages AS msg ON msg.transaction_uid = tx.uid"
+                    "LEFT JOIN cosmos_operations AS op ON op.message_uid = msg.uid"
+                    "WHERE op.uid = :uid",
+                    soci::use(operation.getUid()),
+                    soci::into(txHash);
 
-            std::string txHash;
-            sql << "SELECT tx.hash"
-                   "FROM cosmos_transactions AS tx"
-                   "LEFT JOIN cosmos_messages AS msg ON msg.transaction_uid = tx.uid"
-                   "LEFT JOIN cosmos_operations AS op ON op.message_uid = msg.uid"
-                   "WHERE op.uid = :uid",
-                   soci::use(operation.getUid()),
-                   soci::into(txHash);
+                CosmosLikeTransactionDatabaseHelper::getTransactionByHash(sql, txHash, tx);
 
-            CosmosLikeTransactionDatabaseHelper::getTransactionByHash(
-                sql,
-                txHash,
-                tx);
+                operation.txData = tx;
+            }
 
-            operation.setTransactionData(tx);
+            {
+                ledger::core::cosmos::Message msg;
+
+                std::string msgUid;
+                sql << "SELECT msg.uid"
+                    "FROM cosmos_messages AS msg"
+                    //"LEFT JOIN cosmos_messages AS msg ON msg.transaction_uid = tx.uid"
+                    "LEFT JOIN cosmos_operations AS op ON op.message_uid = msg.uid"
+                    "WHERE op.uid = :uid",
+                    soci::use(operation.getUid()),
+                    soci::into(msgUid);
+
+                CosmosLikeTransactionDatabaseHelper::getMessageByUid(sql, msgUid, msg);
+
+                operation.msgData = msg;
+            }
         }
 
         std::shared_ptr<CosmosLikeOperation> CosmosLikeOperationQuery::createOperation(std::shared_ptr<AbstractAccount> &account) {
             ledger::core::cosmos::Transaction tx;
-            return std::make_shared<CosmosLikeOperation>(account->getWallet()->getCurrency(), tx);
+            ledger::core::cosmos::Message msg;
+            return std::make_shared<CosmosLikeOperation>(account->getWallet()->getCurrency(), tx, msg);
         }
     }
 }

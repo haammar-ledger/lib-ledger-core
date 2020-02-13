@@ -38,6 +38,7 @@
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 #include <cosmos/database/CosmosLikeAccountDatabaseHelper.hpp>
 #include <cosmos/database/CosmosLikeTransactionDatabaseHelper.hpp>
+#include <cosmos/database/CosmosLikeOperationDatabaseHelper.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/transaction_builders/CosmosLikeTransactionBuilder.hpp>
 #include <cosmos/CosmosLikeOperationQuery.hpp>
@@ -81,8 +82,31 @@ namespace ledger {
 
                 void CosmosLikeAccount::inflateOperation(CosmosLikeOperation &out,
                                                          const std::shared_ptr<const AbstractWallet> &wallet,
-                                                         const cosmos::Transaction &tx) {
-                        // TODO COSMOS Implement inflateOperation
+                                                         const cosmos::Transaction &tx,
+                                                         const cosmos::Message &msg) {
+                        // Stuff from ledger::core::Operation
+                        /*
+                        DONE:
+                        std::string accountUid;
+                        Option<api::Block> block;
+                        std::string currencyName;
+                        std::string walletUid;
+                        std::chrono::system_clock::time_point date;
+                        std::shared_ptr<TrustIndicator> trust;
+                        std::shared_ptr<AbstractAccount> _account;
+
+                        NOT DONE:
+                        std::string uid;
+                        std::vector<std::string> senders;
+                        std::vector<std::string> recipients;
+                        BigInt amount;
+                        Option<BigInt> fees;
+                        api::OperationType type;
+                        */
+
+                        out.txData = tx;
+                        out.msgData = msg;
+
                         out.accountUid = getAccountUid();
                         out.block = tx.block;
                         // TODO : find out if out.cosmosTransaction is necessary
@@ -97,6 +121,9 @@ namespace ledger {
                         // TODO : find out if out.cosmosTransaction is necessary
                         // out.cosmosTransaction.getValue().block = out.block;
                         out.trust = std::make_shared<TrustIndicator>();
+                        out._account = shared_from_this();
+                        // TODO What OperationType relevant here?
+                        //out.type = ?
                 }
 
                 int CosmosLikeAccount::putTransaction(soci::session &sql, const cosmos::Transaction &tx) {
@@ -113,8 +140,27 @@ namespace ledger {
                         auto address = getKeychain()->getAddress()->toBech32();
                         CosmosLikeTransactionDatabaseHelper::putTransaction(sql, getAccountUid(), tx);
 
-//             Operation operation;
-//             inflateOperation(operation, getWallet(), tx);
+                        //for (auto msg : tx.messages) {
+                        for (auto msgIndex = 0 ; msgIndex < tx.messages.size() ; msgIndex++) {
+                                auto msg = tx.messages[msgIndex];
+
+                                CosmosLikeOperation operation(getWallet()->getCurrency(), tx, msg);
+                                inflateOperation(operation, getWallet(), tx, msg);
+                                operation.refreshUid(std::to_string(msgIndex));
+
+                                //FIXME Which one? Does core::OperationDatabaseHelper do the job?
+                                //*
+                                auto inserted = CosmosLikeOperationDatabaseHelper::putOperation(sql, operation);
+                                if (inserted) {
+                                        CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, operation.msgData.uid);
+                                /*/
+                                if (CosmosLikeOperationDatabaseHelper::putOperation(sql, operation)) {
+                                //*/
+                                        emitNewOperationEvent(operation);
+                                }
+                       }
+
+
 //
 //             for (const auto& msg : tx.messages) {
 //                 operation.senders = {msg.sender};

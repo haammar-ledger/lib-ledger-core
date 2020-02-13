@@ -43,27 +43,33 @@ namespace ledger {
     namespace core {
         class CosmosLikeTransactionDatabaseHelper {
         public:
+            static bool transactionExists(soci::session &sql, const std::string &cosmosTxUid);
+
             // Tx --> DB
-            static std::string putTransaction(soci::session &sql,
+            static void putTransaction(soci::session &sql,
                                               const std::string &accountUid,
                                               const cosmos::Transaction &tx);
 
+            // DB --> Tx
             static bool getTransactionByHash(soci::session &sql,
                                              const std::string &hash,
                                              cosmos::Transaction &tx);
-            // DB --> Tx
+
+            // DB --> Msg
+            static bool getMessageByUid(soci::session &sql,
+                                        const std::string &msgUid,
+                                        cosmos::Message &msg);
+
+            /*
             static bool inflateTransaction(soci::session &sql,
                                            const soci::row &row,
                                            cosmos::Transaction &tx);
+            static void inflateMessage(const soci::row &row, cosmos::Message &msg);
 
-            static bool transactionExists(soci::session &sql,
-                                          const std::string &cosmosTxUid);
+            static std::string createCosmosTransactionUid(const std::string &accountUid, const std::string &txHash);
 
-            static std::string createCosmosTransactionUid(const std::string &accountUid,
-                                                          const std::string &txHash);
-
-            static std::string createCosmosMessageUid(const std::string &txUid,
-                                                      uint64_t msgIndex);
+            static std::string createCosmosMessageUid(const std::string &txUid, uint64_t msgIndex);
+            */
         };
     }
 }

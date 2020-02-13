@@ -47,34 +47,39 @@ namespace ledger {
 
             public:
 
+                ledger::core::cosmos::Transaction txData;
+                ledger::core::cosmos::Message msgData;
+
                 CosmosLikeOperation() = default; // FIXME Keep or remove this?
 
                 //CosmosLikeOperation(const std::shared_ptr<const AbstractWallet>& wallet, // FIXME This ok?
                 CosmosLikeOperation(const api::Currency& currency,
-                                    ledger::core::cosmos::Transaction const& txData);
+                                    ledger::core::cosmos::Transaction const& tx,
+                                    ledger::core::cosmos::Message const& msg);
 
-                CosmosLikeOperation(const std::shared_ptr<CosmosLikeOperation> &copy,
-                                    ledger::core::cosmos::Transaction const& txData);
-
+                /*
+                CosmosLikeOperation(const std::shared_ptr<CosmosLikeOperation> &operation,
+                                    ledger::core::cosmos::Transaction const& txData,
+                                    ledger::core::cosmos::Message const& msg);
+                */
+                /*
                 void setTransactionData(ledger::core::cosmos::Transaction const& txData);
                 ledger::core::cosmos::Transaction& getTransactionData();
 
-                // TODO ?
-                //void setMessageData(ledger::core::cosmos::Message const& msgData);
-                //ledger::core::cosmos::Message& getMessageData();
+                void setMessageData(ledger::core::cosmos::Message const& msgData);
+                ledger::core::cosmos::Message& getMessageData();
+                */
 
                 virtual std::shared_ptr<api::CosmosLikeTransaction> getTransaction() override;
                 virtual std::shared_ptr<api::CosmosLikeMessage> getMessage() override;
 
-                virtual void refreshUid(const std::string &additional = "") override;
+                virtual void refreshUid(const std::string &msgIndex) override;
 
             private:
 
                 std::shared_ptr<api::CosmosLikeTransaction> _txApi {nullptr};
                 std::shared_ptr<api::CosmosLikeMessage> _msgApi {nullptr};
 
-                ledger::core::cosmos::Transaction _txData;
-                //ledger::core::cosmos::Transaction _msgData; // TODO ?
         };
 
     }

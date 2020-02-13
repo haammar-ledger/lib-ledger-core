@@ -41,8 +41,12 @@
 #include <core/api/Currency.hpp>
 #include <core/math/BigInt.hpp>
 
-#include <cosmos/api_impl/CosmosLikeBlockApi.hpp>
-#include <cosmos/api_impl/CosmosLikeOperation.hpp>
+#include <cosmos/cosmos.hpp>
+
+//#include <cosmos/api_impl/CosmosLikeBlockApi.hpp>
+//#include <cosmos/api_impl/CosmosLikeOperation.hpp>
+#include <cosmos/api/CosmosLikeBlock.hpp>
+#include <cosmos/api/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransaction.hpp>
 #include <cosmos/api/CosmosLikeAmount.hpp>
 #include <cosmos/api/CosmosLikeMessage.hpp>
@@ -52,8 +56,9 @@ namespace ledger {
         class CosmosLikeTransactionApi : public api::CosmosLikeTransaction {
         public:
             explicit CosmosLikeTransactionApi(const api::Currency& currency);
-            explicit CosmosLikeTransactionApi(const std::shared_ptr<CosmosLikeOperation>& operation);
-            CosmosLikeTransactionApi(const cosmos::Transaction& tx) : _tx(tx) {}
+
+            explicit CosmosLikeTransactionApi(const api::Currency& currency,
+                                              const cosmos::Transaction& tx);
 
             std::string getHash() const override;
             std::shared_ptr<api::Amount> getFee() const override;
@@ -74,13 +79,18 @@ namespace ledger {
             CosmosLikeTransactionApi & setMemo(const std::string &memo);
             CosmosLikeTransactionApi & setAccountNumber(const std::string &accountNumber);
 
+            const cosmos::Transaction & getRawData() const;
+
+
         private:
+
             api::Currency _currency;
+            cosmos::Account _account; // FIXME How to initialize this? Only 'accountNumber' managed so far
+            cosmos::Transaction _txData;
             std::vector<uint8_t> _rSignature;
             std::vector<uint8_t> _sSignature;
             std::vector<uint8_t> _signingPubKey;
-            cosmos::Transaction _tx;
-            cosmos::Account _account;
+
         };
     }
 }
