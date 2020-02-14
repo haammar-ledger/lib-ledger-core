@@ -40,6 +40,7 @@
 
 #include <core/operation/Operation.hpp>
 #include <core/wallet/AbstractWallet.hpp>
+#include <core/wallet/AbstractAccount.hpp>
 
 namespace ledger {
     namespace core {
@@ -47,13 +48,13 @@ namespace ledger {
 
             public:
 
+                // TODO [refacto] Remove these, only use CosmosLikeTransactionApi::_txData and CosmosLikeMessage::_msgData
                 ledger::core::cosmos::Transaction txData;
                 ledger::core::cosmos::Message msgData;
 
-                CosmosLikeOperation() = default; // FIXME Keep or remove this?
+                CosmosLikeOperation() = default;
 
-                //CosmosLikeOperation(const std::shared_ptr<const AbstractWallet>& wallet, // FIXME This ok?
-                CosmosLikeOperation(const api::Currency& currency,
+                CosmosLikeOperation(std::shared_ptr<AbstractAccount> const& account,
                                     ledger::core::cosmos::Transaction const& tx,
                                     ledger::core::cosmos::Message const& msg);
 
@@ -62,13 +63,12 @@ namespace ledger {
                                     ledger::core::cosmos::Transaction const& txData,
                                     ledger::core::cosmos::Message const& msg);
                 */
-                /*
+
                 void setTransactionData(ledger::core::cosmos::Transaction const& txData);
-                ledger::core::cosmos::Transaction& getTransactionData();
+                //ledger::core::cosmos::Transaction& getTransactionData();
 
                 void setMessageData(ledger::core::cosmos::Message const& msgData);
-                ledger::core::cosmos::Message& getMessageData();
-                */
+                //ledger::core::cosmos::Message& getMessageData();
 
                 virtual std::shared_ptr<api::CosmosLikeTransaction> getTransaction() override;
                 virtual std::shared_ptr<api::CosmosLikeMessage> getMessage() override;

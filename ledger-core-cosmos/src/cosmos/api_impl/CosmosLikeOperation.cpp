@@ -41,28 +41,31 @@
 namespace ledger {
     namespace core {
 
-        CosmosLikeOperation::CosmosLikeOperation(const api::Currency& currency,
+        CosmosLikeOperation::CosmosLikeOperation(std::shared_ptr<AbstractAccount> const& account,
                                                  ledger::core::cosmos::Transaction const& tx,
                                                  ledger::core::cosmos::Message const& msg) :
-            _txApi(std::make_shared<CosmosLikeTransactionApi>(currency, tx)),
+            Operation(account),
+            _txApi(std::make_shared<CosmosLikeTransactionApi>(account->getWallet()->getCurrency(), tx)),
             _msgApi(std::make_shared<CosmosLikeMessage>(msg)),
             txData(tx),
             msgData(msg)
         {}
 
-/*
-        void CosmosLikeOperation::setTransactionData(ledger::core::cosmos::Transaction const& txData) {
-            _txData = txData;
+        void CosmosLikeOperation::setTransactionData(ledger::core::cosmos::Transaction const& tx) {
+            txData = tx;
+            std::static_pointer_cast<CosmosLikeTransactionApi>(_txApi)->setRawData(txData);
         }
 
+/*
         ledger::core::cosmos::Transaction& CosmosLikeOperation::getTransactionData() {
             return _txData;
         }
-
-        void CosmosLikeOperation::setMessageData(ledger::core::cosmos::Message const& msgData) {
-            _msgData = msgData;
+*/
+        void CosmosLikeOperation::setMessageData(ledger::core::cosmos::Message const& msg) {
+            msgData = msg;
+            std::static_pointer_cast<CosmosLikeMessage>(_msgApi)->setRawData(msgData);
         }
-
+/*
         ledger::core::cosmos::Message& CosmosLikeOperation::getMessageData() {
             return _msgData;
         }

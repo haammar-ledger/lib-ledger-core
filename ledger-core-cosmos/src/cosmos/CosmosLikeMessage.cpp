@@ -98,7 +98,7 @@ namespace ledger {
 				jsonString.SetString(content.description.c_str(), static_cast<rapidjson::SizeType>(content.description.length()), allocator);
 				jsonContent.AddMember(kDescription, jsonString, allocator);
 
-				json.AddMember(kAmount, jsonContent, allocator);
+				json.AddMember(kContent, jsonContent, allocator);
 			}
 
 			// FIXME Test this
@@ -123,9 +123,8 @@ namespace ledger {
 			// FIXME Test this
 			// add a `CosmosLikeAmount` to an array of `rapidjson::Value`
 			inline auto addAmounts(std::vector<api::CosmosLikeAmount> const& amounts,
-								  rapidjson::Value& json,
+								  rapidjson::Value& jsonAmounts,
 								  rapidjson::Document::AllocatorType& allocator) {
-				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
 				rapidjson::Value jsonString(rapidjson::kStringType);
 				for (auto amount : amounts) {
 					rapidjson::Value jsonAmount(rapidjson::kObjectType);
@@ -140,7 +139,6 @@ namespace ledger {
 
 					jsonAmounts.PushBack(jsonAmount, allocator);
 				}
-            	json.AddMember(kAmount, jsonAmounts, allocator);
 			}
 		}
 
@@ -153,6 +151,10 @@ namespace ledger {
         CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& msg) :
 			_msgData(msg)
 		{}
+
+		void CosmosLikeMessage::setRawData(const cosmos::Message &msgData) {
+			_msgData = msgData;
+		}
 
 		const cosmos::Message& CosmosLikeMessage::getRawData() const {
 			return _msgData;
@@ -246,13 +248,14 @@ namespace ledger {
 
 		api::CosmosLikeMsgType CosmosLikeMessage::getMessageType() const {
 			auto msgType = getRawMessageType();
-
+			return cosmos::stringToMsgType(msgType.c_str());
+			/*
 			if (msgType == kMsgSend) {
 				return api::CosmosLikeMsgType::MSGSEND;
 			} else if (msgType == kMsgDelegate) {
 				return api::CosmosLikeMsgType::MSGDELEGATE;
 			} else if (msgType == kMsgUndelegate) {
-				return api::CosmosLikeMsgType::MSGDELEGATE;
+				return api::CosmosLikeMsgType::MSGUNDELEGATE;
 			} else if (msgType == kMsgRedelegate) {
 				return api::CosmosLikeMsgType::MSGREDELEGATE;
 			} else if (msgType == kMsgSubmitProposal) {
@@ -266,6 +269,7 @@ namespace ledger {
 			}  else {
 				return api::CosmosLikeMsgType::UNKNOWN;
 			}
+			*/
 		}
 
 		std::string CosmosLikeMessage::getRawMessageType() const {
@@ -304,7 +308,9 @@ namespace ledger {
 				jsonContent.AddMember(kToAddress, jsonString, allocator);
 
 				// cosmos::MsgSend::amount
-				addAmounts(content.amount, jsonContent, allocator);
+				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
+				addAmounts(content.amount, jsonAmounts, allocator);
+            	jsonContent.AddMember(kAmount, jsonAmounts, allocator);
 
 			} else if (_msgData.type == kMsgDelegate) {
 
@@ -385,7 +391,9 @@ namespace ledger {
 				jsonContent.AddMember(kProposer, jsonString, allocator);
 
 				// cosmos::MsgSubmitProposal::initialDeposit
-				addAmounts(content.initialDeposit, jsonContent, allocator);
+				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
+				addAmounts(content.initialDeposit, jsonAmounts, allocator);
+            	jsonContent.AddMember(kInitialDeposit, jsonAmounts, allocator);
 
 			} else if (_msgData.type == kMsgVote) {
 
@@ -427,7 +435,9 @@ namespace ledger {
 				jsonContent.AddMember(kProposalId, jsonString, allocator);
 
 				// cosmos::MsgDeposit::amount
-				addAmounts(content.amount, jsonContent, allocator);
+				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
+				addAmounts(content.amount, jsonAmounts, allocator);
+            	jsonContent.AddMember(kAmount, jsonAmounts, allocator);
 
 			} else if (_msgData.type == kMsgWithdrawDelegationReward) {
 
@@ -447,7 +457,7 @@ namespace ledger {
 
 			} // else the content stays empty
 
-			json.AddMember(kContent, jsonContent, allocator);
+			json.AddMember(kValue, jsonContent, allocator);
 
 			return json;
 		}

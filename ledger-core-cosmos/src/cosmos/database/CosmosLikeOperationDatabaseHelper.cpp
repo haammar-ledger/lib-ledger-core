@@ -60,7 +60,7 @@ namespace ledger {
         bool CosmosLikeOperationDatabaseHelper::getOperationByHash(soci::session &sql,
                                                                        const std::string &hash,
                                                                        cosmos::Transaction &tx) {
-            soci::rowset<soci::row> rows = (sql.prepare << "SELECT tx.transaction_uid, tx.hash, tx.time, "
+            soci::rowset<soci::row> rows = (sql.prepare << "SELECT tx.uid, tx.hash, tx.time, "
                     "tx.fee_amount, tx.gas, tx.gas_used, tx.memo, tx.block_uid, "
                     "block.hash, block.height, block.time, block.currency_name "
                     "FROM cosmos_transactions AS tx "

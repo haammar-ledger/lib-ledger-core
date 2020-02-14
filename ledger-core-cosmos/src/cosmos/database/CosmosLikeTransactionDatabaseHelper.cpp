@@ -50,7 +50,7 @@ namespace ledger {
     namespace core {
 
         static void inflateMessage(soci::row const& row, cosmos::Message& msg) {
-            msg.uid = row.get<std::string>(1);
+            msg.uid = row.get<std::string>(0);
             auto msgType = row.get<std::string>(2);
             msg.type = msgType;
             switch (cosmos::stringToMsgType(msgType.c_str())) {
@@ -176,7 +176,6 @@ namespace ledger {
 
         static void insertMessage(soci::session& sql,
                                   std::string const& txUid,
-                                  std::string const& msgUid,
                                   cosmos::Message const& msg,
                                   cosmos::MessageLog const& log) {
 
@@ -189,7 +188,7 @@ namespace ledger {
                                "transaction_uid, message_type, log,"
                                "success, msg_index, from_address, to_address, amount) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
-                               soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                               soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                soci::use(m.fromAddress), soci::use(m.toAddress), soci::use(coins);
                     }
@@ -201,7 +200,7 @@ namespace ledger {
                                "transaction_uid, message_type, log,"
                                "success, msg_index, delegator_address, validator_address, amount) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
-                                soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.delegatorAddress), soci::use(m.validatorAddress), soci::use(m.amount);
                     }
@@ -213,7 +212,7 @@ namespace ledger {
                                "transaction_uid, message_type, log,"
                                "success, msg_index, delegator_address, validator_address, amount)"
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
-                                soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.delegatorAddress), soci::use(m.validatorAddress), soci::use(m.amount);
                     }
@@ -226,7 +225,7 @@ namespace ledger {
                                "success, msg_index, delegator_address, validator_src_address,"
                                "validator_dst_address, amount)"
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
-                                soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.delegatorAddress), soci::use(m.validatorSourceAddress),
                                 soci::use(m.validatorDestinationAddress), soci::use(m.amount);
@@ -242,7 +241,7 @@ namespace ledger {
                                "content_title, content_description, amount)"
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :proposer,"
                                ":ctype, :ctitle, :cdescription, :amount)",
-                                soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.proposer), soci::use(m.content.type), soci::use(m.content.title),
                                 soci::use(m.content.description), soci::use(coins);
@@ -256,7 +255,7 @@ namespace ledger {
                                "success, msg_index, proposal_id, voter,"
                                "vote_option)"
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :pid, :voter, :opt)",
-                                soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.proposalId), soci::use(m.voter),
                                 soci::use(api::to_string(m.option));
@@ -270,7 +269,7 @@ namespace ledger {
                                "success, msg_index, delegator_address, validator_src_address,"
                                "validator_dst_address, amount)"
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
-                                soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.delegatorAddress), soci::use(m.validatorSourceAddress),
                                 soci::use(m.validatorDestinationAddress), soci::use(m.amount);
@@ -282,7 +281,7 @@ namespace ledger {
                            "transaction_uid, message_type, log,"
                            "success, msg_index, delegator_address, validator_src_address)"
                            "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta)",
-                            soci::use(msgUid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
+                            soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                             soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                             soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
                 }
@@ -291,7 +290,7 @@ namespace ledger {
             }
         }
 
-        static void insertTransaction(soci::session& sql, std::string const& txUid, cosmos::Transaction const& tx) {
+        static void insertTransaction(soci::session& sql, cosmos::Transaction const& tx) {
             Option<std::string> blockUid;
             if (tx.block.nonEmpty() && !tx.block.getValue().blockHash.empty()) {
                 blockUid = BlockDatabaseHelper::createBlockUid(tx.block.getValue());
@@ -304,9 +303,9 @@ namespace ledger {
                 return g.toString();
             });
             sql << "INSERT INTO cosmos_transactions("
-                   "transaction_uid, hash, block_uid, time, fee_amount, gas, gas_used, memo"
+                   "uid, hash, block_uid, time, fee_amount, gas, gas_used, memo"
                    ") VALUES (:uid, :hash, :buid, :time, :fee, :gas, :gas_used, :memo)",
-                    soci::use(txUid), soci::use(tx.hash), soci::use(blockUid), soci::use(date),
+                    soci::use(tx.uid), soci::use(tx.hash), soci::use(blockUid), soci::use(date),
                     soci::use(fee), soci::use(gas), soci::use(gasUsed), soci::use(tx.memo);
         }
 
@@ -322,17 +321,17 @@ namespace ledger {
 
         bool CosmosLikeTransactionDatabaseHelper::transactionExists(soci::session &sql, const std::string &txUid) {
             int32_t count = 0;
-            sql << "SELECT COUNT(*) FROM cosmos_transactions WHERE transaction_uid = :txUid", soci::use(txUid), soci::into(count);
+            sql << "SELECT COUNT(*) FROM cosmos_transactions WHERE uid = :txUid", soci::use(txUid), soci::into(count);
             return count == 1;
         }
 
         void CosmosLikeTransactionDatabaseHelper::putTransaction(soci::session &sql,
                                                                  const std::string &accountUid,
-                                                                 const cosmos::Transaction &tx) {
+                                                                 cosmos::Transaction &tx) {
 
-            auto txUid = createCosmosTransactionUid(accountUid, tx.hash);
+            tx.uid = createCosmosTransactionUid(accountUid, tx.hash);
 
-            if (transactionExists(sql, txUid)) {
+            if (transactionExists(sql, tx.uid)) {
 
                 // UPDATE (we only update block information and gasUsed)
                 if (tx.block.nonEmpty() && tx.block.getValue().blockHash.size() > 0) {
@@ -357,17 +356,17 @@ namespace ledger {
                 }
 
                 // Insert transaction
-                insertTransaction(sql, txUid, tx);
+                insertTransaction(sql, tx);
 
                 // Insert messages
                 //for (const auto& msg : tx.messages) {
                 for (auto index = 0 ; index < tx.messages.size() ; index++) {
-                    const auto& msg = tx.messages[index];
-                    const auto& log = tx.logs[index];
+                    auto& msg = tx.messages[index];
+                    auto& log = tx.logs[index];
 
-                    auto msgUid = createCosmosMessageUid(txUid, index);
+                    msg.uid = createCosmosMessageUid(tx.uid, index);
 
-                    insertMessage(sql, txUid, msgUid, msg, log);
+                    insertMessage(sql, tx.uid, msg, log);
 
                     index += 1;
                 }
@@ -377,7 +376,7 @@ namespace ledger {
         bool CosmosLikeTransactionDatabaseHelper::getTransactionByHash(soci::session &sql,
                                                                        const std::string &txHash,
                                                                        cosmos::Transaction &tx) {
-            soci::rowset<soci::row> rows = (sql.prepare << "SELECT tx.transaction_uid, tx.hash, tx.time, "
+            soci::rowset<soci::row> rows = (sql.prepare << "SELECT tx.uid, tx.hash, tx.time, "
                     "tx.fee_amount, tx.gas, tx.gas_used, tx.memo, tx.block_uid, "
                     "block.hash, block.height, block.time, block.currency_name "
                     "FROM cosmos_transactions AS tx "

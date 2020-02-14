@@ -180,6 +180,10 @@ namespace ledger {
             }
         }
 
+		void CosmosLikeTransactionApi::setRawData(const cosmos::Transaction &txData) {
+			_txData = txData;
+		}
+
         const cosmos::Transaction & CosmosLikeTransactionApi::getRawData() const {
             return _txData;
         }

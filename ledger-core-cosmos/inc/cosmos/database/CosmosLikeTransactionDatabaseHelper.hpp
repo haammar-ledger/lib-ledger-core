@@ -47,8 +47,8 @@ namespace ledger {
 
             // Tx --> DB
             static void putTransaction(soci::session &sql,
-                                              const std::string &accountUid,
-                                              const cosmos::Transaction &tx);
+                                       const std::string &accountUid,
+                                       cosmos::Transaction &tx);
 
             // DB --> Tx
             static bool getTransactionByHash(soci::session &sql,

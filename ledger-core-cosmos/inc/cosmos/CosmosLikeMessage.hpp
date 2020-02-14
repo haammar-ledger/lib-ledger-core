@@ -67,6 +67,7 @@ namespace ledger {
 
 			rapidjson::Value toJson(rapidjson::Document::AllocatorType& allocator) const;
 
+            void setRawData(const cosmos::Message &msgData);
 			const cosmos::Message& getRawData() const;
 
 		private:

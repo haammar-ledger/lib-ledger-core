@@ -84,49 +84,46 @@ namespace ledger {
                                                          const std::shared_ptr<const AbstractWallet> &wallet,
                                                          const cosmos::Transaction &tx,
                                                          const cosmos::Message &msg) {
-                        // Stuff from ledger::core::Operation
-                        /*
-                        DONE:
-                        std::string accountUid;
-                        Option<api::Block> block;
-                        std::string currencyName;
-                        std::string walletUid;
-                        std::chrono::system_clock::time_point date;
-                        std::shared_ptr<TrustIndicator> trust;
-                        std::shared_ptr<AbstractAccount> _account;
 
-                        NOT DONE:
-                        std::string uid;
-                        std::vector<std::string> senders;
-                        std::vector<std::string> recipients;
-                        BigInt amount;
-                        Option<BigInt> fees;
-                        api::OperationType type;
-                        */
+                        // FIXME Review this!
 
-                        out.txData = tx;
-                        out.msgData = msg;
+                        // TODO From ledger::core::Operation:
+                        //      std::vector<std::string> senders;
+                        //      std::vector<std::string> recipients;
+                        //      api::OperationType type;
 
-                        out.accountUid = getAccountUid();
-                        out.block = tx.block;
-                        // TODO : find out if out.cosmosTransaction is necessary
-                        // out.cosmosTransaction = Option<cosmos::Transaction>(tx);
-                        out.currencyName = getWallet()->getCurrency().name;
-                        // TODO : find out if out.walletType is necessary
-                        // out.walletType = getWallet()->;
-                        out.walletUid = wallet->getWalletUid();
-                        out.date = tx.timestamp;
-                        if (out.block.nonEmpty())
-                                out.block.getValue().currencyName = wallet->getCurrency().name;
-                        // TODO : find out if out.cosmosTransaction is necessary
-                        // out.cosmosTransaction.getValue().block = out.block;
-                        out.trust = std::make_shared<TrustIndicator>();
+                        //out.txData = tx;
+                        //out.msgData = msg;
+                        out.setTransactionData(tx);
+                        out.setMessageData(msg);
+
                         out._account = shared_from_this();
-                        // TODO What OperationType relevant here?
-                        //out.type = ?
+                        out.accountUid = getAccountUid();
+                        out.amount = tx.gasUsed.getValueOr(BigInt::ZERO); // FIXME Is this correct??
+                        out.block = tx.block;
+                        /* FIXME Need to complete tx.block?
+                        if (out.block.nonEmpty()) {
+                                out.block.getValue().currencyName = wallet->getCurrency().name;
+                        }
+                        */
+                        out.currencyName = getWallet()->getCurrency().name;
+                        out.date = tx.timestamp;
+                        out.trust = std::make_shared<TrustIndicator>();
+                        auto fees = 0;
+                        std::for_each(tx.fee.amount.begin(), tx.fee.amount.end(), [&] (cosmos::Coin amount) {
+                             fees += std::stoi(amount.amount);  // FIXME Is this correct??
+                        });
+                        out.fees = BigInt(fees);
+                        out.type = api::OperationType::SEND; // FIXME Manage operation type correctly
+                        out.walletUid = wallet->getWalletUid();
                 }
 
-                int CosmosLikeAccount::putTransaction(soci::session &sql, const cosmos::Transaction &tx) {
+                int CosmosLikeAccount::putTransaction(soci::session &sql, const cosmos::Transaction &transaction) {
+                        // FIXME Design issue: 'transaction' being 'const' (from AbstractBlockchainObserver::putTransaction)
+                        // it makes it impossible to add uids to cosmos::Transaction and cosmos::Message
+                        // Writable copy of tx, to allow to add uids
+                        auto tx = transaction;
+
                         auto wallet = getWallet();
                         if (wallet == nullptr) {
                                 throw Exception(api::ErrorCode::RUNTIME_ERROR, "Wallet reference is dead.");
@@ -138,13 +135,14 @@ namespace ledger {
 
                         int result = FLAG_TRANSACTION_IGNORED;
                         auto address = getKeychain()->getAddress()->toBech32();
+                        //auto txUid = CosmosLikeTransactionDatabaseHelper::createCosmosTransactionUid(getAccountUid(), tx.hash);
                         CosmosLikeTransactionDatabaseHelper::putTransaction(sql, getAccountUid(), tx);
 
                         //for (auto msg : tx.messages) {
                         for (auto msgIndex = 0 ; msgIndex < tx.messages.size() ; msgIndex++) {
                                 auto msg = tx.messages[msgIndex];
 
-                                CosmosLikeOperation operation(getWallet()->getCurrency(), tx, msg);
+                                CosmosLikeOperation operation(getSelf(), tx, msg);
                                 inflateOperation(operation, getWallet(), tx, msg);
                                 operation.refreshUid(std::to_string(msgIndex));
 
@@ -152,6 +150,8 @@ namespace ledger {
                                 //*
                                 auto inserted = CosmosLikeOperationDatabaseHelper::putOperation(sql, operation);
                                 if (inserted) {
+                                        //auto msgUid = CosmosLikeTransactionDatabaseHelper::createCosmosMessageUid(txUid, msgIndex);
+
                                         CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, operation.msgData.uid);
                                 /*/
                                 if (CosmosLikeOperationDatabaseHelper::putOperation(sql, operation)) {

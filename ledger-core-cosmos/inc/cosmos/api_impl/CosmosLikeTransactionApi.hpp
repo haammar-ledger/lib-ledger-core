@@ -79,6 +79,7 @@ namespace ledger {
             CosmosLikeTransactionApi & setMemo(const std::string &memo);
             CosmosLikeTransactionApi & setAccountNumber(const std::string &accountNumber);
 
+            void setRawData(const cosmos::Transaction &txData);
             const cosmos::Transaction & getRawData() const;
 
 

@@ -30,7 +30,7 @@ namespace ledger {
                 ")";
 
             sql << "CREATE TABLE cosmos_transactions("
-                "transaction_uid VARCHAR(255) PRIMARY KEY NOT NULL,"
+                "uid VARCHAR(255) PRIMARY KEY NOT NULL,"
                 "hash VARCHAR(255) NOT NULL,"
                 "block_uid VARCHAR(255) REFERENCES blocks(uid) ON DELETE CASCADE,"
                 "time VARCHAR(255) NOT NULL,"
@@ -123,7 +123,7 @@ namespace ledger {
             sql << "CREATE TABLE cosmos_messages("
                 "uid VARCHAR(255) PRIMARY KEY NOT NULL,"
                 "transaction_uid VARCHAR(255) NOT NULL "
-                    "REFERENCES cosmos_transactions(transaction_uid) ON DELETE CASCADE ON UPDATE CASCADE,"
+                    "REFERENCES cosmos_transactions(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
                 //"operation_uid VARCHAR(255) NOT NULL"
                 //    "REFERENCES operations(uid) ON DELETE CASCADE,"
                 "message_type VARCHAR(255) NOT NULL,"
