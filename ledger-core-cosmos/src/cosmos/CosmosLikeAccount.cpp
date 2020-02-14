@@ -80,20 +80,18 @@ namespace ledger {
                         return std::dynamic_pointer_cast<CosmosLikeAccount>(shared_from_this());
                 }
 
+                // FIXME Review this!
                 void CosmosLikeAccount::inflateOperation(CosmosLikeOperation &out,
                                                          const std::shared_ptr<const AbstractWallet> &wallet,
                                                          const cosmos::Transaction &tx,
                                                          const cosmos::Message &msg) {
 
-                        // FIXME Review this!
 
-                        // TODO From ledger::core::Operation:
+                        // TODO From ledger::core::Operation
                         //      std::vector<std::string> senders;
                         //      std::vector<std::string> recipients;
                         //      api::OperationType type;
 
-                        //out.txData = tx;
-                        //out.msgData = msg;
                         out.setTransactionData(tx);
                         out.setMessageData(msg);
 
@@ -119,9 +117,9 @@ namespace ledger {
                 }
 
                 int CosmosLikeAccount::putTransaction(soci::session &sql, const cosmos::Transaction &transaction) {
-                        // FIXME Design issue: 'transaction' being 'const' (from AbstractBlockchainObserver::putTransaction)
-                        // it makes it impossible to add uids to cosmos::Transaction and cosmos::Message
-                        // Writable copy of tx, to allow to add uids
+                        // FIXME Design issue: 'transaction' being const (from AbstractBlockchainObserver::putTransaction)
+                        // it makes it impossible to manage uids of nested objects (eg. cosmos::Message).
+                        // Writable copy of tx to allow to add uids.
                         auto tx = transaction;
 
                         auto wallet = getWallet();
@@ -135,27 +133,18 @@ namespace ledger {
 
                         int result = FLAG_TRANSACTION_IGNORED;
                         auto address = getKeychain()->getAddress()->toBech32();
-                        //auto txUid = CosmosLikeTransactionDatabaseHelper::createCosmosTransactionUid(getAccountUid(), tx.hash);
                         CosmosLikeTransactionDatabaseHelper::putTransaction(sql, getAccountUid(), tx);
 
-                        //for (auto msg : tx.messages) {
                         for (auto msgIndex = 0 ; msgIndex < tx.messages.size() ; msgIndex++) {
                                 auto msg = tx.messages[msgIndex];
 
-                                CosmosLikeOperation operation(getSelf(), tx, msg);
+                                CosmosLikeOperation operation(tx, msg);
                                 inflateOperation(operation, getWallet(), tx, msg);
                                 operation.refreshUid(std::to_string(msgIndex));
 
-                                //FIXME Which one? Does core::OperationDatabaseHelper do the job?
-                                //*
                                 auto inserted = CosmosLikeOperationDatabaseHelper::putOperation(sql, operation);
                                 if (inserted) {
-                                        //auto msgUid = CosmosLikeTransactionDatabaseHelper::createCosmosMessageUid(txUid, msgIndex);
-
                                         CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, operation.msgData.uid);
-                                /*/
-                                if (CosmosLikeOperationDatabaseHelper::putOperation(sql, operation)) {
-                                //*/
                                         emitNewOperationEvent(operation);
                                 }
                        }
@@ -220,8 +209,6 @@ namespace ledger {
                         //     result = static_cast<int>(operation.type);
                         // }
 
-                        // return result;
-                        // TODO COSMOS Implement putTransaction
                         return result;
                 }
 
@@ -475,7 +462,9 @@ namespace ledger {
                         auto buildFunction = [self, senderAddress](const CosmosLikeTransactionBuildRequest &request,
                                                                    const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer) {
                                 auto currency = self->getWallet()->getCurrency();
-                                auto tx = std::make_shared<CosmosLikeTransactionApi>(self->getWallet()->getCurrency());
+                                auto tx = std::make_shared<CosmosLikeTransactionApi>();
+                                tx->setAccountNumber(self->getAccountUid());
+                                tx->setCurrency(self->getWallet()->getCurrency());
                                 tx->setFee(request.fee);
                                 tx->setGas(request.gas);
                                 tx->setMessages(request.messages);

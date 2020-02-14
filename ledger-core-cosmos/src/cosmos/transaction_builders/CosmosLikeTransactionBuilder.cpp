@@ -77,19 +77,6 @@ namespace ledger {
             //     return object[fieldName].GetObject();
             // }
 
-            // TODO ?
-            /*
-            template <typename T>
-            api::CosmosLikeMsgSend parseMsgSend(const T& n) {
-                cosmos::MsgSend msg;
-
-                msg.fromAddress = n[cosmos::constants::kFromAddress].GetString();
-                msg.toAddress = n[cosmos::constants::kToAddress].GetString();
-                parseCoinVector(n[cosmos::constants::kAmount].GetArray(), msg.amount);
-                return msg;
-            }
-            */
-
             api::CosmosLikeMsgSend buildMsgSendFromRawMessage(Object const& object) {
                 std::vector<api::CosmosLikeAmount> amounts;
 
@@ -331,24 +318,11 @@ namespace ledger {
         CosmosLikeTransactionBuilder::parseRawTransaction(const api::Currency &currency,
                                                           const std::string &rawTransaction,
                                                           bool isSigned) {
-            auto tx = std::make_shared<CosmosLikeTransactionApi>(currency);
             Document document;
             document.Parse(rawTransaction.c_str());
 
-            auto getAmount = [=] (const Object &object) -> Amount {
-                auto denom = getString(object, kDenom);
-                auto amount = getString(object, kAmount);
-
-                auto unit = std::find_if(currency.units.begin(), currency.units.end(), [&] (const api::CurrencyUnit &unit) {
-                    return unit.name == denom;
-                });
-                if (unit == currency.units.end()) {
-                    throw Exception(api::ErrorCode::INVALID_ARGUMENT, "Unknown unit while parsing transaction");
-                }
-                //TODO: Fix Amount::toUnit
-                return Amount(currency, 0, BigInt(amount) * BigInt(10).powu(static_cast<unsigned short>((*unit).numberOfDecimal)));
-            };
-
+            auto tx = std::make_shared<CosmosLikeTransactionApi>();
+            tx->setCurrency(currency);
             tx->setAccountNumber(getString(document.GetObject(), kAccountNumber));
             tx->setMemo(getString(document.GetObject(), kMemo));
             tx->setSequence(getString(document.GetObject(), kSequence));
@@ -356,6 +330,7 @@ namespace ledger {
             //Get fees
             if (document[kFee].IsObject()) {
                 auto feeObject = document[kFee].GetObject();
+
                 // Gas Limit
                 auto gas = std::make_shared<BigInt>(getString(feeObject, kGas));
                 tx->setGas(gas);
@@ -366,10 +341,24 @@ namespace ledger {
                 if (feeObject[kAmount].IsArray()) {
                     auto fee = BigInt();
 
+                    auto getAmount = [=] (const Object &object) -> Amount {
+                        auto denom = getString(object, kDenom);
+                        auto amount = getString(object, kAmount);
+
+                        auto unit = std::find_if(currency.units.begin(), currency.units.end(), [&] (const api::CurrencyUnit &unit) {
+                            return unit.name == denom;
+                        });
+                        if (unit == currency.units.end()) {
+                            throw Exception(api::ErrorCode::INVALID_ARGUMENT, "Unknown unit while parsing transaction");
+                        }
+                        //TODO: Fix Amount::toUnit
+                        return Amount(currency, 0, BigInt(amount) * BigInt(10).powu(static_cast<unsigned short>((*unit).numberOfDecimal)));
+                    };
+
                     // accumlate all types of fee
                     for (auto& amount : feeObject[kAmount].GetArray()) {
                         if (amount.IsObject()) {
-                            fee = fee +  BigInt(getAmount(amount.GetObject()).toString());
+                            fee = fee + BigInt(getAmount(amount.GetObject()).toString());
                         }
                     }
 

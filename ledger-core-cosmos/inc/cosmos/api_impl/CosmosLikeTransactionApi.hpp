@@ -55,10 +55,9 @@ namespace ledger {
     namespace core {
         class CosmosLikeTransactionApi : public api::CosmosLikeTransaction {
         public:
-            explicit CosmosLikeTransactionApi(const api::Currency& currency);
+            explicit CosmosLikeTransactionApi() {}
 
-            explicit CosmosLikeTransactionApi(const api::Currency& currency,
-                                              const cosmos::Transaction& tx);
+            explicit CosmosLikeTransactionApi(const cosmos::Transaction& txData);
 
             std::string getHash() const override;
             std::shared_ptr<api::Amount> getFee() const override;
@@ -70,6 +69,8 @@ namespace ledger {
             void setDERSignature(const std::vector<uint8_t> & signature) override;
             std::vector<uint8_t> getSigningPubKey() const override;
             std::shared_ptr<api::Amount> getGas() const override;
+
+            CosmosLikeTransactionApi & setCurrency(const api::Currency& currency);
             CosmosLikeTransactionApi & setMessages(const std::vector<std::shared_ptr<api::CosmosLikeMessage>> & messages);
             CosmosLikeTransactionApi & setSigningPubKey(const std::vector<uint8_t> &pubKey);
             CosmosLikeTransactionApi & setHash(const std::string &hash);
@@ -86,7 +87,8 @@ namespace ledger {
         private:
 
             api::Currency _currency;
-            cosmos::Account _account; // FIXME How to initialize this? Only 'accountNumber' managed so far
+            std::string _accountNumber;
+            std::string _accountSequence;
             cosmos::Transaction _txData;
             std::vector<uint8_t> _rSignature;
             std::vector<uint8_t> _sSignature;

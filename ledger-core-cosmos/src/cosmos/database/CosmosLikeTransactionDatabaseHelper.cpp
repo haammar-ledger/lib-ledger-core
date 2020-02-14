@@ -38,7 +38,6 @@
 #include <core/wallet/BlockDatabaseHelper.hpp>
 
 #include <cosmos/database/SociCosmosAmount.hpp>
-//#include <cosmos/CosmosLikeCurrencies.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
 
 #include <core/api/enum_from_string.hpp>
@@ -359,7 +358,6 @@ namespace ledger {
                 insertTransaction(sql, tx);
 
                 // Insert messages
-                //for (const auto& msg : tx.messages) {
                 for (auto index = 0 ; index < tx.messages.size() ; index++) {
                     auto& msg = tx.messages[index];
                     auto& log = tx.logs[index];

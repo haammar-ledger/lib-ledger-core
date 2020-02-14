@@ -82,14 +82,8 @@ static void sortJson(Value &val) {
 namespace ledger {
     namespace core {
 
-        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const api::Currency &currency) :
-            _currency(currency)
-        {}
-
-        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const api::Currency &currency,
-                                                           const cosmos::Transaction& tx) :
-            _currency(currency),
-            _txData(tx)
+        CosmosLikeTransactionApi::CosmosLikeTransactionApi(const cosmos::Transaction& txData) :
+            _txData(txData)
         {}
 
         std::string CosmosLikeTransactionApi::getMemo() const {
@@ -197,7 +191,7 @@ namespace ledger {
             Document::AllocatorType& allocator = document.GetAllocator();
 
             Value vString(rapidjson::kStringType);
-            vString.SetString(_account.accountNumber.c_str(), static_cast<rapidjson::SizeType>(_account.accountNumber.length()), allocator);
+            vString.SetString(_accountNumber.c_str(), static_cast<rapidjson::SizeType>(_accountNumber.length()), allocator);
             document.AddMember(kAccountNumber, vString, allocator);
 
             auto chainID = networks::getCosmosLikeNetworkParameters(_currency.name).ChainId;
@@ -275,7 +269,7 @@ namespace ledger {
                 document.AddMember(kSignature, sigArray, allocator);
             }
 
-            vString.SetString(_account.sequence.c_str(), static_cast<rapidjson::SizeType>(_account.sequence.length()), allocator);
+            vString.SetString(_accountSequence.c_str(), static_cast<rapidjson::SizeType>(_accountSequence.length()), allocator);
             document.AddMember(kSequence, vString, allocator);
 
             StringBuffer buffer;
@@ -283,6 +277,11 @@ namespace ledger {
             sortJson(document);
             document.Accept(writer);
             return buffer.GetString();
+        }
+
+        CosmosLikeTransactionApi &CosmosLikeTransactionApi::setCurrency(const api::Currency& currency) {
+            _currency = currency;
+            return *this;
         }
 
         CosmosLikeTransactionApi &CosmosLikeTransactionApi::setSigningPubKey(const std::vector<uint8_t> &pubKey) {
@@ -321,7 +320,7 @@ namespace ledger {
         }
 
         CosmosLikeTransactionApi &CosmosLikeTransactionApi::setSequence(const std::string &sequence) {
-            _account.sequence = sequence;
+            _accountSequence = sequence;
             return *this;
         }
 
@@ -331,7 +330,7 @@ namespace ledger {
         }
 
         CosmosLikeTransactionApi &CosmosLikeTransactionApi::setAccountNumber(const std::string &accountNumber) {
-            _account.accountNumber = accountNumber;
+            _accountNumber = accountNumber;
             return *this;
         }
 

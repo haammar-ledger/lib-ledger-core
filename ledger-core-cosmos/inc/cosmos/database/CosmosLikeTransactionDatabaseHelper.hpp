@@ -32,17 +32,19 @@
 #ifndef LEDGER_CORE_COSMOSLIKETRANSACTIONDATABASEHELPER_H
 #define LEDGER_CORE_COSMOSLIKETRANSACTIONDATABASEHELPER_H
 
-
-#include <string>
+#include <cosmos/cosmos.hpp>
 
 #include <soci.h>
+#include <string>
 
-#include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 
 namespace ledger {
     namespace core {
+
         class CosmosLikeTransactionDatabaseHelper {
+
         public:
+
             static bool transactionExists(soci::session &sql, const std::string &cosmosTxUid);
 
             // Tx --> DB
@@ -60,16 +62,6 @@ namespace ledger {
                                         const std::string &msgUid,
                                         cosmos::Message &msg);
 
-            /*
-            static bool inflateTransaction(soci::session &sql,
-                                           const soci::row &row,
-                                           cosmos::Transaction &tx);
-            static void inflateMessage(const soci::row &row, cosmos::Message &msg);
-
-            static std::string createCosmosTransactionUid(const std::string &accountUid, const std::string &txHash);
-
-            static std::string createCosmosMessageUid(const std::string &txUid, uint64_t msgIndex);
-            */
         };
     }
 }

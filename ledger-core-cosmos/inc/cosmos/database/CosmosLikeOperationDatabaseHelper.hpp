@@ -1,6 +1,6 @@
 /*
  *
- * CosmosLikeTransactionDatabaseHelper
+ * CosmosLikeOperationDatabaseHelper
  *
  * Created by Hakim Aammar on 11/02/2020.
  *
@@ -32,34 +32,20 @@
 #ifndef LEDGER_CORE_COSMOSLIKEOPERATIONDATABASEHELPER_H
 #define LEDGER_CORE_COSMOSLIKEOPERATIONDATABASEHELPER_H
 
-
 #include <string>
 
 #include <soci.h>
 
 #include <core/operation/OperationDatabaseHelper.hpp>
-//#include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
-
-//#include <cosmos/api/CosmosLikeOperation.hpp>
 
 namespace ledger {
     namespace core {
         class CosmosLikeOperationDatabaseHelper : public OperationDatabaseHelper {
         public:
 
-            //static void updateOperation(soci::session& sql, const api::CosmosLikeOperation& operation);
-            static void updateOperation(soci::session& sql, const std::string& opUid, const std::string& msgUid);
-
-            // Tx --> DB
-            //static void putOperation(soci::session &sql, CosmosLikeOperation &op);
-
-            // DB --> Tx
-            //static bool inflateOperation(soci::session &sql, const soci::row &row, CosmosLikeOperation &op);
-
-            //static bool operationExists(soci::session &sql, const std::string &cosmosTxUid);
-
-            // NOTE Replaced by a call to CosmmosLikeOperation::refreshUid() just before putOperation() ?
-            //static std::string createCosmosOperationUid(const std::string &txUid, const std::string &msgUid);
+            static void updateOperation(soci::session& sql, const std::string& opUid, const std::string& msgUid) {
+                sql << "INSERT INTO cosmos_operations VALUES(:uid, :message_uid)", soci::use(opUid), soci::use(msgUid);
+            }
 
         };
     }

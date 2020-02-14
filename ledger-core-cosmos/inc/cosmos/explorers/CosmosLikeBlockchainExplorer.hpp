@@ -45,7 +45,6 @@
 #include <core/net/HttpClient.hpp>
 #include <core/utils/ConfigurationMatchable.hpp>
 #include <core/utils/Option.hpp>
-//#include <core/wallet/Block.hpp>
 
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>

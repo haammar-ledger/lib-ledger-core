@@ -48,7 +48,7 @@
 #include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
-#include <cosmos/database/CosmosLikeAccountDatabaseEntry.hpp>
+//#include <cosmos/database/CosmosLikeAccountDatabaseEntry.hpp>
 
 namespace ledger {
         namespace core {

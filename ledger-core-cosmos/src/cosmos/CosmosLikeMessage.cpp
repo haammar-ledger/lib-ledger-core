@@ -46,39 +46,8 @@ namespace ledger {
 
 		using namespace cosmos::constants;
 
-        //using Object = GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>::Object;
-		//using rapidjsonArray = rapidjson::GenericValue<rapidjson::UTF8<char>, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>>::Array;
-
 		namespace {
-			/*
-			// a closure helper that check if a `DynamicObject` holds a specific key
-			inline auto containsKeys(const std::shared_ptr<api::DynamicObject>& object) {
-				return [=](auto const& key) {
-					return object->contains(key);
-				};
-			}
 
-			// add a `CosmosLikeAmount` to a `DynamicObject`
-			inline auto addAmount(const std::shared_ptr<api::DynamicObject>& object, api::CosmosLikeAmount const& amount) {
-				auto amountObject = std::make_shared<::ledger::core::DynamicObject>();
-
-				amountObject->putString(kAmount, amount.amount);
-				amountObject->putString(kDenom, amount.denom);
-
-				object->putObject(kAmount, amountObject);
-			}
-
-			// add a `CosmosLikeAmount` to a `DynamicArray`
-			inline auto addAmount(const std::shared_ptr<api::DynamicArray>& array, api::CosmosLikeAmount const& amount) {
-				auto amountObject = std::make_shared<::ledger::core::DynamicObject>();
-
-				amountObject->putString(kAmount, amount.amount);
-				amountObject->putString(kDenom, amount.denom);
-
-				array->pushObject(amountObject);
-			}
-			*/
-			// FIXME Test this
 			// add a `CosmosLikeContent` to a `rapidjson::Value`
 			inline auto addContent(api::CosmosLikeContent const& content,
 								   rapidjson::Value& json,
@@ -101,7 +70,6 @@ namespace ledger {
 				json.AddMember(kContent, jsonContent, allocator);
 			}
 
-			// FIXME Test this
 			// add a `CosmosLikeAmount` to a `rapidjson::Value`
 			inline auto addAmount(api::CosmosLikeAmount const& amount,
 								  rapidjson::Value& json,
@@ -120,8 +88,7 @@ namespace ledger {
 				json.AddMember(kAmount, jsonAmount, allocator);
 			}
 
-			// FIXME Test this
-			// add a `CosmosLikeAmount` to an array of `rapidjson::Value`
+			// add an array of `CosmosLikeAmount` to a `rapidjson::Value`
 			inline auto addAmounts(std::vector<api::CosmosLikeAmount> const& amounts,
 								  rapidjson::Value& jsonAmounts,
 								  rapidjson::Document::AllocatorType& allocator) {
@@ -142,12 +109,6 @@ namespace ledger {
 			}
 		}
 
-/*
-		CosmosLikeMessage::CosmosLikeMessage(const std::shared_ptr<DynamicObject> &content) :
-			_content(content)
-		{}
-
-*/
         CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& msg) :
 			_msgData(msg)
 		{}
@@ -160,120 +121,12 @@ namespace ledger {
 			return _msgData;
 		}
 
-		/*
-		cosmos::Message CosmosLikeMessage::toRawMessage() const {
-			auto msgType = getRawMessageType();
-			cosmos::Message raw_message;
-			raw_message.type = msgType;
-
-			if (raw_message.type == kMsgSend) {
-				raw_message.content =
-					unwrapMsgSend(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgDelegate) {
-				raw_message.content =
-					unwrapMsgDelegate(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgUndelegate) {
-				raw_message.content =
-					unwrapMsgUndelegate(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgRedelegate) {
-				raw_message.content =
-					unwrapMsgRedelegate(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgSubmitProposal) {
-				raw_message.content =
-					unwrapMsgSubmitProposal(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgVote) {
-				raw_message.content =
-					unwrapMsgVote(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgDeposit) {
-				raw_message.content =
-					unwrapMsgDeposit(std::make_shared<CosmosLikeMessage>(*this));
-			} else if (raw_message.type == kMsgWithdrawDelegationReward) {
-				raw_message.content = unwrapMsgWithdrawDelegationReward(
-					std::make_shared<CosmosLikeMessage>(*this));
-			}  // else the content stays empty
-			return raw_message;
-		}
-
-		CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& rawStruct) : _content() {
-			auto msgType = rawStruct.type;
-			std::shared_ptr<DynamicObject> content = nullptr;
-
-			if (msgType == kMsgSend) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgSend(
-									boost::get<cosmos::MsgSend>(rawStruct.content)))
-								->_content;
-			} else if (msgType == kMsgDelegate) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgDelegate(
-									boost::get<cosmos::MsgDelegate>(rawStruct.content)))
-								->_content;
-			} else if (msgType == kMsgUndelegate) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgUndelegate(
-									boost::get<cosmos::MsgUndelegate>(rawStruct.content)))
-								->_content;
-			} else if (msgType == kMsgRedelegate) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgRedelegate(
-									boost::get<cosmos::MsgRedelegate>(rawStruct.content)))
-								->_content;
-			} else if (msgType == kMsgSubmitProposal) {
-				content =
-					std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-						CosmosLikeMessage::wrapMsgSubmitProposal(
-							boost::get<cosmos::MsgSubmitProposal>(rawStruct.content)))
-						->_content;
-			} else if (msgType == kMsgVote) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgVote(
-									boost::get<cosmos::MsgVote>(rawStruct.content)))
-								->_content;
-			} else if (msgType == kMsgDeposit) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgDeposit(
-									boost::get<cosmos::MsgDeposit>(rawStruct.content)))
-								->_content;
-			} else if (msgType == kMsgWithdrawDelegationReward) {
-				content = std::std::dynamic_pointer_cast<CosmosLikeMessage>(
-								CosmosLikeMessage::wrapMsgWithdrawDelegationReward(
-									boost::get<cosmos::MsgWithdrawDelegationReward>(
-										rawStruct.content)))
-								->_content;
-			}  // else the content stays nullptr
-
-			_content = content;
-		}
-		*/
-
 		api::CosmosLikeMsgType CosmosLikeMessage::getMessageType() const {
 			auto msgType = getRawMessageType();
 			return cosmos::stringToMsgType(msgType.c_str());
-			/*
-			if (msgType == kMsgSend) {
-				return api::CosmosLikeMsgType::MSGSEND;
-			} else if (msgType == kMsgDelegate) {
-				return api::CosmosLikeMsgType::MSGDELEGATE;
-			} else if (msgType == kMsgUndelegate) {
-				return api::CosmosLikeMsgType::MSGUNDELEGATE;
-			} else if (msgType == kMsgRedelegate) {
-				return api::CosmosLikeMsgType::MSGREDELEGATE;
-			} else if (msgType == kMsgSubmitProposal) {
-				return api::CosmosLikeMsgType::MSGSUBMITPROPOSAL;
-			} else if (msgType == kMsgVote) {
-				return api::CosmosLikeMsgType::MSGVOTE;
-			} else if (msgType == kMsgDeposit) {
-				return api::CosmosLikeMsgType::MSGDEPOSIT;
-			} else if (msgType == kMsgWithdrawDelegationReward) {
-				return api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD;
-			}  else {
-				return api::CosmosLikeMsgType::UNKNOWN;
-			}
-			*/
 		}
 
 		std::string CosmosLikeMessage::getRawMessageType() const {
-			//return _content->get<std::string>(kType).value_or("");
 			return _msgData.type;
 		}
 
@@ -282,9 +135,6 @@ namespace ledger {
 		// https://github.com/cosmos/ledger-cosmos-app/blob/master/docs/TXSPEC.md
 		// but we defer the sorting to the TransactionApi::serialize() method
 		rapidjson::Value CosmosLikeMessage::toJson(rapidjson::Document::AllocatorType& allocator) const {
-
-			// TODO [refacto] Implement a cosmos Serializer/Deserializer
-			// for all kind of conversions from/to cosmos::structures (here toJson)
 
 			rapidjson::Value json(rapidjson::kObjectType);
 
@@ -315,11 +165,7 @@ namespace ledger {
 			} else if (_msgData.type == kMsgDelegate) {
 
 				const auto& content = boost::get<cosmos::MsgDelegate>(_msgData.content);
-				/*
-				std::string delegatorAddress;
-				std::string validatorAddress;
-				CosmosLikeAmount amount;
-				*/
+
 				// cosmos::MsgDelegate::delegatorAddress
 				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
 				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
@@ -334,11 +180,7 @@ namespace ledger {
 			} else if (_msgData.type == kMsgUndelegate) {
 
 				const auto& content = boost::get<cosmos::MsgUndelegate>(_msgData.content);
-				/*
-				std::string delegatorAddress;
-				std::string validatorAddress;
-				CosmosLikeAmount amount;
-				*/
+
 				// cosmos::MsgUndelegate::delegatorAddress
 				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
 				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
@@ -353,12 +195,7 @@ namespace ledger {
 			} else if (_msgData.type == kMsgRedelegate) {
 
 				const auto& content = boost::get<cosmos::MsgRedelegate>(_msgData.content);
-				/*
-				std::string delegatorAddress;
-				std::string validatorSourceAddress;
-				std::string validatorDestinationAddress;
-				CosmosLikeAmount amount;
-				*/
+
 				// cosmos::MsgRedelegate::delegatorAddress
 				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
 				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
@@ -377,11 +214,6 @@ namespace ledger {
 			} else if (_msgData.type == kMsgSubmitProposal) {
 
 				const auto& content = boost::get<cosmos::MsgSubmitProposal>(_msgData.content);
-				/*
-				CosmosLikeContent content;
-				std::string proposer;
-				std::vector<CosmosLikeAmount> initialDeposit;
-				*/
 
 				// cosmos::MsgSubmitProposal::content
 				addContent(content.content, jsonContent, allocator);
@@ -398,11 +230,6 @@ namespace ledger {
 			} else if (_msgData.type == kMsgVote) {
 
 				const auto& content = boost::get<cosmos::MsgVote>(_msgData.content);
-				/*
-				std::string voter;
-				std::string proposalId;
-				CosmosLikeVoteOption option;
-				*/
 
 				// cosmos::MsgVote::voter
 				jsonString.SetString(content.voter.c_str(), static_cast<rapidjson::SizeType>(content.voter.length()), allocator);
@@ -420,11 +247,6 @@ namespace ledger {
 			} else if (_msgData.type == kMsgDeposit) {
 
 				const auto& content = boost::get<cosmos::MsgDeposit>(_msgData.content);
-				/*
-				std::string depositor;
-				std::string proposalId;
-				std::vector<CosmosLikeAmount> amount;
-				*/
 
 				// cosmos::MsgDeposit::depositor
 				jsonString.SetString(content.depositor.c_str(), static_cast<rapidjson::SizeType>(content.depositor.length()), allocator);
@@ -442,10 +264,6 @@ namespace ledger {
 			} else if (_msgData.type == kMsgWithdrawDelegationReward) {
 
 				const auto& content = boost::get<cosmos::MsgWithdrawDelegationReward>(_msgData.content);
-				/*
-				std::string delegatorAddress;
-				std::string validatorAddress;
-				*/
 
 				// cosmos::MsgWithdrawDelegationReward::delegatorAddress
 				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);

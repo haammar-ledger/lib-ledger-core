@@ -54,21 +54,12 @@ namespace ledger {
 
                 CosmosLikeOperation() = default;
 
-                CosmosLikeOperation(std::shared_ptr<AbstractAccount> const& account,
-                                    ledger::core::cosmos::Transaction const& tx,
+                CosmosLikeOperation(ledger::core::cosmos::Transaction const& tx,
                                     ledger::core::cosmos::Message const& msg);
-
-                /*
-                CosmosLikeOperation(const std::shared_ptr<CosmosLikeOperation> &operation,
-                                    ledger::core::cosmos::Transaction const& txData,
-                                    ledger::core::cosmos::Message const& msg);
-                */
 
                 void setTransactionData(ledger::core::cosmos::Transaction const& txData);
-                //ledger::core::cosmos::Transaction& getTransactionData();
 
                 void setMessageData(ledger::core::cosmos::Message const& msgData);
-                //ledger::core::cosmos::Message& getMessageData();
 
                 virtual std::shared_ptr<api::CosmosLikeTransaction> getTransaction() override;
                 virtual std::shared_ptr<api::CosmosLikeMessage> getMessage() override;

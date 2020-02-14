@@ -124,8 +124,6 @@ namespace ledger {
                 "uid VARCHAR(255) PRIMARY KEY NOT NULL,"
                 "transaction_uid VARCHAR(255) NOT NULL "
                     "REFERENCES cosmos_transactions(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
-                //"operation_uid VARCHAR(255) NOT NULL"
-                //    "REFERENCES operations(uid) ON DELETE CASCADE,"
                 "message_type VARCHAR(255) NOT NULL,"
                 "log TEXT,"
                 "success INTEGER,"

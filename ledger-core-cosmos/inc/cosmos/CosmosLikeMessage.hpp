@@ -59,7 +59,6 @@ namespace ledger {
 
 		public:
 
-			//CosmosLikeMessage(const std::shared_ptr<DynamicObject>& content);
         	CosmosLikeMessage(const cosmos::Message& msgData);
 
 			virtual api::CosmosLikeMsgType getMessageType() const override;
@@ -71,11 +70,9 @@ namespace ledger {
 			const cosmos::Message& getRawData() const;
 
 		private:
-			// TODO : use cosmos::Message as data type instead of the content.
-			// The constructor using DynamicObject should disappear, and
-			// the toJson method should do the type-dispatch to build the json dynamically
-			//std::shared_ptr<DynamicObject> _content;
+
 			cosmos::Message _msgData;
+
 		};
 	}
 }
