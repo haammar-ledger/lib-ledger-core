@@ -58,6 +58,7 @@ using namespace ledger::core;
 api::CosmosLikeNetworkParameters COSMOS = networks::getCosmosLikeNetworkParameters("atom");
 std::string DEFAULT_ADDRESS = "cosmos1sd4tl9aljmmezzudugs7zlaya7pg2895tyn79r";
 std::string DEFAULT_HEX_PUB_KEY = "03d672c1b90c84d9d97522e9a73252a432b77d90a78bf81cdbe35270d9d3dc1c34";
+std::string BIG_SYNC_ADDRESS = "cosmos1y6yvdel7zys8x60gz9067fjpcpygsn62ae9x46";
 
 class CosmosLikeWalletSynchronization : public BaseFixture {
 public:
@@ -158,8 +159,39 @@ TEST_F(CosmosLikeWalletSynchronization, GetWithdrawDelegationRewardWithExplorer)
     ASSERT_TRUE(foundTx) << "The transaction we need to test has not been found in the REST request.";
 }
 
+
+TEST_F(CosmosLikeWalletSynchronization, GetErrorTransaction) {
+    auto services = this->newDefaultServices();
+    auto tx_hash = "4A7823F0F2899AA6EC1DCB2E242C541EDAF90419A3DE03ED885E438FEDB779D4";
+    auto validator = "cosmosvaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4epsluffn";
+    auto delegator = "cosmos1k3kg9w60dd5x56vve2s28v3xjp7fp2vn2hjjsa";
+
+    auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
+            services->getDispatcher()->getSerialExecutionContext("explorer"),
+            services->getHttpClient(api::CosmosConfigurationDefaults::COSMOS_DEFAULT_API_ENDPOINT),
+            COSMOS,
+            std::make_shared<DynamicObject>()
+    );
+    auto tx = ::wait(explorer->getTransactionByHash(tx_hash));
+    ASSERT_EQ(tx->hash, tx_hash);
+    EXPECT_EQ(tx->block->height, 768780);
+    EXPECT_EQ(tx->logs.size(), 1);
+    EXPECT_FALSE(tx->logs[0].success);
+    EXPECT_EQ(tx->logs[0].log, "{\"codespace\":\"sdk\",\"code\":10,\"message\":\"insufficient account funds; 2412592uatom < 2417501uatom\"}");
+    EXPECT_EQ(tx->messages[0].type, cosmos::constants::kMsgDelegate);
+    const cosmos::MsgDelegate& msg = boost::get<cosmos::MsgDelegate>(tx->messages[0].content);
+    EXPECT_EQ(msg.delegatorAddress, delegator);
+    EXPECT_EQ(msg.validatorAddress, validator);
+    EXPECT_EQ(msg.amount.amount, "2417501");
+    EXPECT_EQ(msg.amount.denom, "uatom");
+    EXPECT_EQ(tx->fee.gas.toInt64(), 200000);
+    EXPECT_EQ(tx->fee.amount[0].denom, "uatom");
+    EXPECT_EQ(tx->fee.amount[0].amount, "5000");
+    EXPECT_EQ(tx->gasUsed, Option<std::string>("47235"));
+}
+
+
 TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
-    auto context = this->dispatcher->getSerialExecutionContext("context");
     auto services = this->newDefaultServices();
     auto tx_hash = "F4B8CB550B498F744CCC420907B80D0B068250972F975354A873CD1CCF9B000A";
     auto receiver = "cosmos1xxkueklal9vejv9unqu80w9vptyepfa95pd53u";
@@ -177,7 +209,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
     EXPECT_EQ(tx->block->height, 453223);
     EXPECT_EQ(tx->logs.size(), 1);
     EXPECT_TRUE(tx->logs[0].success);
-    EXPECT_EQ(tx->messages[0].type, "cosmos-sdk/MsgSend");
+    EXPECT_EQ(tx->messages[0].type, cosmos::constants::kMsgSend);
     const cosmos::MsgSend& msg = boost::get<cosmos::MsgSend>(tx->messages[0].content);
     EXPECT_EQ(msg.fromAddress, sender);
     EXPECT_EQ(msg.toAddress, receiver);
@@ -190,7 +222,6 @@ TEST_F(CosmosLikeWalletSynchronization, GetSendWithExplorer) {
 }
 
 TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
-    auto context = this->dispatcher->getSerialExecutionContext("context");
     auto services = this->newDefaultServices();
     auto delegator = "cosmos1ytpz9gt59hssp5m5sknuzrwse88glqhgcrypxj";
     auto validator = "cosmosvaloper1ey69r37gfxvxg62sh4r0ktpuc46pzjrm873ae8";
@@ -219,7 +250,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
             EXPECT_EQ(tx->block->height, 660081);
             EXPECT_EQ(tx->logs.size(), 1);
             EXPECT_TRUE(tx->logs[0].success);
-            EXPECT_EQ(tx->messages[0].type, "cosmos-sdk/MsgDelegate");
+            EXPECT_EQ(tx->messages[0].type, cosmos::constants::kMsgDelegate);
             const cosmos::MsgDelegate& msg = boost::get<cosmos::MsgDelegate>(tx->messages[0].content);
             EXPECT_EQ(msg.delegatorAddress, delegator);
             EXPECT_EQ(msg.validatorAddress, validator);
