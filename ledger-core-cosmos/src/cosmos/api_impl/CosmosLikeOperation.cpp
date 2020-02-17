@@ -62,11 +62,17 @@ namespace ledger {
 
         void CosmosLikeOperation::setTransactionData(ledger::core::cosmos::Transaction const& tx) {
             txData = tx;
+            if (_txApi == nullptr) {
+                _txApi = std::make_shared<CosmosLikeTransactionApi>(tx);
+            }
             std::static_pointer_cast<CosmosLikeTransactionApi>(_txApi)->setRawData(txData);
         }
 
         void CosmosLikeOperation::setMessageData(ledger::core::cosmos::Message const& msg) {
             msgData = msg;
+            if (_msgApi == nullptr) {
+                _msgApi = std::make_shared<CosmosLikeMessage>(msg);
+            }
             std::static_pointer_cast<CosmosLikeMessage>(_msgApi)->setRawData(msgData);
         }
 

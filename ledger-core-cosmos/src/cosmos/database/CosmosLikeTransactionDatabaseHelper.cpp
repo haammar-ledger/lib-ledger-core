@@ -128,6 +128,7 @@ namespace ledger {
                     }
                     break;
                 case api::CosmosLikeMsgType::UNKNOWN:
+                    // TODO [COIN-178] Generic mechanism to handle unknown types
                     break;
             }
         }
@@ -262,30 +263,31 @@ namespace ledger {
                     break;
                 case api::CosmosLikeMsgType::MSGDEPOSIT:
                     {
-                        const auto& m = boost::get<cosmos::MsgRedelegate>(msg.content);
-                        sql << "INSERT INTO cosmos_messages (uid,"
-                               "transaction_uid, message_type, log,"
-                               "success, msg_index, delegator_address, validator_src_address,"
-                               "validator_dst_address, amount)"
-                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
+                        const auto& m = boost::get<cosmos::MsgDeposit>(msg.content);
+                        std::string coins = soci::coinsToString(m.amount);
+                        sql << "INSERT INTO cosmos_messages (uid, transaction_uid, "
+                               "message_type, log, success, "
+                               "msg_index, depositor, proposal_id, amount)"
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :dep, :pid, :amount)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
-                                soci::use(m.delegatorAddress), soci::use(m.validatorSourceAddress),
-                                soci::use(m.validatorDestinationAddress), soci::use(m.amount);
+                                soci::use(m.depositor), soci::use(m.proposalId), soci::use(coins);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD: {
                     const auto &m = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
                     sql << "INSERT INTO cosmos_messages (uid,"
                            "transaction_uid, message_type, log,"
-                           "success, msg_index, delegator_address, validator_src_address)"
+                           "success, msg_index, delegator_address, validator_address)"
                            "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta)",
                             soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                             soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                             soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
                 }
                     break;
-                case api::CosmosLikeMsgType::UNKNOWN:break;
+                case api::CosmosLikeMsgType::UNKNOWN:
+                    // TODO [COIN-178] Generic mechanism to handle unknown types
+                    break;
             }
         }
 
@@ -365,8 +367,6 @@ namespace ledger {
                     msg.uid = createCosmosMessageUid(tx.uid, index);
 
                     insertMessage(sql, tx.uid, msg, log);
-
-                    index += 1;
                 }
             }
         }

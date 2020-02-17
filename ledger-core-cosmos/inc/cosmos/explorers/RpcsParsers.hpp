@@ -244,19 +244,12 @@ namespace ledger {
             template <class T>
             void parseTransaction(const T& node,
                     cosmos::Transaction& transaction) {
-<<<<<<< HEAD
                 assert((node.HasMember(kTxHash)));
                 transaction.hash = node[kTxHash].GetString();
                 if (node.HasMember(kHeight)) {
                     cosmos::Block block;
                     block.height = BigInt::fromString(node[kHeight].GetString()).toUint64();
                     block.currencyName = currencies::ATOM.name;
-=======
-                transaction.hash = node["txhash"].GetString();
-                if (node.HasMember("height")) {
-                    api::Block block;
-                    block.height = BigInt::fromString(node["height"].GetString()).toUint64();
->>>>>>> Rebase + enable to read/write cosmos transactions from/to DB
                     transaction.block = block;
                 }
                 if (node.HasMember(kGasUsed)) {
