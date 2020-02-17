@@ -33,6 +33,7 @@
 
 #include <soci.h>
 
+#include <cosmos/CosmosLikeConstants.hpp>
 #include <cosmos/api/CosmosLikeAddress.hpp>
 #include <cosmos/CosmosLikeWallet.hpp>
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
@@ -80,24 +81,58 @@ namespace ledger {
                         return std::dynamic_pointer_cast<CosmosLikeAccount>(shared_from_this());
                 }
 
-                // FIXME Review this!
+                static void computeAmount(CosmosLikeOperation &out, const cosmos::Message &msg) {
+                        switch (cosmos::stringToMsgType(msg.type.c_str())) {
+                                case api::CosmosLikeMsgType::MSGSEND: {
+                                        const auto& coins = boost::get<cosmos::MsgSend>(msg.content).amount;
+                                        std::for_each(coins.begin(), coins.end(), [&] (cosmos::Coin amount) {
+                                                out.amount = out.amount + BigInt::fromDecimal(amount.amount);
+                                        });
+                                } break;
+                                case api::CosmosLikeMsgType::MSGDELEGATE: {
+                                        out.amount = boost::get<cosmos::MsgDelegate>(msg.content).amount.amount;
+                                } break;
+                                case api::CosmosLikeMsgType::MSGUNDELEGATE: {
+                                        out.amount = boost::get<cosmos::MsgUndelegate>(msg.content).amount.amount;
+                                } break;
+                                case api::CosmosLikeMsgType::MSGREDELEGATE: {
+                                        out.amount = boost::get<cosmos::MsgRedelegate>(msg.content).amount.amount;
+                                } break;
+                                case api::CosmosLikeMsgType::MSGSUBMITPROPOSAL: {
+                                        const auto& coins = boost::get<cosmos::MsgSubmitProposal>(msg.content).initialDeposit;
+                                        std::for_each(coins.begin(), coins.end(), [&] (cosmos::Coin amount) {
+                                                out.amount = out.amount + BigInt::fromDecimal(amount.amount);
+                                        });
+                                } break;
+                                case api::CosmosLikeMsgType::MSGVOTE: {
+                                        // No amount-like data for this type of operation
+                                } break;
+                                case api::CosmosLikeMsgType::MSGDEPOSIT: {
+                                        const auto& coins = boost::get<cosmos::MsgDeposit>(msg.content).amount;
+                                        std::for_each(coins.begin(), coins.end(), [&] (cosmos::Coin amount) {
+                                                out.amount = out.amount + BigInt::fromDecimal(amount.amount);
+                                        });
+                                } break;
+                                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD: {
+                                        // No amount-like data for this type of operation
+                                } break;
+                                default: {
+                                } break;
+                        }
+                }
+
                 void CosmosLikeAccount::inflateOperation(CosmosLikeOperation &out,
                                                          const std::shared_ptr<const AbstractWallet> &wallet,
                                                          const cosmos::Transaction &tx,
                                                          const cosmos::Message &msg) {
 
-
-                        // TODO From ledger::core::Operation
-                        //      std::vector<std::string> senders;
-                        //      std::vector<std::string> recipients;
-                        //      api::OperationType type;
-
                         out.setTransactionData(tx);
                         out.setMessageData(msg);
 
+                        computeAmount(out, msg);
+
                         out._account = shared_from_this();
                         out.accountUid = getAccountUid();
-                        out.amount = tx.gasUsed.getValueOr(BigInt::ZERO); // FIXME Is this correct??
                         out.block = tx.block;
                         /* FIXME Need to complete tx.block?
                         if (out.block.nonEmpty()) {
@@ -109,10 +144,11 @@ namespace ledger {
                         out.trust = std::make_shared<TrustIndicator>();
                         auto fees = 0;
                         std::for_each(tx.fee.amount.begin(), tx.fee.amount.end(), [&] (cosmos::Coin amount) {
-                             fees += std::stoi(amount.amount);  // FIXME Is this correct??
+                                assert(amount.denom == "uatom"); // FIXME Temporary until all units correctly supported
+                                fees += BigInt::fromDecimal(amount.amount).toInt();
                         });
                         out.fees = BigInt(fees);
-                        out.type = api::OperationType::SEND; // FIXME Manage operation type correctly
+                        out.type = api::OperationType::NONE; // FIXME Figure out if this is enough for Cosmos
                         out.walletUid = wallet->getWalletUid();
                 }
 

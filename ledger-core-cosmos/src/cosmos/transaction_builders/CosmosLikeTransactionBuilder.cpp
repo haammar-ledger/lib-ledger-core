@@ -348,6 +348,9 @@ namespace ledger {
                         auto unit = std::find_if(currency.units.begin(), currency.units.end(), [&] (const api::CurrencyUnit &unit) {
                             return unit.name == denom;
                         });
+
+                        assert(unit->name == "uatom"); // FIXME Temporary until all units correctly supported
+
                         if (unit == currency.units.end()) {
                             throw Exception(api::ErrorCode::INVALID_ARGUMENT, "Unknown unit while parsing transaction");
                         }
