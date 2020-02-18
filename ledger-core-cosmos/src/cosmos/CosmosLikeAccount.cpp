@@ -81,7 +81,7 @@ namespace ledger {
                         return std::dynamic_pointer_cast<CosmosLikeAccount>(shared_from_this());
                 }
 
-                static void computeAmount(CosmosLikeOperation &out, const cosmos::Message &msg) {
+                static void computeAndSetAmount(CosmosLikeOperation &out, const cosmos::Message &msg) {
                         switch (cosmos::stringToMsgType(msg.type.c_str())) {
                                 case api::CosmosLikeMsgType::MSGSEND: {
                                         const auto& coins = boost::get<cosmos::MsgSend>(msg.content).amount;
@@ -104,20 +104,17 @@ namespace ledger {
                                                 out.amount = out.amount + BigInt::fromDecimal(amount.amount);
                                         });
                                 } break;
-                                case api::CosmosLikeMsgType::MSGVOTE: {
-                                        // No amount-like data for this type of operation
-                                } break;
                                 case api::CosmosLikeMsgType::MSGDEPOSIT: {
                                         const auto& coins = boost::get<cosmos::MsgDeposit>(msg.content).amount;
                                         std::for_each(coins.begin(), coins.end(), [&] (cosmos::Coin amount) {
                                                 out.amount = out.amount + BigInt::fromDecimal(amount.amount);
                                         });
                                 } break;
-                                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD: {
-                                        // No amount-like data for this type of operation
-                                } break;
-                                default: {
-                                } break;
+                                case api::CosmosLikeMsgType::MSGVOTE:
+                                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
+                                default:
+                                        // No amount-like data for these types of operation
+                                break;
                         }
                 }
 
@@ -129,16 +126,14 @@ namespace ledger {
                         out.setTransactionData(tx);
                         out.setMessageData(msg);
 
-                        computeAmount(out, msg);
+                        computeAndSetAmount(out, msg);
 
                         out._account = shared_from_this();
                         out.accountUid = getAccountUid();
                         out.block = tx.block;
-                        /* FIXME Need to complete tx.block?
                         if (out.block.nonEmpty()) {
                                 out.block.getValue().currencyName = wallet->getCurrency().name;
                         }
-                        */
                         out.currencyName = getWallet()->getCurrency().name;
                         out.date = tx.timestamp;
                         out.trust = std::make_shared<TrustIndicator>();
@@ -148,7 +143,7 @@ namespace ledger {
                                 fees += BigInt::fromDecimal(amount.amount).toInt();
                         });
                         out.fees = BigInt(fees);
-                        out.type = api::OperationType::NONE; // FIXME Figure out if this is enough for Cosmos
+                        out.type = api::OperationType::NONE; // TODO Correct management of operation type for Cosmos
                         out.walletUid = wallet->getWalletUid();
                 }
 
