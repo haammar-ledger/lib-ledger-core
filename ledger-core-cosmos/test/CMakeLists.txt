@@ -17,6 +17,7 @@ add_executable(${PROJECT_NAME}
   main.cpp
   Fixtures.cpp
   address_test.cpp
+  db_test.cpp
   transactions_test.cpp
   synchronization_test.cpp
   AccountTests.cpp

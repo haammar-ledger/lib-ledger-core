@@ -124,6 +124,9 @@ namespace soci {
         }
     };
 
+    std::string coinToString(const ledger::core::cosmos::Coin &coin);
+    void stringToCoin(const std::string &str, ledger::core::cosmos::Coin &out);
+
     std::string coinsToString(const std::vector<ledger::core::cosmos::Coin> &coins);
     void stringToCoins(const std::string &str, std::vector<ledger::core::cosmos::Coin> &out);
 }

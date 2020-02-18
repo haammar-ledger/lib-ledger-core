@@ -35,6 +35,7 @@
 
 #include <string>
 
+#include <core/api/Block.hpp>
 #include <core/api/DynamicObject.hpp>
 #include <core/api/ExecutionContext.hpp>
 #include <core/async/DedicatedContext.hpp>
@@ -44,12 +45,12 @@
 #include <core/net/HttpClient.hpp>
 #include <core/utils/ConfigurationMatchable.hpp>
 #include <core/utils/Option.hpp>
-#include <core/wallet/Block.hpp>
 
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
-#include <cosmos/cosmos.hpp>
 #include <cosmos/api/CosmosLikeNetworkParameters.hpp>
-#include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
+#include <cosmos/api/CosmosLikeTransaction.hpp>
+#include <cosmos/cosmos.hpp>
+#include <cosmos/CosmosLikeMessage.hpp>
 
 namespace ledger {
     namespace core {

@@ -35,6 +35,7 @@
 
 #include <core/async/DedicatedContext.hpp>
 #include <core/net/HttpClient.hpp>
+#include <core/api/Block.hpp>
 
 #include <experimental/string_view>
 

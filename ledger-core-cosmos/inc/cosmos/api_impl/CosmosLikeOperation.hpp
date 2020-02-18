@@ -33,22 +33,44 @@
 #define LEDGER_CORE_COSMOSLIKEOPERATION_H
 
 
+#include <cosmos/cosmos.hpp>
 #include <cosmos/api/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransaction.hpp>
+#include <cosmos/api/CosmosLikeMessage.hpp>
+
 #include <core/operation/Operation.hpp>
+#include <core/wallet/AbstractWallet.hpp>
+#include <core/wallet/AbstractAccount.hpp>
 
 namespace ledger {
     namespace core {
         class CosmosLikeOperation : public api::CosmosLikeOperation, public Operation {
+
             public:
+
+                // TODO [refacto] Remove these, only use CosmosLikeTransactionApi::_txData and CosmosLikeMessage::_msgData
+                ledger::core::cosmos::Transaction txData;
+                ledger::core::cosmos::Message msgData;
+
                 CosmosLikeOperation() = default;
-                CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp);
+
+                CosmosLikeOperation(ledger::core::cosmos::Transaction const& tx,
+                                    ledger::core::cosmos::Message const& msg);
+
+                void setTransactionData(ledger::core::cosmos::Transaction const& txData);
+
+                void setMessageData(ledger::core::cosmos::Message const& msgData);
+
                 virtual std::shared_ptr<api::CosmosLikeTransaction> getTransaction() override;
                 virtual std::shared_ptr<api::CosmosLikeMessage> getMessage() override;
-                virtual void refreshUid(const std::string &additional) override;
+
+                virtual void refreshUid(const std::string &msgIndex) override;
 
             private:
-                std::shared_ptr<api::CosmosLikeTransaction> _transaction {nullptr};
+
+                std::shared_ptr<api::CosmosLikeTransaction> _txApi {nullptr};
+                std::shared_ptr<api::CosmosLikeMessage> _msgApi {nullptr};
+
         };
 
     }

@@ -38,8 +38,8 @@
 
 #include <core/utils/Option.hpp>
 #include <core/utils/DateUtils.hpp>
+#include <core/api/Block.hpp>
 
-#include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <cosmos/CosmosLikeMessage.hpp>

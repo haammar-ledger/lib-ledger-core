@@ -41,8 +41,12 @@
 #include <core/api/Currency.hpp>
 #include <core/math/BigInt.hpp>
 
-#include <cosmos/api_impl/CosmosLikeBlockApi.hpp>
-#include <cosmos/api_impl/CosmosLikeOperation.hpp>
+#include <cosmos/cosmos.hpp>
+
+//#include <cosmos/api_impl/CosmosLikeBlockApi.hpp>
+//#include <cosmos/api_impl/CosmosLikeOperation.hpp>
+#include <cosmos/api/CosmosLikeBlock.hpp>
+#include <cosmos/api/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransaction.hpp>
 #include <cosmos/api/CosmosLikeAmount.hpp>
 #include <cosmos/api/CosmosLikeMessage.hpp>
@@ -51,9 +55,9 @@ namespace ledger {
     namespace core {
         class CosmosLikeTransactionApi : public api::CosmosLikeTransaction {
         public:
-            explicit CosmosLikeTransactionApi(const api::Currency& currency);
-            explicit CosmosLikeTransactionApi(const std::shared_ptr<CosmosLikeOperation>& operation);
-            CosmosLikeTransactionApi(const cosmos::Transaction& tx) : _tx(tx) {}
+            explicit CosmosLikeTransactionApi() {}
+
+            explicit CosmosLikeTransactionApi(const cosmos::Transaction& txData);
 
             std::string getHash() const override;
             std::shared_ptr<api::Amount> getFee() const override;
@@ -65,6 +69,8 @@ namespace ledger {
             void setDERSignature(const std::vector<uint8_t> & signature) override;
             std::vector<uint8_t> getSigningPubKey() const override;
             std::shared_ptr<api::Amount> getGas() const override;
+
+            CosmosLikeTransactionApi & setCurrency(const api::Currency& currency);
             CosmosLikeTransactionApi & setMessages(const std::vector<std::shared_ptr<api::CosmosLikeMessage>> & messages);
             CosmosLikeTransactionApi & setSigningPubKey(const std::vector<uint8_t> &pubKey);
             CosmosLikeTransactionApi & setHash(const std::string &hash);
@@ -74,13 +80,20 @@ namespace ledger {
             CosmosLikeTransactionApi & setMemo(const std::string &memo);
             CosmosLikeTransactionApi & setAccountNumber(const std::string &accountNumber);
 
+            void setRawData(const cosmos::Transaction &txData);
+            const cosmos::Transaction & getRawData() const;
+
+
         private:
+
             api::Currency _currency;
+            std::string _accountNumber;
+            std::string _accountSequence;
+            cosmos::Transaction _txData;
             std::vector<uint8_t> _rSignature;
             std::vector<uint8_t> _sSignature;
             std::vector<uint8_t> _signingPubKey;
-            cosmos::Transaction _tx;
-            cosmos::Account _account;
+
         };
     }
 }

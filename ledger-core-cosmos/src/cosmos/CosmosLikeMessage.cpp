@@ -37,7 +37,7 @@
 
 #include <core/api/ErrorCode.hpp>
 #include <core/api/enum_from_string.hpp>
-#include <core/collections/DynamicArray.hpp>
+//#include <core/collections/DynamicArray.hpp>
 
 #include <cosmos/CosmosLikeConstants.hpp>
 
@@ -45,643 +45,366 @@ namespace ledger {
 	namespace core {
 
 		using namespace cosmos::constants;
+
 		namespace {
-			// a closure helper that check if a `DynamicObject` holds a specific key
-			inline auto containsKeys(const std::shared_ptr<api::DynamicObject>& object) {
-				return [=](auto const& key) {
-					return object->contains(key);
-				};
+
+			// add a `CosmosLikeContent` to a `rapidjson::Value`
+			inline auto addContent(api::CosmosLikeContent const& content,
+								   rapidjson::Value& json,
+								   rapidjson::Document::AllocatorType& allocator) {
+				rapidjson::Value jsonContent(rapidjson::kObjectType);
+            	rapidjson::Value jsonString(rapidjson::kStringType);
+
+				// api::CosmosLikeContent::type
+				jsonString.SetString(content.type.c_str(), static_cast<rapidjson::SizeType>(content.type.length()), allocator);
+				jsonContent.AddMember(kType, jsonString, allocator);
+
+				// api::CosmosLikeContent::title
+				jsonString.SetString(content.title.c_str(), static_cast<rapidjson::SizeType>(content.title.length()), allocator);
+				jsonContent.AddMember(kTitle, jsonString, allocator);
+
+				// api::CosmosLikeContent::description
+				jsonString.SetString(content.description.c_str(), static_cast<rapidjson::SizeType>(content.description.length()), allocator);
+				jsonContent.AddMember(kDescription, jsonString, allocator);
+
+				json.AddMember(kContent, jsonContent, allocator);
 			}
 
-			// add a `CosmosLikeAmount` to a `DynamicObject`
-			inline auto addAmount(const std::shared_ptr<api::DynamicObject>& object, api::CosmosLikeAmount const& amount) {
-				auto amountObject = std::make_shared<::ledger::core::DynamicObject>();
+			// add a `CosmosLikeAmount` to a `rapidjson::Value`
+			inline auto addAmount(api::CosmosLikeAmount const& amount,
+								  rapidjson::Value& json,
+								  rapidjson::Document::AllocatorType& allocator) {
+				rapidjson::Value jsonAmount(rapidjson::kObjectType);
+            	rapidjson::Value jsonString(rapidjson::kStringType);
 
-				amountObject->putString(kAmount, amount.amount);
-				amountObject->putString(kDenom, amount.denom);
+				// api::CosmosLikeAmount::amount
+				jsonString.SetString(amount.amount.c_str(), static_cast<rapidjson::SizeType>(amount.amount.length()), allocator);
+				jsonAmount.AddMember(kAmount, jsonString, allocator);
 
-				object->putObject(kAmount, amountObject);
+				// api::CosmosLikeAmount::denom
+				jsonString.SetString(amount.denom.c_str(), static_cast<rapidjson::SizeType>(amount.denom.length()), allocator);
+				jsonAmount.AddMember(kDenom, jsonString, allocator);
+
+				json.AddMember(kAmount, jsonAmount, allocator);
 			}
 
-			// add a `CosmosLikeAmount` to a `DynamicArray`
-			inline auto addAmount(const std::shared_ptr<api::DynamicArray>& array, api::CosmosLikeAmount const& amount) {
-				auto amountObject = std::make_shared<::ledger::core::DynamicObject>();
+			// add an array of `CosmosLikeAmount` to a `rapidjson::Value`
+			inline auto addAmounts(std::vector<api::CosmosLikeAmount> const& amounts,
+								  rapidjson::Value& jsonAmounts,
+								  rapidjson::Document::AllocatorType& allocator) {
+				rapidjson::Value jsonString(rapidjson::kStringType);
+				for (auto amount : amounts) {
+					rapidjson::Value jsonAmount(rapidjson::kObjectType);
 
-				amountObject->putString(kAmount, amount.amount);
-				amountObject->putString(kDenom, amount.denom);
+					// api::CosmosLikeAmount::amount
+					jsonString.SetString(amount.amount.c_str(), static_cast<rapidjson::SizeType>(amount.amount.length()), allocator);
+					jsonAmount.AddMember(kAmount, jsonString, allocator);
 
-				array->pushObject(amountObject);
+					// api::CosmosLikeAmount::denom
+					jsonString.SetString(amount.denom.c_str(), static_cast<rapidjson::SizeType>(amount.denom.length()), allocator);
+					jsonAmount.AddMember(kDenom, jsonString, allocator);
+
+					jsonAmounts.PushBack(jsonAmount, allocator);
+				}
 			}
 		}
 
-                CosmosLikeMessage::CosmosLikeMessage(const std::shared_ptr<DynamicObject>& content)
-                    : _content(content) {}
+        CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& msg) :
+			_msgData(msg)
+		{}
 
-                cosmos::Message CosmosLikeMessage::toRawMessage() const {
-			auto msgType = getRawMessageType();
-			cosmos::Message raw_message;
-			raw_message.type = msgType;
+		void CosmosLikeMessage::setRawData(const cosmos::Message &msgData) {
+			_msgData = msgData;
+		}
 
-                        if (raw_message.type == kMsgSend) {
-                            raw_message.content =
-                                unwrapMsgSend(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgDelegate) {
-                            raw_message.content =
-                                unwrapMsgDelegate(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgUndelegate) {
-                            raw_message.content =
-                                unwrapMsgUndelegate(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgRedelegate) {
-                            raw_message.content =
-                                unwrapMsgRedelegate(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgSubmitProposal) {
-                            raw_message.content =
-                                unwrapMsgSubmitProposal(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgVote) {
-                            raw_message.content =
-                                unwrapMsgVote(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgDeposit) {
-                            raw_message.content =
-                                unwrapMsgDeposit(std::make_shared<CosmosLikeMessage>(*this));
-                        } else if (raw_message.type == kMsgWithdrawDelegationReward) {
-                            raw_message.content = unwrapMsgWithdrawDelegationReward(
-                                std::make_shared<CosmosLikeMessage>(*this));
-                        }  // else the content stays empty
-                        return raw_message;
-                }
-
-                CosmosLikeMessage::CosmosLikeMessage(const cosmos::Message& rawStruct) : _content() {
-			auto msgType = rawStruct.type;
-			std::shared_ptr<DynamicObject> content = nullptr;
-
-                        if (msgType == kMsgSend) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgSend(
-                                              boost::get<cosmos::MsgSend>(rawStruct.content)))
-                                          ->_content;
-                        } else if (msgType == kMsgDelegate) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgDelegate(
-                                              boost::get<cosmos::MsgDelegate>(rawStruct.content)))
-                                          ->_content;
-                        } else if (msgType == kMsgUndelegate) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgUndelegate(
-                                              boost::get<cosmos::MsgUndelegate>(rawStruct.content)))
-                                          ->_content;
-                        } else if (msgType == kMsgRedelegate) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgRedelegate(
-                                              boost::get<cosmos::MsgRedelegate>(rawStruct.content)))
-                                          ->_content;
-                        } else if (msgType == kMsgSubmitProposal) {
-                            content =
-                                std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                    CosmosLikeMessage::wrapMsgSubmitProposal(
-                                        boost::get<cosmos::MsgSubmitProposal>(rawStruct.content)))
-                                    ->_content;
-                        } else if (msgType == kMsgVote) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgVote(
-                                              boost::get<cosmos::MsgVote>(rawStruct.content)))
-                                          ->_content;
-                        } else if (msgType == kMsgDeposit) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgDeposit(
-                                              boost::get<cosmos::MsgDeposit>(rawStruct.content)))
-                                          ->_content;
-                        } else if (msgType == kMsgWithdrawDelegationReward) {
-                            content = std::dynamic_pointer_cast<CosmosLikeMessage>(
-                                          CosmosLikeMessage::wrapMsgWithdrawDelegationReward(
-                                              boost::get<cosmos::MsgWithdrawDelegationReward>(
-                                                  rawStruct.content)))
-                                          ->_content;
-                        }  // else the content stays nullptr
-
-                        _content = content;
-                }
+		const cosmos::Message& CosmosLikeMessage::getRawData() const {
+			return _msgData;
+		}
 
 		api::CosmosLikeMsgType CosmosLikeMessage::getMessageType() const {
 			auto msgType = getRawMessageType();
-
-			if (msgType == kMsgSend) {
-				return api::CosmosLikeMsgType::MSGSEND;
-			} else if (msgType == kMsgDelegate) {
-				return api::CosmosLikeMsgType::MSGDELEGATE;
-			} else if (msgType == kMsgUndelegate) {
-				return api::CosmosLikeMsgType::MSGDELEGATE;
-			} else if (msgType == kMsgRedelegate) {
-				return api::CosmosLikeMsgType::MSGREDELEGATE;
-			} else if (msgType == kMsgSubmitProposal) {
-				return api::CosmosLikeMsgType::MSGSUBMITPROPOSAL;
-			} else if (msgType == kMsgVote) {
-				return api::CosmosLikeMsgType::MSGVOTE;
-			} else if (msgType == kMsgDeposit) {
-				return api::CosmosLikeMsgType::MSGDEPOSIT;
-			} else if (msgType == kMsgWithdrawDelegationReward) {
-				return api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD;
-			}  else {
-				return api::CosmosLikeMsgType::UNKNOWN;
-			}
+			return cosmos::stringToMsgType(msgType.c_str());
 		}
 
 		std::string CosmosLikeMessage::getRawMessageType() const {
-			return _content->get<std::string>(kType).value_or("");
+			return _msgData.type;
 		}
 
+		// Note : this Json has not been sorted yet
+		// This doesn't follow the spec
+		// https://github.com/cosmos/ledger-cosmos-app/blob/master/docs/TXSPEC.md
+		// but we defer the sorting to the TransactionApi::serialize() method
 		rapidjson::Value CosmosLikeMessage::toJson(rapidjson::Document::AllocatorType& allocator) const {
-			// Note : this Json has not been sorted yet
-			// This doesn't follow the spec
-                        // https://github.com/cosmos/ledger-cosmos-app/blob/master/docs/TXSPEC.md
-                        // but we defer the sorting to the TransactionApi::serialize() method
-			return _content->toJson(allocator);
+
+			rapidjson::Value json(rapidjson::kObjectType);
+
+            rapidjson::Value jsonString(rapidjson::kStringType);
+
+			// cosmos::Message::type
+            jsonString.SetString(_msgData.type.c_str(), static_cast<rapidjson::SizeType>(_msgData.type.length()), allocator);
+            json.AddMember(kType, jsonString, allocator);
+
+			rapidjson::Value jsonContent(rapidjson::kObjectType);
+			if (_msgData.type == kMsgSend) {
+
+				const auto& content = boost::get<cosmos::MsgSend>(_msgData.content);
+
+				// cosmos::MsgSend::fromAddress
+				jsonString.SetString(content.fromAddress.c_str(), static_cast<rapidjson::SizeType>(content.fromAddress.length()), allocator);
+				jsonContent.AddMember(kFromAddress, jsonString, allocator);
+
+				// cosmos::MsgSend::toAddress
+				jsonString.SetString(content.toAddress.c_str(), static_cast<rapidjson::SizeType>(content.toAddress.length()), allocator);
+				jsonContent.AddMember(kToAddress, jsonString, allocator);
+
+				// cosmos::MsgSend::amount
+				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
+				addAmounts(content.amount, jsonAmounts, allocator);
+            	jsonContent.AddMember(kAmount, jsonAmounts, allocator);
+
+			} else if (_msgData.type == kMsgDelegate) {
+
+				const auto& content = boost::get<cosmos::MsgDelegate>(_msgData.content);
+
+				// cosmos::MsgDelegate::delegatorAddress
+				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
+				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
+
+				// cosmos::MsgDelegate::validatorAddress
+				jsonString.SetString(content.validatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.validatorAddress.length()), allocator);
+				jsonContent.AddMember(kValidatorAddress, jsonString, allocator);
+
+				// cosmos::MsgDelegate::amount
+				addAmount(content.amount, jsonContent, allocator);
+
+			} else if (_msgData.type == kMsgUndelegate) {
+
+				const auto& content = boost::get<cosmos::MsgUndelegate>(_msgData.content);
+
+				// cosmos::MsgUndelegate::delegatorAddress
+				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
+				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
+
+				// cosmos::MsgUndelegate::validatorAddress
+				jsonString.SetString(content.validatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.validatorAddress.length()), allocator);
+				jsonContent.AddMember(kValidatorAddress, jsonString, allocator);
+
+				// cosmos::MsgUndelegate::amount
+				addAmount(content.amount, jsonContent, allocator);
+
+			} else if (_msgData.type == kMsgRedelegate) {
+
+				const auto& content = boost::get<cosmos::MsgRedelegate>(_msgData.content);
+
+				// cosmos::MsgRedelegate::delegatorAddress
+				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
+				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
+
+				// cosmos::MsgRedelegate::validatorSourceAddress
+				jsonString.SetString(content.validatorSourceAddress.c_str(), static_cast<rapidjson::SizeType>(content.validatorSourceAddress.length()), allocator);
+				jsonContent.AddMember(kValidatorSrcAddress, jsonString, allocator);
+
+				// cosmos::MsgRedelegate::validatorDestinationAddress
+				jsonString.SetString(content.validatorDestinationAddress.c_str(), static_cast<rapidjson::SizeType>(content.validatorDestinationAddress.length()), allocator);
+				jsonContent.AddMember(kValidatorDstAddress, jsonString, allocator);
+
+				// cosmos::MsgRedelegate::amount
+				addAmount(content.amount, jsonContent, allocator);
+
+			} else if (_msgData.type == kMsgSubmitProposal) {
+
+				const auto& content = boost::get<cosmos::MsgSubmitProposal>(_msgData.content);
+
+				// cosmos::MsgSubmitProposal::content
+				addContent(content.content, jsonContent, allocator);
+
+				// cosmos::MsgSubmitProposal::proposer
+				jsonString.SetString(content.proposer.c_str(), static_cast<rapidjson::SizeType>(content.proposer.length()), allocator);
+				jsonContent.AddMember(kProposer, jsonString, allocator);
+
+				// cosmos::MsgSubmitProposal::initialDeposit
+				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
+				addAmounts(content.initialDeposit, jsonAmounts, allocator);
+            	jsonContent.AddMember(kInitialDeposit, jsonAmounts, allocator);
+
+			} else if (_msgData.type == kMsgVote) {
+
+				const auto& content = boost::get<cosmos::MsgVote>(_msgData.content);
+
+				// cosmos::MsgVote::voter
+				jsonString.SetString(content.voter.c_str(), static_cast<rapidjson::SizeType>(content.voter.length()), allocator);
+				jsonContent.AddMember(kVoter, jsonString, allocator);
+
+				// cosmos::MsgVote::proposalId
+				jsonString.SetString(content.proposalId.c_str(), static_cast<rapidjson::SizeType>(content.proposalId.length()), allocator);
+				jsonContent.AddMember(kProposalId, jsonString, allocator);
+
+				// cosmos::MsgVote::option
+				auto option = api::to_string(content.option);
+				jsonString.SetString(option.c_str(), static_cast<rapidjson::SizeType>(option.length()), allocator);
+				jsonContent.AddMember(kOption, jsonString, allocator);
+
+			} else if (_msgData.type == kMsgDeposit) {
+
+				const auto& content = boost::get<cosmos::MsgDeposit>(_msgData.content);
+
+				// cosmos::MsgDeposit::depositor
+				jsonString.SetString(content.depositor.c_str(), static_cast<rapidjson::SizeType>(content.depositor.length()), allocator);
+				jsonContent.AddMember(kDepositor, jsonString, allocator);
+
+				// cosmos::MsgDeposit::proposalId
+				jsonString.SetString(content.proposalId.c_str(), static_cast<rapidjson::SizeType>(content.proposalId.length()), allocator);
+				jsonContent.AddMember(kProposalId, jsonString, allocator);
+
+				// cosmos::MsgDeposit::amount
+				rapidjson::Value jsonAmounts(rapidjson::kArrayType);
+				addAmounts(content.amount, jsonAmounts, allocator);
+            	jsonContent.AddMember(kAmount, jsonAmounts, allocator);
+
+			} else if (_msgData.type == kMsgWithdrawDelegationReward) {
+
+				const auto& content = boost::get<cosmos::MsgWithdrawDelegationReward>(_msgData.content);
+
+				// cosmos::MsgWithdrawDelegationReward::delegatorAddress
+				jsonString.SetString(content.delegatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.delegatorAddress.length()), allocator);
+				jsonContent.AddMember(kDelegatorAddress, jsonString, allocator);
+
+				// cosmos::MsgWithdrawDelegationReward::validatorAddress
+				jsonString.SetString(content.validatorAddress.c_str(), static_cast<rapidjson::SizeType>(content.validatorAddress.length()), allocator);
+				jsonContent.AddMember(kValidatorAddress, jsonString, allocator);
+
+			} // else the content stays empty
+
+			json.AddMember(kValue, jsonContent, allocator);
+
+			return json;
 		}
 
-		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgSend(const api::CosmosLikeMsgSend & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-			auto amounts = std::make_shared<::ledger::core::DynamicArray>();
+		// TODO [refacto] Templatize all the following functions
 
-			object->putString(kType, kMsgSend);
-			object->putObject(kValue, value);
-
-			value->putString(kFromAddress, msg.fromAddress);
-			value->putString(kToAddress, msg.toAddress);
-			value->putArray(kAmount, amounts);
-
-			std::for_each(std::cbegin(msg.amount), std::cend(msg.amount), [&amounts](auto const& amount) {
-				addAmount(amounts, amount);
-			});
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgSend(const api::CosmosLikeMsgSend & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgSend;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
     	api::CosmosLikeMsgSend api::CosmosLikeMessage::unwrapMsgSend(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGSEND
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGSEND) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSend");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgSend{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kFromAddress, kToAddress, kAmount };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSend: bad value fields");
-				}
-
-				underlyingMsg.fromAddress = value->getString(kFromAddress).value();
-				underlyingMsg.toAddress = value->getString(kToAddress).value();
-			}
-
-			{
-				static const char* keys[] = { kAmount, kDenom };
-
-				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(
-					value->getArray(kAmount));
-
-				for (auto size = amounts->size(), i = decltype(size){0}; i < size; ++i) {
-					auto amount = amounts->getObject(i);
-
-					if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
-						throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSend: bad amount fields");
-					}
-
-					underlyingMsg.amount.push_back(CosmosLikeAmount{
-						amount->getString(kAmount).value(),
-						amount->getString(kDenom).value()
-					});
-				}
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgSend>(cosmosMsg->getRawData().content);
 		}
 
-    	std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgDelegate(const api::CosmosLikeMsgDelegate & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-
-			object->putString(kType, kMsgDelegate);
-			object->putObject(kValue, value);
-
-			value->putString(kDelegatorAddress, msg.delegatorAddress);
-			value->putString(kValidatorAddress, msg.validatorAddress);
-
-			addAmount(value, msg.amount);
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+    	std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgDelegate(const api::CosmosLikeMsgDelegate & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgDelegate;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
     	api::CosmosLikeMsgDelegate api::CosmosLikeMessage::unwrapMsgDelegate(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGDELEGATE
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGDELEGATE) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDelegate");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgDelegate{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kDelegatorAddress, kValidatorAddress, kAmount };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDelegate: bad value fields");
-				}
-
-				underlyingMsg.delegatorAddress = value->getString(kDelegatorAddress).value();
-				underlyingMsg.validatorAddress = value->getString(kValidatorAddress).value();
-			}
-
-			{
-				static const char* keys[] = { kAmount, kDenom };
-
-				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-					value->getObject(kAmount));
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDelegate: bad amount fields");
-				}
-
-				underlyingMsg.amount = {
-					amount->getString(kAmount).value(),
-					amount->getString(kDenom).value()
-				};
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgDelegate>(cosmosMsg->getRawData().content);
 		}
 
-    	std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgUndelegate(const api::CosmosLikeMsgUndelegate & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-
-			object->putString(kType, kMsgUndelegate);
-			object->putObject(kValue, value);
-
-			value->putString(kDelegatorAddress, msg.delegatorAddress);
-			value->putString(kValidatorAddress, msg.validatorAddress);
-
-			addAmount(value, msg.amount);
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+    	std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgUndelegate(const api::CosmosLikeMsgUndelegate & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgUndelegate;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
     	api::CosmosLikeMsgUndelegate api::CosmosLikeMessage::unwrapMsgUndelegate(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGUNDELEGATE
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGUNDELEGATE) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgUndelegate");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgUndelegate{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kDelegatorAddress, kValidatorAddress, kAmount };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgUnDelegate: bad value fields");
-				}
-
-				underlyingMsg.delegatorAddress = value->getString(kDelegatorAddress).value();
-				underlyingMsg.validatorAddress = value->getString(kValidatorAddress).value();
-			}
-
-			{
-				static const char* keys[] = { kAmount, kDenom };
-
-				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-					value->getObject(kAmount));
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgUnDelegate: bad amount fields");
-				}
-
-				underlyingMsg.amount = {
-					amount->getString(kAmount).value(),
-					amount->getString(kDenom).value()
-				};
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgUndelegate>(cosmosMsg->getRawData().content);
 		}
 
-    	std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgRedelegate(const api::CosmosLikeMsgRedelegate & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-
-			object->putString(kType, kMsgRedelegate);
-			object->putObject(kValue, value);
-
-			value->putString(kDelegatorAddress, msg.delegatorAddress);
-			value->putString(kValidatorSrcAddress, msg.validatorSourceAddress);
-			value->putString(kValidatorDstAddress, msg.validatorDestinationAddress);
-
-			addAmount(value, msg.amount);
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+    	std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgRedelegate(const api::CosmosLikeMsgRedelegate & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgRedelegate;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
     	api::CosmosLikeMsgRedelegate api::CosmosLikeMessage::unwrapMsgRedelegate(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGREDELEGATE
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGREDELEGATE) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgRedelegate");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgRedelegate{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kDelegatorAddress, kValidatorSrcAddress, kValidatorDstAddress, kAmount };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgRedelegate: bad value fields");
-				}
-
-				underlyingMsg.delegatorAddress = value->getString(kDelegatorAddress).value();
-				underlyingMsg.validatorSourceAddress = value->getString(kValidatorSrcAddress).value();
-				underlyingMsg.validatorDestinationAddress = value->getString(kValidatorDstAddress).value();
-			}
-
-			{
-				static const char* keys[] = { kAmount, kDenom };
-
-				auto amount = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-					value->getObject(kAmount));
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgRedelegate: bad amount fields");
-				}
-
-				underlyingMsg.amount = {
-					amount->getString(kAmount).value(),
-					amount->getString(kDenom).value()
-				};
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgRedelegate>(cosmosMsg->getRawData().content);
 		}
 
-		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgSubmitProposal(const api::CosmosLikeMsgSubmitProposal & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-			auto amounts = std::make_shared<::ledger::core::DynamicArray>();
-			auto content = std::make_shared<::ledger::core::DynamicObject>();
-			auto contentValue = std::make_shared<::ledger::core::DynamicObject>();
+		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgSubmitProposal(const api::CosmosLikeMsgSubmitProposal & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgSubmitProposal;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 
-			object->putString(kType, kMsgSubmitProposal);
-			object->putObject(kValue, value);
-
-			value->putObject(kContent, content);
-			value->putString(kProposer, msg.proposer);
-			value->putArray(kInitialDeposit, amounts);
-
-			std::for_each(std::cbegin(msg.initialDeposit), std::cend(msg.initialDeposit), [&amounts](auto const& amount) {
-				addAmount(amounts, amount);
-			});
-
-			content->putString(kType, msg.content.type);
-			content->putObject(kValue, contentValue);
-
-			contentValue->putString(kTitle, msg.content.title);
-			contentValue->putString(kDescription, msg.content.description);
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
 		}
 
     	api::CosmosLikeMsgSubmitProposal api::CosmosLikeMessage::unwrapMsgSubmitProposal(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGSUBMITPROPOSAL
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGSUBMITPROPOSAL) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgSubmitProposal{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kContent, kProposer, kInitialDeposit };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad value fields");
-				}
-
-				underlyingMsg.proposer = value->getString(kFromAddress).value();
-			}
-
-			auto content = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				value->getObject(kContent));
-
-			{
-				static const char* keys[] = { kType, kValue };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(content))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad content fields");
-				}
-
-				underlyingMsg.content.type = content->getString(kType).value();
-			}
-
-			auto contentValue = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kTitle, kDescription };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(contentValue))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad content value fields");
-				}
-
-				underlyingMsg.content.title = contentValue->getString(kTitle).value();
-				underlyingMsg.content.description = contentValue->getString(kDescription).value();
-			}
-
-			{
-				static const char* keys[] = { kAmount, kDenom };
-
-				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(
-					value->getArray(kAmount));
-
-				for (auto size = amounts->size(), i = decltype(size){0}; i < size; ++i) {
-					auto amount = amounts->getObject(i);
-
-					if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
-						throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgSubmitProposal: bad amount fields");
-					}
-
-					underlyingMsg.initialDeposit.push_back(CosmosLikeAmount{
-						amount->getString(kAmount).value(),
-						amount->getString(kDenom).value()
-					});
-				}
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgSubmitProposal>(cosmosMsg->getRawData().content);
 		}
 
 
-		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgVote(const api::CosmosLikeMsgVote & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-
-			object->putString(kType, kMsgVote);
-			object->putObject(kValue, value);
-
-			value->putString(kVoter, msg.voter);
-			value->putString(kProposalId, msg.proposalId);
-			value->putString(kOption, api::to_string(msg.option));
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgVote(const api::CosmosLikeMsgVote & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgVote;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
 
 		api::CosmosLikeMsgVote api::CosmosLikeMessage::unwrapMsgVote(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGVOTE
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGVOTE) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgVote");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgVote{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kVoter, kProposalId, kOption };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgVote: bad value fields");
-				}
-
-				underlyingMsg.voter = value->getString(kVoter).value();
-				underlyingMsg.proposalId = value->getString(kProposalId).value();
-				underlyingMsg.option = api::from_string<api::CosmosLikeVoteOption>(value->getString(kOption).value());
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgVote>(cosmosMsg->getRawData().content);
 		}
 
-		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgDeposit(const api::CosmosLikeMsgDeposit & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-			auto amounts = std::make_shared<::ledger::core::DynamicArray>();
-
-			object->putString(kType, kMsgDeposit);
-			object->putObject(kValue, value);
-
-			value->putString(kDepositor, msg.depositor);
-			value->putString(kProposalId, msg.proposalId);
-			value->putArray(kAmount, amounts);
-
-			std::for_each(std::cbegin(msg.amount), std::cend(msg.amount), [&amounts](auto const& amount) {
-				addAmount(amounts, amount);
-			});
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgDeposit(const api::CosmosLikeMsgDeposit & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgDeposit;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
 		api::CosmosLikeMsgDeposit api::CosmosLikeMessage::unwrapMsgDeposit(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGDEPOSIT
-				|| !implMsg->_content->contains(kValue)) {
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGDEPOSIT) {
 				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDeposit");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgDeposit{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kDepositor, kProposalId, kAmount };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDeposit: bad value fields");
-				}
-
-				underlyingMsg.depositor = value->getString(kDepositor).value();
-				underlyingMsg.proposalId = value->getString(kProposalId).value();
-			}
-
-			{
-				static const char* keys[] = { kAmount, kDenom };
-
-				auto amounts = std::dynamic_pointer_cast<::ledger::core::DynamicArray>(
-					value->getArray(kAmount));
-
-				for (auto size = amounts->size(), i = decltype(size){0}; i < size; ++i) {
-					auto amount = amounts->getObject(i);
-
-					if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(amount))) {
-						throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgDeposit: bad amount fields");
-					}
-
-					underlyingMsg.amount.push_back(CosmosLikeAmount{
-						amount->getString(kAmount).value(),
-						amount->getString(kDenom).value()
-					});
-				}
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgDeposit>(cosmosMsg->getRawData().content);
 		}
 
 
-		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgWithdrawDelegationReward(const api::CosmosLikeMsgWithdrawDelegationReward & msg) {
-			auto object = std::make_shared<::ledger::core::DynamicObject>();
-			auto value = std::make_shared<::ledger::core::DynamicObject>();
-
-			object->putString(kType, kMsgWithdrawDelegationReward);
-			object->putObject(kValue, value);
-
-			value->putString(kDelegatorAddress, msg.delegatorAddress);
-			value->putString(kValidatorAddress, msg.validatorAddress);
-
-			return std::make_shared<::ledger::core::CosmosLikeMessage>(object);
+		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgWithdrawDelegationReward(const api::CosmosLikeMsgWithdrawDelegationReward & msgContent) {
+			cosmos::Message msg;
+			msg.type = kMsgWithdrawDelegationReward;
+			msg.content = msgContent;
+			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
 
 
     	api::CosmosLikeMsgWithdrawDelegationReward api::CosmosLikeMessage::unwrapMsgWithdrawDelegationReward(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
-			auto implMsg = std::dynamic_pointer_cast<::ledger::core::CosmosLikeMessage>(msg);
-
-			if (msg->getMessageType() != api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD
-				|| !implMsg->_content->contains(kValue)) {
-				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgWithDrawDelegationReward");
+			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
+			if (cosmosMsg->getMessageType() != api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD) {
+				throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgWithdrawDelegationReward");
 			}
-
-			auto underlyingMsg = api::CosmosLikeMsgWithdrawDelegationReward{};
-			auto value = std::dynamic_pointer_cast<::ledger::core::DynamicObject>(
-				implMsg->_content->getObject(kValue));
-
-			{
-				static const char* keys[] = { kDelegatorAddress, kValidatorAddress };
-
-				if (!std::all_of(std::cbegin(keys), std::cend(keys), containsKeys(value))) {
-					throw Exception(api::ErrorCode::RUNTIME_ERROR, "unable to unwrap MsgWithDrawDelegationReward: bad value fields");
-				}
-
-				underlyingMsg.delegatorAddress = value->getString(kDelegatorAddress).value();
-				underlyingMsg.validatorAddress = value->getString(kValidatorAddress).value();
-			}
-
-			return underlyingMsg;
+			return boost::get<cosmos::MsgWithdrawDelegationReward>(cosmosMsg->getRawData().content);
 		}
 	}
 }

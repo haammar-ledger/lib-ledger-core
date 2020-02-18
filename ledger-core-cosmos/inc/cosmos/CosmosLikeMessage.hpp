@@ -34,6 +34,8 @@
 
 #include <core/collections/DynamicObject.hpp>
 
+#include <cosmos/cosmos.hpp>
+
 #include <cosmos/api/CosmosLikeAmount.hpp>
 #include <cosmos/api/CosmosLikeContent.hpp>
 #include <cosmos/api/CosmosLikeVoteOption.hpp>
@@ -56,20 +58,21 @@ namespace ledger {
 			friend api::CosmosLikeMessage;
 
 		public:
-			CosmosLikeMessage(const std::shared_ptr<DynamicObject>& content);
-			CosmosLikeMessage(const cosmos::Message& rawStruct);
+
+        	CosmosLikeMessage(const cosmos::Message& msgData);
+
 			virtual api::CosmosLikeMsgType getMessageType() const override;
 			virtual std::string getRawMessageType() const override;
 
 			rapidjson::Value toJson(rapidjson::Document::AllocatorType& allocator) const;
 
-			cosmos::Message toRawMessage() const;
+            void setRawData(const cosmos::Message &msgData);
+			const cosmos::Message& getRawData() const;
 
 		private:
-			// TODO : use cosmos::Message as data type instead of the content.
-			// The constructor using DynamicObject should disappear, and
-			// the toJson method should do the type-dispatch to build the json dynamically
-			std::shared_ptr<DynamicObject> _content;
+
+			cosmos::Message _msgData;
+
 		};
 	}
 }

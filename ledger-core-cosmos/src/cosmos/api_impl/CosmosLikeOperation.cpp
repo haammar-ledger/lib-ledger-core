@@ -33,30 +33,61 @@
 
 #include <core/api/ErrorCode.hpp>
 #include <core/utils/Exception.hpp>
+#include <core/operation/OperationDatabaseHelper.hpp>
 
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
+#include <cosmos/CosmosLikeMessage.hpp>
 
 namespace ledger {
     namespace core {
 
-        CosmosLikeOperation::CosmosLikeOperation(const std::shared_ptr<Operation>& baseOp) {
-            auto cosmosBaseOp = std::dynamic_pointer_cast<CosmosLikeOperation>(baseOp);
-            if (cosmosBaseOp) {
-                _transaction = std::make_shared<CosmosLikeTransactionApi>(cosmosBaseOp);
+        CosmosLikeOperation::CosmosLikeOperation(ledger::core::cosmos::Transaction const& tx,
+                                                 ledger::core::cosmos::Message const& msg) :
+            //Operation(account), // TODO Need this?
+            _txApi(std::make_shared<CosmosLikeTransactionApi>(tx)),
+            _msgApi(std::make_shared<CosmosLikeMessage>(msg)),
+            txData(tx),
+            msgData(msg)
+        {
+            /* TODO Complete missing info for _txApi ?
+                api::Currency _currency;
+                std::string _accountNumber;
+                std::string _accountSequence;
+                cosmos::Transaction _txData;
+                std::vector<uint8_t> _rSignature;
+                std::vector<uint8_t> _sSignature;
+                std::vector<uint8_t> _signingPubKey;
+            */
+        }
+
+        void CosmosLikeOperation::setTransactionData(ledger::core::cosmos::Transaction const& tx) {
+            txData = tx;
+            if (_txApi == nullptr) {
+                _txApi = std::make_shared<CosmosLikeTransactionApi>(tx);
             }
+            std::static_pointer_cast<CosmosLikeTransactionApi>(_txApi)->setRawData(txData);
+        }
+
+        void CosmosLikeOperation::setMessageData(ledger::core::cosmos::Message const& msg) {
+            msgData = msg;
+            if (_msgApi == nullptr) {
+                _msgApi = std::make_shared<CosmosLikeMessage>(msg);
+            }
+            std::static_pointer_cast<CosmosLikeMessage>(_msgApi)->setRawData(msgData);
         }
 
 		std::shared_ptr<api::CosmosLikeTransaction> CosmosLikeOperation::getTransaction() {
-            return _transaction;
+            return _txApi;
         }
 
 		std::shared_ptr<api::CosmosLikeMessage> CosmosLikeOperation::getMessage() {
-			throw make_exception(api::ErrorCode::IMPLEMENTATION_IS_MISSING, "CosmosLikeOperation::getMessage");
+			return _msgApi;
 		}
 
-        void CosmosLikeOperation::refreshUid(const std::string &additional) {
-            // TODO: Add implementation
-            (void) additional;
+        void CosmosLikeOperation::refreshUid(const std::string &msgIndex) {
+            auto final = fmt::format("{}+{}+{}", _txApi->getHash(), msgIndex, api::to_string(_msgApi->getMessageType()));
+
+            uid = OperationDatabaseHelper::createUid(accountUid, final, getOperationType());
         }
 
     }

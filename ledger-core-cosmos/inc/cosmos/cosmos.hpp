@@ -30,16 +30,8 @@
 
 #pragma once
 
-#include <list>
-#include <boost/variant.hpp>
-
-#include <core/math/BigInt.hpp>
-#include <core/wallet/Block.hpp>
-#include <core/utils/Option.hpp>
-
-#include <cosmos/api/CosmosLikeAmount.hpp>
-#include <cosmos/api/CosmosLikeContent.hpp>
-#include <cosmos/api/CosmosLikeMessage.hpp>
+#include <cosmos/api/CosmosLikeMsgType.hpp>
+#include <cosmos/api/CosmosLikeMsgSend.hpp>
 #include <cosmos/api/CosmosLikeMsgDelegate.hpp>
 #include <cosmos/api/CosmosLikeMsgDeposit.hpp>
 #include <cosmos/api/CosmosLikeMsgDeposit.hpp>
@@ -50,7 +42,14 @@
 #include <cosmos/api/CosmosLikeMsgUndelegate.hpp>
 #include <cosmos/api/CosmosLikeMsgVote.hpp>
 #include <cosmos/api/CosmosLikeMsgWithdrawDelegationReward.hpp>
-#include <cosmos/api/CosmosLikeVoteOption.hpp>
+#include <core/api/Block.hpp>
+
+#include <core/math/BigInt.hpp>
+#include <core/utils/Option.hpp>
+
+#include <boost/variant.hpp>
+
+#include <list>
 
 
 namespace ledger {
@@ -84,6 +83,7 @@ namespace ledger {
                                 >;
 
                         struct Message {
+                                std::string uid;
                                 std::string type;
                                 MessageContent content;
                         };
@@ -127,10 +127,9 @@ namespace ledger {
                                 std::chrono::system_clock::time_point lastUpdate;
                         };
 
-
-                        // Small helpers to avoid very long types
-                        using TransactionList = std::list<std::shared_ptr<Transaction>>;
-                        using MsgType = ::ledger::core::api::CosmosLikeMsgType;
-                }
-        }
+			// Small helpers to avoid very long types
+			using TransactionList = std::list<std::shared_ptr<Transaction>>;
+			using MsgType = ::ledger::core::api::CosmosLikeMsgType;
+		}
+	}
 }
