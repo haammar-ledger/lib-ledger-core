@@ -4,7 +4,10 @@
 #include <integration/BaseFixture.hpp>
 
 #include <cosmos/CosmosLikeAccount.hpp>
+#include <cosmos/cosmos.hpp>
 
+
+using namespace ledger::core::cosmos;
 
 namespace ledger {
         namespace testing {
@@ -21,6 +24,14 @@ namespace ledger {
                                 const std::shared_ptr<core::AbstractWallet>& wallet,
                                 int32_t index,
                                 const core::api::ExtendedKeyAccountCreationInfo &info);
+
+                        void setupSendMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+
+                        void setupTransactionWithSingleMessage(Transaction& tx, const Message& msg, const std::chrono::system_clock::time_point& timeRef);
+
+                        void assertSameSendMessage(const Message& msgRef, const Message& msgResult);
+
+                        void assertSameTransactionWithSingleMessage(const Transaction& txRef, const Transaction& txResult);
                 }
         }
 }

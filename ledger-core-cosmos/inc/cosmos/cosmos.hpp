@@ -71,6 +71,8 @@ namespace ledger {
                         using MsgDeposit = api::CosmosLikeMsgDeposit;
                         using MsgWithdrawDelegationReward = api::CosmosLikeMsgWithdrawDelegationReward;
 
+                        struct MsgUnsupported {};
+
                         using MessageContent = boost::variant<
                                 MsgSend,
                                 MsgDelegate,
@@ -79,7 +81,8 @@ namespace ledger {
                                 MsgSubmitProposal,
                                 MsgVote,
                                 MsgDeposit,
-                                MsgWithdrawDelegationReward
+                                MsgWithdrawDelegationReward,
+                                MsgUnsupported
                                 >;
 
                         struct Message {

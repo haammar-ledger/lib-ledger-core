@@ -122,8 +122,7 @@ namespace ledger {
 		}
 
 		api::CosmosLikeMsgType CosmosLikeMessage::getMessageType() const {
-			auto msgType = getRawMessageType();
-			return cosmos::stringToMsgType(msgType.c_str());
+			return cosmos::stringToMsgType(_msgData.type.c_str());
 		}
 
 		std::string CosmosLikeMessage::getRawMessageType() const {
@@ -358,14 +357,12 @@ namespace ledger {
 			return boost::get<cosmos::MsgSubmitProposal>(cosmosMsg->getRawData().content);
 		}
 
-
 		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgVote(const api::CosmosLikeMsgVote & msgContent) {
 			cosmos::Message msg;
 			msg.type = kMsgVote;
 			msg.content = msgContent;
 			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
-
 
 		api::CosmosLikeMsgVote api::CosmosLikeMessage::unwrapMsgVote(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
 			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);
@@ -390,14 +387,12 @@ namespace ledger {
 			return boost::get<cosmos::MsgDeposit>(cosmosMsg->getRawData().content);
 		}
 
-
 		std::shared_ptr<api::CosmosLikeMessage> api::CosmosLikeMessage::wrapMsgWithdrawDelegationReward(const api::CosmosLikeMsgWithdrawDelegationReward & msgContent) {
 			cosmos::Message msg;
 			msg.type = kMsgWithdrawDelegationReward;
 			msg.content = msgContent;
 			return std::make_shared<::ledger::core::CosmosLikeMessage>(msg);
 		}
-
 
     	api::CosmosLikeMsgWithdrawDelegationReward api::CosmosLikeMessage::unwrapMsgWithdrawDelegationReward(const std::shared_ptr<api::CosmosLikeMessage> & msg) {
 			auto cosmosMsg = std::dynamic_pointer_cast<ledger::core::CosmosLikeMessage>(msg);

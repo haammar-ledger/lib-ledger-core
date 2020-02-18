@@ -127,8 +127,10 @@ namespace ledger {
                         content.validatorAddress = row.get<std::string>(10);
                     }
                     break;
-                case api::CosmosLikeMsgType::UNKNOWN:
-                    // TODO [COIN-178] Generic mechanism to handle unknown types
+                case api::CosmosLikeMsgType::UNSUPPORTED:
+                    {
+                        msg.content = cosmos::MsgUnsupported();
+                    }
                     break;
             }
         }
@@ -274,19 +276,28 @@ namespace ledger {
                                 soci::use(m.depositor), soci::use(m.proposalId), soci::use(coins);
                     }
                     break;
-                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD: {
-                    const auto &m = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
-                    sql << "INSERT INTO cosmos_messages (uid,"
-                           "transaction_uid, message_type, log,"
-                           "success, msg_index, delegator_address, validator_address)"
-                           "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta)",
-                            soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
-                            soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
-                            soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
-                }
+                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
+                    {
+                        const auto &m = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
+                        sql << "INSERT INTO cosmos_messages (uid,"
+                               "transaction_uid, message_type, log,"
+                               "success, msg_index, delegator_address, validator_address)"
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :da, :va)",
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                                soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
+                                soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
+                    }
                     break;
-                case api::CosmosLikeMsgType::UNKNOWN:
-                    // TODO [COIN-178] Generic mechanism to handle unknown types
+                case api::CosmosLikeMsgType::UNSUPPORTED:
+                    {
+                        // Do record the message type, even if unsupported
+                        sql << "INSERT INTO cosmos_messages (uid,"
+                               "transaction_uid, message_type, "
+                               "log, success, msg_index)"
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi)",
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                                soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex);
+                    }
                     break;
             }
         }

@@ -112,7 +112,7 @@ namespace ledger {
                                 } break;
                                 case api::CosmosLikeMsgType::MSGVOTE:
                                 case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
-                                default:
+                                case api::CosmosLikeMsgType::UNSUPPORTED:
                                         // No amount-like data for these types of operation
                                 break;
                         }

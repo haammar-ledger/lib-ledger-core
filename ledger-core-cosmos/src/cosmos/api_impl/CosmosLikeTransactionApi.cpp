@@ -103,11 +103,6 @@ namespace ledger {
         CosmosLikeTransactionApi & CosmosLikeTransactionApi::setMessages(const std::vector<std::shared_ptr<api::CosmosLikeMessage>> & cmessages) {
             auto result = std::vector<cosmos::Message>();
             for (auto& message : cmessages) {
-                if (message->getMessageType() == api::CosmosLikeMsgType::UNKNOWN) {
-                    throw Exception(
-                        api::ErrorCode::INVALID_ARGUMENT,
-                        fmt::format("Unknown '{}' message", message->getRawMessageType()));
-                }
                 auto concrete_message = std::dynamic_pointer_cast<CosmosLikeMessage>(message);
                 if (!concrete_message) {
                     throw Exception(

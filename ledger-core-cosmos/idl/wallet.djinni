@@ -94,7 +94,7 @@ CosmosLikeMsgType = enum {
         MsgVote;
         MsgDeposit;
         MsgWithdrawDelegationReward;
-        Unknown;
+        Unsupported;
 }
 
 CosmosLikeMessage = interface +c {
