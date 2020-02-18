@@ -233,7 +233,7 @@ namespace ledger {
                             [](auto transaction) -> cosmos::Transaction { return *transaction; });
                         result->transactions = c_transaction_list;
                         result->hasNext = false;
-                        result->marker = "";
+                        result->paginationMarker = "";
                         return result;
                     });
         }
