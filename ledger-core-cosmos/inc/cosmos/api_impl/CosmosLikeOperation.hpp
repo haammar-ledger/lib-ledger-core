@@ -48,10 +48,6 @@ namespace ledger {
 
             public:
 
-                // TODO [refacto] Remove these, only use CosmosLikeTransactionApi::_txData and CosmosLikeMessage::_msgData
-                ledger::core::cosmos::Transaction txData;
-                ledger::core::cosmos::Message msgData;
-
                 CosmosLikeOperation() = default;
 
                 CosmosLikeOperation(ledger::core::cosmos::Transaction const& tx,

@@ -175,7 +175,7 @@ namespace ledger {
 
                                 auto inserted = CosmosLikeOperationDatabaseHelper::putOperation(sql, operation);
                                 if (inserted) {
-                                        CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, operation.msgData.uid);
+                                        CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, msg.uid);
                                         emitNewOperationEvent(operation);
                                 }
                        }
