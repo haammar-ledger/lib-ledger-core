@@ -231,7 +231,7 @@ namespace ledger {
                                                 return constants::kMsgDeposit;
                                         case MsgType::MSGWITHDRAWDELEGATIONREWARD:
                                                 return constants::kMsgWithdrawDelegationReward;
-                                        case MsgType::UNKNOWN:
+                                        case MsgType::UNSUPPORTED:
                                         default:
                                                 return "";
                                 }
@@ -259,7 +259,7 @@ namespace ledger {
                                 } else if (strings_equal(string, constants::kMsgWithdrawDelegationReward)) {
                                         return MsgType::MSGWITHDRAWDELEGATIONREWARD;
                                 } else {
-                                        return MsgType::UNKNOWN;
+                                        return MsgType::UNSUPPORTED;
                                 }
                         }
                 }

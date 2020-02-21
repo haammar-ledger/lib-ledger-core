@@ -112,7 +112,7 @@ namespace ledger {
                                 } break;
                                 case api::CosmosLikeMsgType::MSGVOTE:
                                 case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
-                                default:
+                                case api::CosmosLikeMsgType::UNSUPPORTED:
                                         // No amount-like data for these types of operation
                                 break;
                         }
@@ -175,7 +175,7 @@ namespace ledger {
 
                                 auto inserted = CosmosLikeOperationDatabaseHelper::putOperation(sql, operation);
                                 if (inserted) {
-                                        CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, operation.msgData.uid);
+                                        CosmosLikeOperationDatabaseHelper::updateOperation(sql, operation.uid, msg.uid);
                                         emitNewOperationEvent(operation);
                                 }
                        }

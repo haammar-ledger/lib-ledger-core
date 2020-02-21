@@ -4,7 +4,10 @@
 #include <integration/BaseFixture.hpp>
 
 #include <cosmos/CosmosLikeAccount.hpp>
+#include <cosmos/cosmos.hpp>
 
+
+using namespace ledger::core::cosmos;
 
 namespace ledger {
         namespace testing {
@@ -21,6 +24,26 @@ namespace ledger {
                                 const std::shared_ptr<core::AbstractWallet>& wallet,
                                 int32_t index,
                                 const core::api::ExtendedKeyAccountCreationInfo &info);
+
+                        void setupDelegateMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);                        void setupDepositMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+                        void setupRedelegateMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+                        void setupSendMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+                        void setupSubmitProposalMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+                        void setupUndelegateMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+                        void setupVoteMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+                        void setupWithdrawDelegationRewardMessage(Message& msg, const std::chrono::system_clock::time_point& timeRef);
+
+                        void setupTransaction(Transaction& tx, const std::vector<Message>& msgs, const std::chrono::system_clock::time_point& timeRef);
+
+                        void assertSameDelegateMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameDepositMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameRedelegateMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameSendMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameSubmitProposalMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameUndelegateMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameVoteMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameWithdrawDelegationRewardMessage(const Message& msgRef, const Message& msgResult);
+                        void assertSameTransaction(const Transaction& txRef, const Transaction& txResult);
                 }
         }
 }

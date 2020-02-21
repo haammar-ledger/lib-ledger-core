@@ -413,10 +413,13 @@ namespace ledger {
                                     buildMsgWithdrawDelegatationRewardFromRawMessage(msgObject)));
                                 break;
                             default:
-                                throw Exception(
-                                    api::ErrorCode::INVALID_ARGUMENT,
-                                    fmt::format("unknown message {} while parsing transaction", getString(msgObject, kType)));
-                                break;
+                            {
+                                cosmos::Message msg;
+                                msg.type = getString(msgObject, kType);
+                                msg.content = cosmos::MsgUnsupported();
+                                messages.push_back(std::make_shared<::ledger::core::CosmosLikeMessage>(msg));
+                            }
+                            break;
                         }
                     }
                 }

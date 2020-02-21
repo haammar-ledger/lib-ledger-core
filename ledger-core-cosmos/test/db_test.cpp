@@ -3,17 +3,16 @@
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 #include <cosmos/database/CosmosLikeTransactionDatabaseHelper.hpp>
 #include <cosmos/CosmosLikeOperationQuery.hpp>
-#include <cosmos/CosmosLikeWallet.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <cosmos/CosmosLikeMessage.hpp>
-#include <cosmos/cosmos.hpp>
+#include <cosmos/CosmosLikeWallet.hpp>
 
 #include <core/Services.hpp>
 #include <core/utils/DateUtils.hpp>
 
 #include <gtest/gtest.h>
 
-using namespace ledger::core::cosmos;
+using namespace ledger::testing::cosmos;
 
 class CosmosDBTests : public BaseFixture {
 public:
@@ -37,68 +36,17 @@ public:
         auto configuration = DynamicObject::newInstance();
         //configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME, "44'/<coin_type>'/<account>'/<node>/<address>");
         wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
-                        wait(walletStore->createWallet("e847815f-488a-4301-b67c-378a5e9c8a61", "atom", configuration)));
+                            wait(walletStore->createWallet("e847815f-488a-4301-b67c-378a5e9c8a61", "atom", configuration)));
 
         auto accountInfo = wait(wallet->getNextAccountCreationInfo());
         EXPECT_EQ(accountInfo.index, 0);
         accountInfo.publicKeys.push_back(hex::toByteArray(ledger::testing::cosmos::DEFAULT_HEX_PUB_KEY));
 
         account = ledger::testing::cosmos::createCosmosLikeAccount(wallet, accountInfo.index, accountInfo);
-
     }
-
-    void setupTestData(Transaction& tx, std::chrono::system_clock::time_point& timeRef) {
-        tx.hash = "A1E44688B429AF17322EC33CE62876FA415EFC8D9244A2F51454BD025F416594";
-        api::Block block;
-        block.blockHash = "52B39D45B438C6995CD448B09963954883B0F7A57E9EFC7A95E0A6C5BAC09C00";
-        block.currencyName = "atom";
-        block.height = 744795;
-        block.time = timeRef;
-        tx.block = block;
-        tx.fee.gas = BigInt(30000);
-        tx.fee.amount.emplace_back("30", "uatom");
-        tx.gasUsed = BigInt(26826);
-        tx.timestamp = timeRef;
-        tx.memo = "Sent by Ledger";
-        Message msg;
-        msg.type = "cosmos-sdk/MsgSend";
-        MsgSend sendMsg;
-        sendMsg.fromAddress = "cosmos155svs6sgxe55rnvs6ghprtqu0mh69kehrn0dqr";
-        sendMsg.toAddress = "cosmos1sd4tl9aljmmezzudugs7zlaya7pg2895tyn79r";
-        sendMsg.amount.emplace_back("900000", "uatom");
-        msg.content = sendMsg;
-        tx.messages.push_back(msg);
-        MessageLog log;
-        log.messageIndex = 0;
-        log.success = true;
-        log.log = "Success";
-        tx.logs.push_back(log);
-    }
-
-    void assertTestResultTransaction(const Transaction& txRef, const Transaction& txResult) {
-        EXPECT_EQ(txResult.hash, txRef.hash);
-        EXPECT_EQ(txResult.block.hasValue(), txRef.block.hasValue());
-        EXPECT_EQ(txResult.block.getValue().blockHash, txRef.block.getValue().blockHash);
-        EXPECT_EQ(txResult.block.getValue().currencyName, txRef.block.getValue().currencyName);
-        EXPECT_EQ(txResult.block.getValue().height, txRef.block.getValue().height);
-        EXPECT_EQ(txResult.block.getValue().time, txRef.block.getValue().time);
-        EXPECT_EQ(txResult.fee.amount.size(), 1);
-        EXPECT_EQ(txResult.fee.amount[0].amount, txRef.fee.amount[0].amount);
-        EXPECT_EQ(txResult.fee.amount[0].denom, txRef.fee.amount[0].denom);
-        EXPECT_EQ(txResult.fee.gas, txRef.fee.gas);
-        EXPECT_EQ(txResult.gasUsed.hasValue(), txRef.gasUsed.hasValue());
-        EXPECT_EQ(txResult.gasUsed.getValue().to_string(), txRef.gasUsed.getValue().to_string());
-        EXPECT_EQ(txResult.timestamp, txRef.timestamp);
-        EXPECT_EQ(txResult.messages.size(), 1);
-        EXPECT_EQ(txResult.messages[0].type, txRef.messages[0].type);
-        EXPECT_EQ(txResult.memo, txRef.memo);
-        EXPECT_EQ(txResult.logs.size(), 1);
-        EXPECT_EQ(txResult.logs[0].success, txRef.logs[0].success);
-    }
-
 };
 
-TEST_F(CosmosDBTests, CosmosDBTest) {
+TEST_F(CosmosDBTests, BasicDBTest) {
 
     std::shared_ptr<Services> services;
     std::shared_ptr<CosmosLikeAccount> account;
@@ -107,8 +55,11 @@ TEST_F(CosmosDBTests, CosmosDBTest) {
 
     std::chrono::system_clock::time_point timeRef = DateUtils::now();
 
+    Message msg;
+    setupSendMessage(msg, timeRef);
+
     Transaction tx;
-    setupTestData(tx, timeRef);
+    setupTransaction(tx, std::vector<Message>{ msg }, timeRef);
 
     // Test writing into DB
     {
@@ -123,7 +74,7 @@ TEST_F(CosmosDBTests, CosmosDBTest) {
         auto result = CosmosLikeTransactionDatabaseHelper::getTransactionByHash(sql, tx.hash, txRetrieved);
         EXPECT_EQ(result, true);
 
-        assertTestResultTransaction(tx, txRetrieved);
+        assertSameTransaction(tx, txRetrieved);
 
         // TODO Test other (all?) message types
         auto sendMsg = boost::get<MsgSend>(tx.messages[0].content);
@@ -137,7 +88,7 @@ TEST_F(CosmosDBTests, CosmosDBTest) {
 
 }
 
-TEST_F(CosmosDBTests, CosmosOperationQueryTest) {
+TEST_F(CosmosDBTests, OperationQueryTest) {
     std::shared_ptr<Services> services;
     std::shared_ptr<CosmosLikeAccount> account;
     std::shared_ptr<CosmosLikeWallet> wallet;
@@ -145,8 +96,11 @@ TEST_F(CosmosDBTests, CosmosOperationQueryTest) {
 
     std::chrono::system_clock::time_point timeRef = DateUtils::now();
 
+    Message msg;
+    setupSendMessage(msg, timeRef);
+
     Transaction tx;
-    setupTestData(tx, timeRef);
+    setupTransaction(tx, std::vector<Message>{ msg }, timeRef);
 
     {
         soci::session sql(services->getDatabaseSessionPool()->getPool());
@@ -177,15 +131,90 @@ TEST_F(CosmosDBTests, CosmosOperationQueryTest) {
         auto cosmosOp = std::dynamic_pointer_cast<CosmosLikeOperation>(op);
 
         auto txRetrieved = std::dynamic_pointer_cast<CosmosLikeTransactionApi>(cosmosOp->getTransaction())->getRawData();
-        assertTestResultTransaction(tx, txRetrieved);
+        assertSameTransaction(tx, txRetrieved);
 
-        auto msgRetrieved = std::dynamic_pointer_cast<CosmosLikeMessage>(cosmosOp->getMessage())->getRawData();
-        auto sendMsg = boost::get<MsgSend>(tx.messages[0].content);
-        auto sendMsgRetrieved = boost::get<MsgSend>(msgRetrieved.content);
-        EXPECT_EQ(sendMsgRetrieved.fromAddress, sendMsg.fromAddress);
-        EXPECT_EQ(sendMsgRetrieved.toAddress, sendMsg.toAddress);
-        EXPECT_EQ(sendMsgRetrieved.amount.size(), 1);
-        EXPECT_EQ(sendMsgRetrieved.amount[0].amount, sendMsg.amount[0].amount);
-        EXPECT_EQ(sendMsgRetrieved.amount[0].denom, sendMsg.amount[0].denom);
+        assertSameSendMessage(tx.messages[0], txRetrieved.messages[0]);
+    }
+}
+
+TEST_F(CosmosDBTests, UnsuportedMsgTypeTest) {
+    std::shared_ptr<Services> services;
+    std::shared_ptr<CosmosLikeAccount> account;
+    std::shared_ptr<CosmosLikeWallet> wallet;
+    setupTest(services, account, wallet);
+
+    std::chrono::system_clock::time_point timeRef = DateUtils::now();
+
+    Message msg;
+    setupSendMessage(msg, timeRef);
+
+    Transaction tx;
+    setupTransaction(tx, std::vector<Message>{ msg }, timeRef);
+
+    // Change message type
+    tx.messages[0].type = "unknown-message-type";
+
+    {
+        soci::session sql(services->getDatabaseSessionPool()->getPool());
+        account->putTransaction(sql, tx);
+    }
+
+    {
+        auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
+        EXPECT_EQ(ops.size(), 1);
+
+        auto op = ops[0];
+        auto cosmosOp = std::dynamic_pointer_cast<CosmosLikeOperation>(op);
+        auto txRetrieved = std::dynamic_pointer_cast<CosmosLikeTransactionApi>(cosmosOp->getTransaction())->getRawData();
+
+        assertSameTransaction(tx, txRetrieved);
+    }
+}
+
+TEST_F(CosmosDBTests, MultipleMsgTest) {
+    std::shared_ptr<Services> services;
+    std::shared_ptr<CosmosLikeAccount> account;
+    std::shared_ptr<CosmosLikeWallet> wallet;
+    setupTest(services, account, wallet);
+
+    std::chrono::system_clock::time_point timeRef = DateUtils::now();
+
+    Message msgSend;
+    setupSendMessage(msgSend, timeRef);
+
+    Message msgVote;
+    setupVoteMessage(msgVote, timeRef);
+
+    Transaction tx;
+    setupTransaction(tx, std::vector<Message>{ msgSend, msgVote }, timeRef);
+
+    {
+        soci::session sql(services->getDatabaseSessionPool()->getPool());
+        account->putTransaction(sql, tx);
+    }
+
+    {
+        auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
+        EXPECT_EQ(ops.size(), 2);
+
+        {
+            auto op = ops[0];
+            auto cosmosOp = std::dynamic_pointer_cast<CosmosLikeOperation>(op);
+            auto txRetrieved = std::dynamic_pointer_cast<CosmosLikeTransactionApi>(cosmosOp->getTransaction())->getRawData();
+            auto msgRetrieved = std::dynamic_pointer_cast<CosmosLikeMessage>(cosmosOp->getMessage())->getRawData();
+
+            assertSameTransaction(tx, txRetrieved);
+            assertSameSendMessage(msgSend, msgRetrieved);
+        }
+
+        {
+            auto op = ops[1];
+            auto cosmosOp = std::dynamic_pointer_cast<CosmosLikeOperation>(op);
+            auto txRetrieved = std::dynamic_pointer_cast<CosmosLikeTransactionApi>(cosmosOp->getTransaction())->getRawData();
+            auto msgRetrieved = std::dynamic_pointer_cast<CosmosLikeMessage>(cosmosOp->getMessage())->getRawData();
+
+            assertSameTransaction(tx, txRetrieved);
+            assertSameVoteMessage(msgVote, msgRetrieved);
+        }
     }
 }
