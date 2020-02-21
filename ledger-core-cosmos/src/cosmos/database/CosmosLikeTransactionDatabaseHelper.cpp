@@ -49,82 +49,104 @@ namespace ledger {
     namespace core {
 
         static void inflateMessage(soci::row const& row, cosmos::Message& msg) {
-            msg.uid = row.get<std::string>(0);
-            auto msgType = row.get<std::string>(2);
+            // See Migrations.cpp for column numbers
+            const auto COL_UID = 0;
+            const auto COL_TXUID = 1;
+            const auto COL_MSGTYPE = 2;
+            const auto COL_LOG = 3;
+            const auto COL_SUCCESS = 4;
+            const auto COL_MSGINDEX = 5;
+            const auto COL_FROMADDR = 6;
+            const auto COL_TOADDR = 7;
+            const auto COL_AMOUNT = 8;
+            const auto COL_DELADDR = 9;
+            const auto COL_VALADDR = 10;
+            const auto COL_VALSRCADDR = 11;
+            const auto COL_VALDESTADDR = 12;
+            const auto COL_PROPTYPE = 13;
+            const auto COL_PROPTITLE = 14;
+            const auto COL_PROPDESC = 15;
+            const auto COL_PROPOSER = 16;
+            const auto COL_VOTER = 17;
+            const auto COL_PROPID = 18;
+            const auto COL_VOTEOPT = 19;
+            const auto COL_DEPOSITOR = 20;
+            msg.uid = row.get<std::string>(COL_UID);
+            auto msgType = row.get<std::string>(COL_MSGTYPE);
             msg.type = msgType;
             switch (cosmos::stringToMsgType(msgType.c_str())) {
                 case api::CosmosLikeMsgType::MSGSEND:
                     {
                         msg.content = cosmos::MsgSend();
                         auto &content = boost::get<cosmos::MsgSend>(msg.content);
-                        content.fromAddress = row.get<std::string>(6);
-                        content.toAddress = row.get<std::string>(7);
-                        soci::stringToCoins(row.get<std::string>(8), content.amount);
+                        content.fromAddress = row.get<std::string>(COL_FROMADDR);
+                        content.toAddress = row.get<std::string>(COL_TOADDR);
+                        soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.amount);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGDELEGATE:
                     {
                         msg.content = cosmos::MsgDelegate();
                         auto &content = boost::get<cosmos::MsgDelegate>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(9);
-                        content.validatorAddress = row.get<std::string>(10);
-                        soci::stringToCoin(row.get<std::string>(8), content.amount);
+                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                        content.validatorAddress = row.get<std::string>(COL_VALADDR);
+                        soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGUNDELEGATE:
                     {
                         msg.content = cosmos::MsgUndelegate();
                         auto &content = boost::get<cosmos::MsgUndelegate>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(9);
-                        content.validatorAddress = row.get<std::string>(10);
-                        soci::stringToCoin(row.get<std::string>(8), content.amount);
+                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                        content.validatorAddress = row.get<std::string>(COL_VALADDR);
+                        soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGREDELEGATE:
                     {
                         msg.content = cosmos::MsgRedelegate();
                         auto &content = boost::get<cosmos::MsgRedelegate>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(9);
-                        content.validatorSourceAddress = row.get<std::string>(11);
-                        content.validatorDestinationAddress = row.get<std::string>(12);
-                        soci::stringToCoin(row.get<std::string>(8), content.amount);
+                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                        content.validatorSourceAddress = row.get<std::string>(COL_VALSRCADDR);
+                        content.validatorDestinationAddress = row.get<std::string>(COL_VALDESTADDR);
+                        soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGSUBMITPROPOSAL:
                     {
                         msg.content = cosmos::MsgSubmitProposal();
                         auto &content = boost::get<cosmos::MsgSubmitProposal>(msg.content);
-                        content.content.type = row.get<std::string>(13);
-                        content.content.title = row.get<std::string>(14);
-                        content.content.description = row.get<std::string>(15);
-                        content.proposer = row.get<std::string>(16);
-                        soci::stringToCoins(row.get<std::string>(8), content.initialDeposit);
+                        content.content.type = row.get<std::string>(COL_PROPTYPE);
+                        content.content.title = row.get<std::string>(COL_PROPTITLE);
+                        content.content.description = row.get<std::string>(COL_PROPDESC);
+                        content.proposer = row.get<std::string>(COL_PROPOSER);
+                        soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.initialDeposit);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGVOTE:
                     {
                         msg.content = cosmos::MsgVote();
                         auto &content = boost::get<cosmos::MsgVote>(msg.content);
-                        content.voter = row.get<std::string>(17);
-                        content.proposalId = row.get<std::string>(18);
-                        content.option = api::from_string<api::CosmosLikeVoteOption>(row.get<std::string>(19));
+                        content.voter = row.get<std::string>(COL_VOTER);
+                        content.proposalId = row.get<std::string>(COL_PROPID);
+                        content.option = api::from_string<api::CosmosLikeVoteOption>(row.get<std::string>(COL_VOTEOPT));
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGDEPOSIT:
                     {
                         msg.content = cosmos::MsgDeposit();
                         auto &content = boost::get<cosmos::MsgDeposit>(msg.content);
-                        content.depositor = row.get<std::string>(20);
-                        content.proposalId = row.get<std::string>(18);
-                        soci::stringToCoins(row.get<std::string>(8), content.amount);
+                        content.depositor = row.get<std::string>(COL_DEPOSITOR);
+                        content.proposalId = row.get<std::string>(COL_PROPID);
+                        soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.amount);
                     }
                     break;
                 case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
                     {
                         msg.content = cosmos::MsgWithdrawDelegationReward();
                         auto &content = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(9);
-                        content.validatorAddress = row.get<std::string>(10);
+                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                        content.validatorAddress = row.get<std::string>(COL_VALADDR);
                     }
                     break;
                 case api::CosmosLikeMsgType::UNSUPPORTED:
@@ -139,23 +161,37 @@ namespace ledger {
                                        const soci::row &row,
                                        cosmos::Transaction &tx) {
 
-            tx.uid = row.get<std::string>(0);
-            tx.hash = row.get<std::string>(1);
-            tx.timestamp = row.get<std::chrono::system_clock::time_point>(2);
-            soci::stringToCoins(row.get<std::string>(3), tx.fee.amount);
-            tx.fee.gas = row.get<std::string>(4);
-            tx.gasUsed = row.get<Option<std::string>>(5).map<BigInt>([] (const std::string& v) {
+            // See CosmosLikeTransactionDatabaseHelper::getTransactionByHash for column names.
+            const auto COL_TX_UID = 0;
+            const auto COL_TX_HASH = 1;
+            const auto COL_TX_TIME = 2;
+            const auto COL_TX_FEE = 3;
+            const auto COL_TX_GAS = 4;
+            const auto COL_TX_GASUSED = 5;
+            const auto COL_TX_MEMO = 6;
+            const auto COL_TX_BLOCKUID = 7;
+            const auto COL_BLK_HASH = 8;
+            const auto COL_BLK_HEIGHT = 9;
+            const auto COL_BLK_TIME = 10;
+            const auto COL_BLK_CURRNAME = 11;
+
+            tx.uid = row.get<std::string>(COL_TX_UID);
+            tx.hash = row.get<std::string>(COL_TX_HASH);
+            tx.timestamp = row.get<std::chrono::system_clock::time_point>(COL_TX_TIME);
+            soci::stringToCoins(row.get<std::string>(COL_TX_FEE), tx.fee.amount);
+            tx.fee.gas = row.get<std::string>(COL_TX_GAS);
+            tx.gasUsed = row.get<Option<std::string>>(COL_TX_GASUSED).map<BigInt>([] (const std::string& v) {
                 return BigInt::fromString(v);
             });
-            tx.memo = row.get<Option<std::string>>(6).getValueOr("");
+            tx.memo = row.get<Option<std::string>>(COL_TX_MEMO).getValueOr("");
 
-            if (row.get_indicator(7) != soci::i_null) {
+            if (row.get_indicator(COL_TX_BLOCKUID) != soci::i_null) {
                 cosmos::Block block;
-                block.uid = row.get<std::string>(7);
-                block.blockHash = row.get<std::string>(8);
-                block.height = soci::get_number<uint64_t>(row, 9);
-                block.time = row.get<std::chrono::system_clock::time_point>(10);
-                block.currencyName = row.get<std::string>(11);
+                block.uid = row.get<std::string>(COL_TX_BLOCKUID);
+                block.blockHash = row.get<std::string>(COL_BLK_HASH);
+                block.height = soci::get_number<uint64_t>(row, COL_BLK_HEIGHT);
+                block.time = row.get<std::chrono::system_clock::time_point>(COL_BLK_TIME);
+                block.currencyName = row.get<std::string>(COL_BLK_CURRNAME);
                 tx.block = block;
             }
 
@@ -164,14 +200,18 @@ namespace ledger {
                     soci::use(tx.uid));
 
             for (auto &msgRow : msgRows) {
+                // See Migrations.cpp for column names
+                const auto COL_MSG_LOG = 3;
+                const auto COL_MSG_SUCCESS = 4;
+                const auto COL_MSG_INDEX = 5;
                 cosmos::Message msg;
                 inflateMessage(msgRow, msg);
                 tx.messages.push_back(msg);
 
                 cosmos::MessageLog log;
-                log.log = msgRow.get<std::string>(3);
-                log.success = soci::get_number<int32_t>(msgRow, 4) != 0;
-                log.messageIndex = soci::get_number<int32_t>(msgRow, 5);
+                log.log = msgRow.get<std::string>(COL_MSG_LOG);
+                log.success = soci::get_number<int32_t>(msgRow, COL_MSG_SUCCESS) != 0;
+                log.messageIndex = soci::get_number<int32_t>(msgRow, COL_MSG_INDEX);
                 tx.logs.push_back(log);
             }
         }
