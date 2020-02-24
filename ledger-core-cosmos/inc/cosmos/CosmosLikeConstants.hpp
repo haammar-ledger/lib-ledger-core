@@ -60,6 +60,8 @@ namespace ledger {
                                 constexpr const char kGas[] = "gas";
                                 constexpr const char kGasUsed[] = "gas_used";
                                 constexpr const char kHeight[] = "height";
+                                constexpr const char kMinHeight[] = "minheight";
+                                constexpr const char kMaxHeight[] = "maxheight";
                                 constexpr const char kInitialDeposit[] = "initial_deposit";
                                 constexpr const char kLog[] = "log";
                                 constexpr const char kLogs[] = "logs";
