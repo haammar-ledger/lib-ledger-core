@@ -44,32 +44,50 @@ namespace ledger {
                                 constexpr const char kMsgUndelegate[] = "cosmos-sdk/MsgUndelegate";
                                 constexpr const char kMsgVote[] = "cosmos-sdk/MsgVote";
                                 constexpr const char kMsgWithdrawDelegationReward[] = "cosmos-sdk/MsgWithdrawDelegationReward";
+                                constexpr const char kMsgMultiSend[] = "cosmos-sdk/MsgMultiSend";
+                                constexpr const char kMsgCreateValidator[] = "cosmos-sdk/MsgCreateValidator";
+                                constexpr const char kMsgEditValidator[] = "cosmos-sdk/MsgEditValidator";
+                                constexpr const char kMsgSetWithdrawAddress[] = "cosmos-sdk/MsgSetWithdrawAddress";
+                                constexpr const char kMsgWithdrawDelegatorReward[] = "cosmos-sdk/MsgWithdrawDelegatorReward";
+                                constexpr const char kMsgWithdrawValidatorCommission[] = "cosmos-sdk/MsgWithdrawValidatorCommission";
+                                constexpr const char kMsgUnjail[] = "cosmos-sdk/MsgUnjail";
 
                                 constexpr const char kAccountNumber[] = "account_number";
                                 constexpr const char kAddress[] = "address";
                                 constexpr const char kAmount[] = "amount";
                                 constexpr const char kChainId[] = "chain_id";
                                 constexpr const char kCoins[] = "coins";
+                                constexpr const char kCommission[] = "commission";
+                                constexpr const char kCommissionRate[] = "commission_rate";
+                                constexpr const char kCommissionRates[] = "commission_rates";
+                                constexpr const char kCommissionMaxRate[] = "commission_max_rate";
+                                constexpr const char kCommissionMaxChangeRate[] = "commission_max_change_rate";
                                 constexpr const char kContent[] = "content";
                                 constexpr const char kDelegatorAddress[] = "delegator_address";
                                 constexpr const char kDenom[] = "denom";
                                 constexpr const char kDepositor[] = "depositor";
                                 constexpr const char kDescription[] = "description";
+                                constexpr const char kDetails[] = "details";
                                 constexpr const char kFee[] = "fee";
                                 constexpr const char kFromAddress[] = "from_address";
                                 constexpr const char kGas[] = "gas";
                                 constexpr const char kGasUsed[] = "gas_used";
                                 constexpr const char kHeight[] = "height";
-                                constexpr const char kMinHeight[] = "minheight";
-                                constexpr const char kMaxHeight[] = "maxheight";
+                                constexpr const char kIdentity[] = "identity";
                                 constexpr const char kInitialDeposit[] = "initial_deposit";
+                                constexpr const char kInputs[] = "inputs";
                                 constexpr const char kLog[] = "log";
                                 constexpr const char kLogs[] = "logs";
+                                constexpr const char kMaxHeight[] = "maxheight";
                                 constexpr const char kMemo[] = "memo";
                                 constexpr const char kMessage[] = "msg";
                                 constexpr const char kMessages[] = "msgs";
+                                constexpr const char kMinHeight[] = "minheight";
+                                constexpr const char kMinSelfDelegation[] = "min_self_delegation";
+                                constexpr const char kMoniker[] = "moniker";
                                 constexpr const char kMsgIndex[] = "msg_index";
                                 constexpr const char kOption[] = "option";
+                                constexpr const char kOutputs[] = "outputs";
                                 constexpr const char kProposalId[] = "proposal_id";
                                 constexpr const char kProposer[] = "proposer";
                                 constexpr const char kPubKey[] = "pub_key";
@@ -83,11 +101,14 @@ namespace ledger {
                                 constexpr const char kTxHash[] = "txhash";
                                 constexpr const char kTx[] = "tx";
                                 constexpr const char kType[] = "type";
+                                constexpr const char kUpdateTime[] = "update_time";
                                 constexpr const char kValidatorAddress[] = "validator_address";
                                 constexpr const char kValidatorDstAddress[] = "validator_dst_address";
                                 constexpr const char kValidatorSrcAddress[] = "validator_src_address";
                                 constexpr const char kValue[] = "value";
                                 constexpr const char kVoter[] = "voter";
+                                constexpr const char kWebsite[] = "website";
+                                constexpr const char kWithdrawAddress[] = "withdraw_address";
 
                                 // Explorer specific constants
                                 constexpr const char kBlockMeta[] = "block_meta";
@@ -233,6 +254,20 @@ namespace ledger {
                                                 return constants::kMsgDeposit;
                                         case MsgType::MSGWITHDRAWDELEGATIONREWARD:
                                                 return constants::kMsgWithdrawDelegationReward;
+                                        case MsgType::MSGMULTISEND:
+                                            return constants::kMsgMultiSend;
+                                        case MsgType::MSGCREATEVALIDATOR:
+                                            return constants::kMsgCreateValidator;
+                                        case MsgType::MSGEDITVALIDATOR:
+                                            return constants::kMsgEditValidator;
+                                        case MsgType::MSGSETWITHDRAWADDRESS:
+                                            return constants::kMsgSetWithdrawAddress;
+                                        case MsgType::MSGWITHDRAWDELEGATORREWARD:
+                                            return constants::kMsgWithdrawDelegatorReward;
+                                        case MsgType::MSGWITHDRAWVALIDATORCOMMISSION:
+                                            return constants::kMsgWithdrawValidatorCommission;
+                                        case MsgType::MSGUNJAIL:
+                                            return constants::kMsgUnjail;
                                         case MsgType::UNSUPPORTED:
                                         default:
                                                 return "";
@@ -260,6 +295,20 @@ namespace ledger {
                                         return MsgType::MSGDEPOSIT;
                                 } else if (strings_equal(string, constants::kMsgWithdrawDelegationReward)) {
                                         return MsgType::MSGWITHDRAWDELEGATIONREWARD;
+                                } else if (strings_equal(string, constants::kMsgMultiSend)) {
+                                        return MsgType::MSGMULTISEND;
+                                } else if (strings_equal(string, constants::kMsgCreateValidator)) {
+                                        return MsgType::MSGCREATEVALIDATOR;
+                                } else if (strings_equal(string, constants::kMsgEditValidator)) {
+                                        return MsgType::MSGEDITVALIDATOR;
+                                } else if (strings_equal(string, constants::kMsgSetWithdrawAddress)) {
+                                        return MsgType::MSGSETWITHDRAWADDRESS;
+                                } else if (strings_equal(string, constants::kMsgWithdrawDelegatorReward)) {
+                                        return MsgType::MSGWITHDRAWDELEGATORREWARD;
+                                } else if (strings_equal(string, constants::kMsgWithdrawValidatorCommission)) {
+                                        return MsgType::MSGWITHDRAWVALIDATORCOMMISSION;
+                                } else if (strings_equal(string, constants::kMsgUnjail)) {
+                                        return MsgType::MSGUNJAIL;
                                 } else {
                                         return MsgType::UNSUPPORTED;
                                 }

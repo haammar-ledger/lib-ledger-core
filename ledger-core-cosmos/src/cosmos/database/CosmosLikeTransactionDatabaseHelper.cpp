@@ -329,6 +329,7 @@ namespace ledger {
                     }
                     break;
                 case api::CosmosLikeMsgType::UNSUPPORTED:
+                default:
                     {
                         // Do record the message type, even if unsupported
                         sql << "INSERT INTO cosmos_messages (uid,"

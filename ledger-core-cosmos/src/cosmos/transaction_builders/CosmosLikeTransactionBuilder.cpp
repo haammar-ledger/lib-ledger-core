@@ -37,6 +37,7 @@
 #include <core/api/enum_from_string.hpp>
 #include <cosmos/CosmosLikeCurrencies.hpp>
 #include <core/bytes/BytesReader.hpp>
+#include <core/utils/DateUtils.hpp>
 
 #include <cosmos/api_impl/CosmosLikeTransactionApi.hpp>
 #include <cosmos/api/CosmosLikeMessage.hpp>
@@ -77,8 +78,8 @@ namespace ledger {
             //     return object[fieldName].GetObject();
             // }
 
-            api::CosmosLikeMsgSend buildMsgSendFromRawMessage(Object const& object) {
-                std::vector<api::CosmosLikeAmount> amounts;
+            cosmos::MsgSend buildMsgSendFromRawMessage(Object const& object) {
+                std::vector<cosmos::Coin> amounts;
 
                 if (!object[kValue][kAmount].IsArray() && !object[kValue][kAmount].IsObject()) {
                     return {
@@ -88,7 +89,7 @@ namespace ledger {
                 };
                 } else if (object[kValue][kAmount].IsObject()) {
                     auto amountObject = object[kValue][kAmount].GetObject();
-                    amounts.push_back(api::CosmosLikeAmount{
+                    amounts.push_back(cosmos::Coin{
                         getString(amountObject, kAmount),
                         getString(amountObject, kDenom)
                     });
@@ -107,7 +108,7 @@ namespace ledger {
                     for (auto& amount : object[kValue][kAmount].GetArray()) {
                         if (amount.IsObject()) {
                             auto amountObject = amount.GetObject();
-                            amounts.push_back(api::CosmosLikeAmount{
+                            amounts.push_back(cosmos::Coin{
                                 getString(amountObject, kAmount),
                                 getString(amountObject, kDenom)
                             });
@@ -122,35 +123,35 @@ namespace ledger {
                 }
             }
 
-            api::CosmosLikeMsgDelegate buildMsgDelegateFromRawMessage(Object const& object) {
+            cosmos::MsgDelegate buildMsgDelegateFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
                 auto amountObject = valueObject[kAmount].GetObject();
 
                 return {
                     getString(valueObject, kDelegatorAddress),
                     getString(valueObject, kValidatorAddress),
-                    api::CosmosLikeAmount(
+                    cosmos::Coin(
                         getString(amountObject, kAmount),
                         getString(amountObject, kDenom)
                     )
                 };
             }
 
-            api::CosmosLikeMsgUndelegate buildMsgUndelegateFromRawMessage(Object const& object) {
+            cosmos::MsgUndelegate buildMsgUndelegateFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
                 auto amountObject = valueObject[kAmount].GetObject();
 
                 return {
                     getString(valueObject, kDelegatorAddress),
                     getString(valueObject, kValidatorAddress),
-                    api::CosmosLikeAmount(
+                    cosmos::Coin(
                         getString(amountObject, kAmount),
                         getString(amountObject, kDenom)
                     )
                 };
             }
 
-             api::CosmosLikeMsgRedelegate buildMsgRedelegateFromRawMessage(Object const& object) {
+             cosmos::MsgRedelegate buildMsgRedelegateFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
                 auto amountObject = valueObject[kAmount].GetObject();
 
@@ -158,14 +159,14 @@ namespace ledger {
                     getString(valueObject, kDelegatorAddress),
                     getString(valueObject, kValidatorSrcAddress),
                     getString(valueObject, kValidatorDstAddress),
-                    api::CosmosLikeAmount(
+                    cosmos::Coin(
                         getString(amountObject, kAmount),
                         getString(amountObject, kDenom)
                     )
                 };
             }
 
-             api::CosmosLikeMsgSubmitProposal buildMsgSubmitProposalFromRawMessage(Object const& object) {
+             cosmos::MsgSubmitProposal buildMsgSubmitProposalFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
                 auto contentObject = valueObject[kContent].GetObject();
                 auto initialDepositArray = valueObject[kInitialDeposit].GetArray();
@@ -176,12 +177,12 @@ namespace ledger {
                     getString(contentObject, kDescription)
                 );
 
-                std::vector<api::CosmosLikeAmount> amounts;
+                std::vector<cosmos::Coin> amounts;
                 // the size of the array of amounts should be frequently equal to one
                 amounts.reserve(initialDepositArray.Size());
                 for (auto& amount : initialDepositArray) {
                     auto amountObject = amount.GetObject();
-                    amounts.push_back(api::CosmosLikeAmount(
+                    amounts.push_back(cosmos::Coin(
                         getString(amountObject, kAmount),
                         getString(amountObject, kDenom)
                     ));
@@ -194,7 +195,7 @@ namespace ledger {
                 };
             }
 
-            api::CosmosLikeMsgVote buildMsgVoteFromRawMessage(Object const& object) {
+            cosmos::MsgVote buildMsgVoteFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
                 return {
                     getString(valueObject, kVoter),
@@ -203,9 +204,9 @@ namespace ledger {
                 };
             }
 
-            api::CosmosLikeMsgDeposit buildMsgDepositFromRawMessage(Object const& object) {
+            cosmos::MsgDeposit buildMsgDepositFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
-                std::vector<api::CosmosLikeAmount> amounts;
+                std::vector<cosmos::Coin> amounts;
 
                 if (valueObject[kAmount].IsArray()) {
                     // the size of the array of amount should be frequently equals to one
@@ -215,7 +216,7 @@ namespace ledger {
                         if (amount.IsObject()) {
                             auto amountObject = amount.GetObject();
 
-                            amounts.push_back(api::CosmosLikeAmount{
+                            amounts.push_back(cosmos::Coin{
                                 getString(amountObject, kAmount),
                                 getString(amountObject, kDenom)
                             });
@@ -230,12 +231,201 @@ namespace ledger {
                };
             }
 
-            api::CosmosLikeMsgWithdrawDelegationReward buildMsgWithdrawDelegatationRewardFromRawMessage(Object const& object) {
+            cosmos::MsgWithdrawDelegationReward buildMsgWithdrawDelegationRewardFromRawMessage(Object const& object) {
                 auto valueObject = object[kValue].GetObject();
                 return {
                     getString(valueObject, kDelegatorAddress),
                     getString(valueObject, kValidatorAddress)
                 };
+            }
+
+            cosmos::MsgMultiSend buildMsgMultiSendFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                std::vector<cosmos::MultiSendInput> inputs;
+                std::vector<cosmos::MultiSendOutput> outputs;
+
+                if (valueObject.HasMember(kInputs) && valueObject[kInputs].IsArray()) {
+                    auto inputJson = valueObject[kInputs].GetArray();
+                    inputs.reserve(inputJson.Size());
+                    for (auto& input : inputJson) {
+                        std::vector<cosmos::Coin> inputAmounts;
+                        if (input.IsObject()) {
+                            auto singleInput = input.GetObject();
+                            auto coins = singleInput[kCoins].GetArray();
+
+                            inputAmounts.reserve(coins.Size());
+
+                            for (auto& amount : coins) {
+                                if (amount.IsObject()) {
+                                    auto amountObject = amount.GetObject();
+
+                                    inputAmounts.push_back(
+                                        cosmos::Coin{getString(amountObject, kAmount),
+                                                              getString(amountObject, kDenom)});
+                                }
+                            }
+
+                            inputs.push_back({getString(singleInput, kAddress), inputAmounts});
+                        }
+                    }
+                }
+
+                if (valueObject.HasMember(kOutputs) && valueObject[kOutputs].IsArray()) {
+                    auto outputJson = valueObject[kOutputs].GetArray();
+                    outputs.reserve(outputJson.Size());
+                    for (auto& output : outputJson) {
+                        std::vector<cosmos::Coin> outputAmounts;
+                        if (output.IsObject()) {
+                            auto singleOutput = output.GetObject();
+                            auto coins = singleOutput[kCoins].GetArray();
+
+                            outputAmounts.reserve(coins.Size());
+
+                            for (auto& amount : coins) {
+                                if (amount.IsObject()) {
+                                    auto amountObject = amount.GetObject();
+
+                                    outputAmounts.push_back(
+                                        cosmos::Coin{getString(amountObject, kAmount),
+                                                              getString(amountObject, kDenom)});
+                                }
+                            }
+
+                            outputs.push_back({getString(singleOutput, kAddress), outputAmounts});
+                        }
+                    }
+                }
+
+                return {inputs, outputs};
+            }
+
+            cosmos::MsgCreateValidator buildMsgCreateValidatorFromRawMessage(
+                Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                cosmos::ValidatorDescription description;
+                cosmos::ValidatorCommission commission;
+                std::string minSelfDelegation("");
+                std::string delegatorAddress("");
+                std::string validatorAddress("");
+                std::string pubkey("");
+                cosmos::Coin value;
+                if (valueObject.HasMember(kDescription) && valueObject[kDescription].IsObject()) {
+                    auto descriptionObject = valueObject[kDescription].GetObject();
+                    description.moniker = getString(descriptionObject, kMoniker);
+                    if (descriptionObject.HasMember(kIdentity) &&
+                        descriptionObject[kIdentity].IsString()) {
+                        description.identity =
+                            optional<std::string>(getString(descriptionObject, kIdentity));
+                    }
+                    if (descriptionObject.HasMember(kWebsite) &&
+                        descriptionObject[kWebsite].IsString()) {
+                        description.website =
+                            optional<std::string>(getString(descriptionObject, kWebsite));
+                    }
+                    if (descriptionObject.HasMember(kDetails) &&
+                        descriptionObject[kDetails].IsString()) {
+                        description.details =
+                            optional<std::string>(getString(descriptionObject, kDetails));
+                    }
+                }
+
+                if (valueObject.HasMember(kCommission) && valueObject[kCommission].IsObject()) {
+                    auto commissionObject = valueObject[kCommission].GetObject();
+                    commission.rates.rate = getString(commissionObject, kCommissionRate);
+                    commission.rates.maxRate = getString(commissionObject, kCommissionMaxRate);
+                    commission.rates.maxChangeRate =
+                        getString(commissionObject, kCommissionMaxChangeRate);
+                    commission.updateTime =
+                        DateUtils::fromJSON(getString(commissionObject, kUpdateTime));
+                }
+
+                if (valueObject.HasMember(kValue) && valueObject[kValue].IsObject()) {
+                    value = cosmos::Coin{
+                        getString(valueObject[kValue].GetObject(), kAmount),
+                        getString(valueObject[kValue].GetObject(), kDenom),
+                    };
+                }
+
+                minSelfDelegation = getString(valueObject, kMinSelfDelegation);
+                delegatorAddress = getString(valueObject, kDelegatorAddress);
+                validatorAddress = getString(valueObject, kValidatorAddress);
+                pubkey = getString(valueObject, kPubKey);
+
+                return {description,
+                        commission,
+                        minSelfDelegation,
+                        delegatorAddress,
+                        validatorAddress,
+                        pubkey,
+                        value};
+            }
+
+            cosmos::MsgEditValidator buildMsgEditValidatorFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                optional<cosmos::ValidatorDescription> description;
+                std::string validatorAddress("");
+                optional<std::string> commissionRate;
+                optional<std::string> minSelfDelegation;
+                if (valueObject.HasMember(kDescription) && valueObject[kDescription].IsObject()) {
+                    auto descriptionObject = valueObject[kDescription].GetObject();
+                    description = cosmos::ValidatorDescription();
+                    description->moniker = getString(descriptionObject, kMoniker);
+                    if (descriptionObject.HasMember(kIdentity) &&
+                        descriptionObject[kIdentity].IsString()) {
+                        description->identity =
+                            optional<std::string>(getString(descriptionObject, kIdentity));
+                    }
+                    if (descriptionObject.HasMember(kWebsite) &&
+                        descriptionObject[kWebsite].IsString()) {
+                        description->website =
+                            optional<std::string>(getString(descriptionObject, kWebsite));
+                    }
+                    if (descriptionObject.HasMember(kDetails) &&
+                        descriptionObject[kDetails].IsString()) {
+                        description->details =
+                            optional<std::string>(getString(descriptionObject, kDetails));
+                    }
+                }
+
+                validatorAddress = getString(valueObject, kValidatorAddress);
+                if (valueObject.HasMember(kCommissionRate) &&
+                    valueObject[kCommissionRate].IsString()) {
+                    commissionRate = optional<std::string>(getString(valueObject, kCommissionRate));
+                }
+                if (valueObject.HasMember(kMinSelfDelegation) &&
+                    valueObject[kMinSelfDelegation].IsString()) {
+                    minSelfDelegation =
+                        optional<std::string>(getString(valueObject, kMinSelfDelegation));
+                }
+
+                return {description, validatorAddress, commissionRate, minSelfDelegation};
+            }
+
+            cosmos::MsgSetWithdrawAddress buildMsgSetWithdrawAddressFromRawMessage(
+                Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                return cosmos::MsgSetWithdrawAddress{getString(valueObject, kDelegatorAddress),
+                                                     getString(valueObject, kWithdrawAddress)};
+            }
+
+            cosmos::MsgWithdrawDelegatorReward buildMsgWithdrawDelegatorRewardFromRawMessage(
+                Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                return cosmos::MsgWithdrawDelegatorReward{
+                    getString(valueObject, kDelegatorAddress),
+                    getString(valueObject, kValidatorAddress)};
+            }
+
+            cosmos::MsgWithdrawValidatorCommission
+            buildMsgWithdrawValidatorCommissionFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                return cosmos::MsgWithdrawValidatorCommission{
+                    getString(valueObject, kValidatorAddress)};
+            }
+
+            cosmos::MsgUnjail buildMsgUnjailFromRawMessage(Object const& object) {
+                auto valueObject = object[kValue].GetObject();
+                return cosmos::MsgUnjail{getString(valueObject, kValidatorAddress)};
             }
         }
 
@@ -410,7 +600,35 @@ namespace ledger {
                                 break;
                             case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
                                 messages.push_back(api::CosmosLikeMessage::wrapMsgWithdrawDelegationReward(
-                                    buildMsgWithdrawDelegatationRewardFromRawMessage(msgObject)));
+                                    buildMsgWithdrawDelegationRewardFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGMULTISEND:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgMultiSend(
+                                    buildMsgMultiSendFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGCREATEVALIDATOR:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgCreateValidator(
+                                    buildMsgCreateValidatorFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGEDITVALIDATOR:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgEditValidator(
+                                    buildMsgEditValidatorFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGSETWITHDRAWADDRESS:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgSetWithdrawAddress(
+                                    buildMsgSetWithdrawAddressFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATORREWARD:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgWithdrawDelegatorReward(
+                                    buildMsgWithdrawDelegatorRewardFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGWITHDRAWVALIDATORCOMMISSION:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgWithdrawValidatorCommission(
+                                    buildMsgWithdrawValidatorCommissionFromRawMessage(msgObject)));
+                                break;
+                            case api::CosmosLikeMsgType::MSGUNJAIL:
+                                messages.push_back(api::CosmosLikeMessage::wrapMsgUnjail(
+                                    buildMsgUnjailFromRawMessage(msgObject)));
                                 break;
                             default:
                             {
