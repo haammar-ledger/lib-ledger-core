@@ -36,7 +36,6 @@
 
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
-#include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
 #include <cosmos/factories/CosmosLikeWalletFactory.hpp>
 #include <cosmos/factories/CosmosLikeKeychainFactory.hpp>
 
