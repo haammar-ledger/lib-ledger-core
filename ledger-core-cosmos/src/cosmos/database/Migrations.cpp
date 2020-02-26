@@ -40,16 +40,6 @@ namespace ledger {
                 "memo TEXT"
                 ")";
 
-            // TODO
-            // ** MsgUndelegate
-            // // MsgUndelegate - struct for unbonding transactions
-            // type MsgUndelegate struct {
-            //  DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-            //  ValidatorAddress sdk.ValAddress `json:"validator_address"`
-            //  SharesAmount     sdk.Dec        `json:"shares_amount"`
-            // }
-            //
-
             // * TODO : handle missing Msg types
             // ** MsgMultiSend
             // // MsgMultiSend - high level transaction of the coin module
@@ -93,32 +83,6 @@ namespace ledger {
             //  // REF: #2373
             //  CommissionRate    *sdk.Dec `json:"commission_rate"`
             //  MinSelfDelegation *sdk.Int `json:"min_self_delegation"`
-            // }
-            //
-            // ** MsgUnjail
-            // // MsgUnjail - struct for unjailing jailed validator
-            // type MsgUnjail struct {
-            //  ValidatorAddr sdk.ValAddress `json:"address"` // address of the validator operator
-            // }
-            //
-            // ** MsgSetWithdrawAddress
-            // // msg struct for changing the withdraw address for a delegator (or validator self-delegation)
-            // type MsgSetWithdrawAddress struct {
-            // 	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-            // 	WithdrawAddress  sdk.AccAddress `json:"withdraw_address"`
-            // }
-            //
-            // ** MsgWithdrawDelegatorReward
-            // // msg struct for delegation withdraw from a single validator
-            // type MsgWithdrawDelegatorReward struct {
-            // 	DelegatorAddress sdk.AccAddress `json:"delegator_address"`
-            // 	ValidatorAddress sdk.ValAddress `json:"validator_address"`
-            // }
-            //
-            // ** MsgWithdrawValidatorCommission
-            // // msg struct for validator withdraw
-            // type MsgWithdrawValidatorCommission struct {
-            // 	ValidatorAddress sdk.ValAddress `json:"validator_address"`
             // }
             sql << "CREATE TABLE cosmos_messages("
                 "uid VARCHAR(255) PRIMARY KEY NOT NULL,"
