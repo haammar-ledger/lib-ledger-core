@@ -34,6 +34,7 @@
 #include <core/utils/Hex.hpp>
 #include <core/collections/Vector.hpp>
 #include <core/utils/Either.hpp>
+#include <core/utils/DateUtils.hpp>
 #include <core/bytes/BytesWriter.hpp>
 #include <core/crypto/SHA256.hpp>
 
@@ -209,7 +210,7 @@ TEST(CosmosTransaction, ParseRawMsgDepositTransaction) {
     EXPECT_EQ(tx->serialize(), strTx);
 }
 
-TEST(CosmosTransaction, ParseRawMsgWithdrawDelegationRewardTransation) {
+TEST(CosmosTransaction, ParseRawMsgWithdrawDelegationRewardTransaction) {
     auto strTx = "{\"account_number\":\"6571\",\"chain_id\":\"cosmoshub-3\",\"fee\":{\"amount\":[{\"amount\":\"5000\",\"denom\":\"uatom\"}],\"gas\":\"200000\"},\"memo\":\"Sent from Ledger\",\"msgs\":[{\"type\":\"cosmos-sdk/MsgWithdrawDelegationReward\",\"value\":{\"delegator_address\":\"cosmos102hty0jv2s29lyc4u0tv97z9v298e24t3vwtpl\",\"validator_address\":\"cosmosvaloper1grgelyng2v6v3t8z87wu3sxgt9m5s03xfytvz7\"}}],\"sequence\":\"0\"}";
     auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
 
@@ -223,3 +224,206 @@ TEST(CosmosTransaction, ParseRawMsgWithdrawDelegationRewardTransation) {
     EXPECT_EQ(tx->serialize(), strTx);
 }
 
+
+TEST(CosmosTransaction, ParseRawMsgMultiSendTransaction) {
+    // From cosmos/cosmos-sdk tests :
+    // https://github.com/cosmos/cosmos-sdk/blob/ebbfaf2a47d3e97a4720f643ca21d5a41676cdc0/x/bank/types/msgs_test.go#L217-L229
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgMultiSend\""
+        ",\"value\":{\"inputs\":[{\"address\":\"cosmos1d9h8qat57ljhcm\",\"coins\":[{\"amount\":\"10\",\"denom\":\"uatom\"}]}]"
+        ",\"outputs\":[{\"address\":\"cosmos1da6hgur4wsmpnjyg\",\"coins\":[{\"amount\":\"10\",\"denom\":\"atom\"}]}]}}"
+        "],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto multiSendMessage = api::CosmosLikeMessage::unwrapMsgMultiSend(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    ASSERT_EQ(multiSendMessage.inputs.size(), 1);
+    EXPECT_EQ(multiSendMessage.inputs[0].fromAddress, "cosmos1d9h8qat57ljhcm");
+    EXPECT_EQ(multiSendMessage.inputs[0].coins.size(), 1);
+    EXPECT_EQ(multiSendMessage.inputs[0].coins[0].amount, "10");
+    EXPECT_EQ(multiSendMessage.inputs[0].coins[0].denom, "uatom");
+    ASSERT_EQ(multiSendMessage.outputs.size(), 1);
+    EXPECT_EQ(multiSendMessage.outputs[0].toAddress, "cosmos1da6hgur4wsmpnjyg");
+    EXPECT_EQ(multiSendMessage.outputs[0].coins.size(), 1);
+    EXPECT_EQ(multiSendMessage.outputs[0].coins[0].amount, "10");
+    EXPECT_EQ(multiSendMessage.outputs[0].coins[0].denom, "atom");
+
+    ASSERT_EQ(tx->serialize(), strTx);
+}
+
+TEST(CosmosTransaction, ParseRawMsgCreateValidatorTransaction) {
+    // TODO : find a transaction in Explorer to confirm the format here
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgCreateValidator\","
+        "\"value\":{"
+        "\"commission\":{\"commission_max_change_rate\":\"0.05\",\"commission_max_rate\":\"0.60\",\"commission_rate\":\"0.45\",\"update_time\":\"2020-02-25T13:42:29Z\"},"
+        "\"delegator_address\":\"cosmostest\","
+        "\"description\":{\"details\":\"It flies well\\\\nnewline\",\"identity\":\"Pocket Monsters\",\"moniker\":\"Hélédelle\",\"website\":\"https://www.pokepedia.fr/H%C3%A9l%C3%A9delle\"},"
+        "\"min_self_delegation\":\"1\","
+        "\"pub_key\":\"0\","
+        "\"validator_address\":\"cosmosvalopertest\","
+        "\"value\":{\"amount\":\"1059860\",\"denom\":\"uatom\"}"
+        "}}],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto createValidatorMessage = api::CosmosLikeMessage::unwrapMsgCreateValidator(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    EXPECT_EQ(createValidatorMessage.description.moniker, "Hélédelle");
+    EXPECT_EQ(createValidatorMessage.description.identity.value(), "Pocket Monsters");
+    EXPECT_EQ(createValidatorMessage.description.website.value(), "https://www.pokepedia.fr/H%C3%A9l%C3%A9delle");
+    EXPECT_EQ(createValidatorMessage.description.details.value(), "It flies well\\nnewline");
+    EXPECT_EQ(createValidatorMessage.commission.rates.rate, "0.45");
+    EXPECT_EQ(createValidatorMessage.commission.rates.maxRate, "0.60");
+    EXPECT_EQ(createValidatorMessage.commission.rates.maxChangeRate, "0.05");
+    EXPECT_EQ(createValidatorMessage.commission.updateTime, DateUtils::fromJSON("2020-02-25T13:42:29Z"));
+    EXPECT_EQ(createValidatorMessage.minSelfDelegation, "1");
+    EXPECT_EQ(createValidatorMessage.delegatorAddress, "cosmostest");
+    EXPECT_EQ(createValidatorMessage.validatorAddress, "cosmosvalopertest");
+    EXPECT_EQ(createValidatorMessage.pubkey, "0");
+    EXPECT_EQ(createValidatorMessage.value.amount, "1059860");
+    EXPECT_EQ(createValidatorMessage.value.denom, "uatom");
+
+    EXPECT_EQ(tx->serialize(), strTx);
+}
+
+TEST(CosmosTransaction, ParseRawMsgEditValidatorTransaction) {
+    // TODO : find a transaction in Explorer to confirm the format here
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgEditValidator\""
+        ",\"value\":{"
+        "\"commission_rate\":\"0.50\","
+        "\"description\":{\"details\":\"Cachabouée\",\"identity\":\"évolution de Wailmer\",\"moniker\":\"Wailord\",\"website\":\"https://www.pokepedia.fr/Wailord\"},"
+        "\"min_self_delegation\":\"800\","
+        "\"validator_address\":\"cosmostest\""
+        "}}],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto editValidatorMessage = api::CosmosLikeMessage::unwrapMsgEditValidator(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    EXPECT_EQ(editValidatorMessage.description.value().moniker, "Wailord");
+    EXPECT_EQ(editValidatorMessage.description.value().identity.value(), "évolution de Wailmer");
+    EXPECT_EQ(editValidatorMessage.description.value().website.value(), "https://www.pokepedia.fr/Wailord");
+    EXPECT_EQ(editValidatorMessage.description.value().details.value(), "Cachabouée");
+    EXPECT_EQ(editValidatorMessage.validatorAddress, "cosmostest");
+    EXPECT_EQ(editValidatorMessage.commissionRate.value(), "0.50");
+    EXPECT_EQ(editValidatorMessage.minSelfDelegation.value(), "800");
+
+    EXPECT_EQ(tx->serialize(), strTx);
+}
+
+TEST(CosmosTransaction, ParseRawMsgSetWithdrawAddressTransaction) {
+    // TODO : find a transaction in Explorer to confirm the format here
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgSetWithdrawAddress\""
+        ",\"value\":{"
+        "\"delegator_address\":\"cosmos1dafe\","
+        "\"withdraw_address\":\"cosmos1erfdsa\""
+        "}}],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto setWithdrawAddressMessage = api::CosmosLikeMessage::unwrapMsgSetWithdrawAddress(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    EXPECT_EQ(setWithdrawAddressMessage.delegatorAddress, "cosmos1dafe");
+    EXPECT_EQ(setWithdrawAddressMessage.withdrawAddress, "cosmos1erfdsa");
+
+    EXPECT_EQ(tx->serialize(), strTx);
+}
+
+TEST(CosmosTransaction, ParseRawMsgWithdrawDelegatorRewardsTransaction) {
+    // TODO : find a transaction in Explorer to confirm the format here
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgWithdrawDelegatorReward\""
+        ",\"value\":{"
+        "\"delegator_address\":\"cosmos1targ\","
+        "\"validator_address\":\"cosmosvaloperwdfae\""
+        "}}],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto withdrawDorRewardMessage = api::CosmosLikeMessage::unwrapMsgWithdrawDelegatorReward(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    EXPECT_EQ(withdrawDorRewardMessage.delegatorAddress, "cosmos1targ");
+    EXPECT_EQ(withdrawDorRewardMessage.validatorAddress, "cosmosvaloperwdfae");
+
+    EXPECT_EQ(tx->serialize(), strTx);
+}
+
+TEST(CosmosTransaction, ParseRawMsgWithdrawValidatorCommissionTransaction) {
+    // TODO : find a transaction in Explorer to confirm the format here
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgWithdrawValidatorCommission\""
+        ",\"value\":{"
+        "\"validator_address\":\"cosmosvaloper1234567890\""
+        "}}],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto withdrawVorCommissionMessage = api::CosmosLikeMessage::unwrapMsgWithdrawValidatorCommission(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    EXPECT_EQ(withdrawVorCommissionMessage.validatorAddress, "cosmosvaloper1234567890");
+
+    EXPECT_EQ(tx->serialize(), strTx);
+}
+
+TEST(CosmosTransaction, ParseRawMsgUnjailTransaction) {
+    // TODO : find a transaction in Explorer to confirm the format here
+    auto strTx = "{\"account_number\":\"6571\","
+        "\"chain_id\":\"cosmoshub-3\","
+        "\"fee\":{\"amount\":[{\"amount\":\"5001\",\"denom\":\"uatom\"}],\"gas\":\"200020\"},"
+        "\"memo\":\"Sent from Ledger\","
+        "\"msgs\":["
+        "{\"type\":\"cosmos-sdk/MsgUnjail\""
+        ",\"value\":{"
+        "\"validator_address\":\"cosmosvaloper1dalton\""
+        "}}],"
+        "\"sequence\":\"0\"}";
+    auto tx = api::CosmosLikeTransactionBuilder::parseRawUnsignedTransaction(ledger::core::currencies::ATOM, strTx);
+
+    auto message = tx->getMessages().front();
+    auto unjailMessage = api::CosmosLikeMessage::unwrapMsgUnjail(message);
+    EXPECT_EQ(tx->getFee()->toLong(), 5001L);
+    EXPECT_EQ(tx->getGas()->toLong(), 200020L);
+    EXPECT_EQ(unjailMessage.validatorAddress, "cosmosvaloper1dalton");
+
+    EXPECT_EQ(tx->serialize(), strTx);
+}

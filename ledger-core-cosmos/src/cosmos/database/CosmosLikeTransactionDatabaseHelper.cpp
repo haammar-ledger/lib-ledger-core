@@ -252,7 +252,7 @@ namespace ledger {
                         const auto& m = boost::get<cosmos::MsgUndelegate>(msg.content);
                         sql << "INSERT INTO cosmos_messages (uid,"
                                "transaction_uid, message_type, log,"
-                               "success, msg_index, delegator_address, validator_address, amount)"
+                               "success, msg_index, delegator_address, validator_address, amount) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
@@ -265,7 +265,7 @@ namespace ledger {
                         sql << "INSERT INTO cosmos_messages (uid,"
                                "transaction_uid, message_type, log,"
                                "success, msg_index, delegator_address, validator_src_address,"
-                               "validator_dst_address, amount)"
+                               "validator_dst_address, amount) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :fa, :ta, :amount)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
@@ -280,7 +280,7 @@ namespace ledger {
                         sql << "INSERT INTO cosmos_messages (uid,"
                                "transaction_uid, message_type, log,"
                                "success, msg_index, proposer, content_type,"
-                               "content_title, content_description, amount)"
+                               "content_title, content_description, amount) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :proposer,"
                                ":ctype, :ctitle, :cdescription, :amount)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
@@ -295,7 +295,7 @@ namespace ledger {
                         sql << "INSERT INTO cosmos_messages (uid,"
                                "transaction_uid, message_type, log,"
                                "success, msg_index, proposal_id, voter,"
-                               "vote_option)"
+                               "vote_option) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :pid, :voter, :opt)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
@@ -309,7 +309,7 @@ namespace ledger {
                         std::string coins = soci::coinsToString(m.amount);
                         sql << "INSERT INTO cosmos_messages (uid, transaction_uid, "
                                "message_type, log, success, "
-                               "msg_index, depositor, proposal_id, amount)"
+                               "msg_index, depositor, proposal_id, amount) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :dep, :pid, :amount)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type), soci::use(log.log),
                                 soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
@@ -321,14 +321,69 @@ namespace ledger {
                         const auto &m = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
                         sql << "INSERT INTO cosmos_messages (uid,"
                                "transaction_uid, message_type, log,"
-                               "success, msg_index, delegator_address, validator_address)"
+                               "success, msg_index, delegator_address, validator_address) "
                                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :da, :va)",
                                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
                                 soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
                                 soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
                     }
                     break;
+                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATORREWARD:
+                    {
+                        const auto &m = boost::get<cosmos::MsgWithdrawDelegatorReward>(msg.content);
+                        sql << "INSERT INTO cosmos_messages (uid,"
+                               "transaction_uid, message_type, log,"
+                               "success, msg_index, delegator_address, validator_address) "
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :da, :va)",
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                                soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
+                                soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
+                    }
+                    break;
+                    // TODO : breaks synchronization test ???
+                    // Breaks MediumXpubSynchronization
+                // case api::CosmosLikeMsgType::MSGWITHDRAWVALIDATORCOMMISSION:
+                //     {
+                //         const auto &m = boost::get<cosmos::MsgWithdrawValidatorCommission>(msg.content);
+                //         std::cout << m.validatorAddress << std::endl;
+                //         sql << "INSERT INTO cosmos_messages (uid,"
+                //                "transaction_uid, message_type, log,"
+                //                "success, msg_index, validator_address) "
+                //                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :va)",
+                //                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                //                 soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
+                //                 soci::use(m.validatorAddress);
+                //     }
+                //     break;
+                case api::CosmosLikeMsgType::MSGSETWITHDRAWADDRESS:
+                    {
+                        const auto &m = boost::get<cosmos::MsgSetWithdrawAddress>(msg.content);
+                        sql << "INSERT INTO cosmos_messages (uid,"
+                               "transaction_uid, message_type, log,"
+                               "success, msg_index, delegator_address, to_address) "
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :da, :withdraw)",
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                                soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
+                                soci::use(m.delegatorAddress), soci::use(m.withdrawAddress);
+                    }
+                    break;
+                case api::CosmosLikeMsgType::MSGUNJAIL:
+                    {
+                        const auto &m = boost::get<cosmos::MsgUnjail>(msg.content);
+                        sql << "INSERT INTO cosmos_messages (uid,"
+                               "transaction_uid, message_type, log,"
+                               "success, msg_index, validator_address) "
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :va)",
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                                soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
+                                soci::use(m.validatorAddress);
+                    }
+                    break;
+                case api::CosmosLikeMsgType::MSGMULTISEND:
+                case api::CosmosLikeMsgType::MSGCREATEVALIDATOR:
+                case api::CosmosLikeMsgType::MSGEDITVALIDATOR:
                 case api::CosmosLikeMsgType::UNSUPPORTED:
+                default:
                     {
                         // Do record the message type, even if unsupported
                         sql << "INSERT INTO cosmos_messages (uid,"

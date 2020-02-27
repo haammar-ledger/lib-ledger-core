@@ -42,6 +42,13 @@
 #include <cosmos/api/CosmosLikeMsgUndelegate.hpp>
 #include <cosmos/api/CosmosLikeMsgVote.hpp>
 #include <cosmos/api/CosmosLikeMsgWithdrawDelegationReward.hpp>
+#include <cosmos/api/CosmosLikeMsgMultiSend.hpp>
+#include <cosmos/api/CosmosLikeMsgCreateValidator.hpp>
+#include <cosmos/api/CosmosLikeMsgEditValidator.hpp>
+#include <cosmos/api/CosmosLikeMsgSetWithdrawAddress.hpp>
+#include <cosmos/api/CosmosLikeMsgWithdrawDelegatorReward.hpp>
+#include <cosmos/api/CosmosLikeMsgWithdrawValidatorCommission.hpp>
+#include <cosmos/api/CosmosLikeMsgUnjail.hpp>
 #include <core/api/Block.hpp>
 
 #include <core/math/BigInt.hpp>
@@ -61,6 +68,14 @@ namespace ledger {
                         using ProposalContent = api::CosmosLikeContent;
                         using VoteOption = api::CosmosLikeVoteOption;
 
+                        using ValidatorDescription = api::CosmosLikeValidatorDescription;
+                        using ValidatorCommission = api::CosmosLikeValidatorCommission;
+
+                        using CommissionRates = api::CosmosLikeCommissionRates;
+
+                        using MultiSendInput = api::CosmosLikeMultiSendInput;
+                        using MultiSendOutput = api::CosmosLikeMultiSendOutput;
+
                         using Coin = api::CosmosLikeAmount;
                         using MsgSend = api::CosmosLikeMsgSend;
                         using MsgDelegate = api::CosmosLikeMsgDelegate;
@@ -70,20 +85,35 @@ namespace ledger {
                         using MsgVote = api::CosmosLikeMsgVote;
                         using MsgDeposit = api::CosmosLikeMsgDeposit;
                         using MsgWithdrawDelegationReward = api::CosmosLikeMsgWithdrawDelegationReward;
+                        using MsgMultiSend = api::CosmosLikeMsgMultiSend;
+                        using MsgCreateValidator = api::CosmosLikeMsgCreateValidator;
+                        using MsgEditValidator = api::CosmosLikeMsgEditValidator;
+                        using MsgSetWithdrawAddress = api::CosmosLikeMsgSetWithdrawAddress;
+                        using MsgWithdrawDelegatorReward =
+                            api::CosmosLikeMsgWithdrawDelegatorReward;
+                        using MsgWithdrawValidatorCommission =
+                            api::CosmosLikeMsgWithdrawValidatorCommission;
+                        using MsgUnjail = api::CosmosLikeMsgUnjail;
 
                         struct MsgUnsupported {};
 
                         using MessageContent = boost::variant<
-                                MsgSend,
-                                MsgDelegate,
-                                MsgRedelegate,
-                                MsgUndelegate,
-                                MsgSubmitProposal,
-                                MsgVote,
-                                MsgDeposit,
-                                MsgWithdrawDelegationReward,
-                                MsgUnsupported
-                                >;
+                            MsgSend,
+                            MsgDelegate,
+                            MsgRedelegate,
+                            MsgUndelegate,
+                            MsgSubmitProposal,
+                            MsgVote,
+                            MsgDeposit,
+                            MsgWithdrawDelegationReward,
+                            MsgMultiSend,
+                            MsgCreateValidator,
+                            MsgEditValidator,
+                            MsgSetWithdrawAddress,
+                            MsgWithdrawDelegatorReward,
+                            MsgWithdrawValidatorCommission,
+                            MsgUnjail,
+                            MsgUnsupported>;
 
                         struct Message {
                                 std::string uid;
