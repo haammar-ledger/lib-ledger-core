@@ -340,21 +340,18 @@ namespace ledger {
                                 soci::use(m.delegatorAddress), soci::use(m.validatorAddress);
                     }
                     break;
-                    // TODO : breaks synchronization test ???
-                    // Breaks MediumXpubSynchronization
-                // case api::CosmosLikeMsgType::MSGWITHDRAWVALIDATORCOMMISSION:
-                //     {
-                //         const auto &m = boost::get<cosmos::MsgWithdrawValidatorCommission>(msg.content);
-                //         std::cout << m.validatorAddress << std::endl;
-                //         sql << "INSERT INTO cosmos_messages (uid,"
-                //                "transaction_uid, message_type, log,"
-                //                "success, msg_index, validator_address) "
-                //                "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :va)",
-                //                 soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
-                //                 soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
-                //                 soci::use(m.validatorAddress);
-                //     }
-                //     break;
+                case api::CosmosLikeMsgType::MSGWITHDRAWVALIDATORCOMMISSION:
+                    {
+                        const auto &m = boost::get<cosmos::MsgWithdrawValidatorCommission>(msg.content);
+                        sql << "INSERT INTO cosmos_messages (uid,"
+                               "transaction_uid, message_type, log,"
+                               "success, msg_index, validator_address) "
+                               "VALUES (:uid, :tuid, :mt, :log, :success, :mi, :va)",
+                                soci::use(msg.uid), soci::use(txUid), soci::use(msg.type),
+                                soci::use(log.log), soci::use(log.success ? 1 : 0), soci::use(log.messageIndex),
+                                soci::use(m.validatorAddress);
+                    }
+                    break;
                 case api::CosmosLikeMsgType::MSGSETWITHDRAWADDRESS:
                     {
                         const auto &m = boost::get<cosmos::MsgSetWithdrawAddress>(msg.content);

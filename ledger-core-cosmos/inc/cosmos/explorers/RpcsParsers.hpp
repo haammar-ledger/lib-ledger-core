@@ -81,6 +81,58 @@ namespace ledger {
                 }
             }
 
+            template <typename T>
+            void parseMultiSendInputs(const T& array, std::vector<cosmos::MultiSendInput>& out) {
+                auto index = 0;
+                out.assign((std::size_t) array.Size(), cosmos::MultiSendInput());
+                for (const auto& n : array) {
+                    auto input = n.GetObject();
+                    out[index].fromAddress = input[kAddress].GetString();
+                    parseCoinVector(input[kCoins].GetArray(), out[index].coins);
+                    index += 1;
+                }
+            }
+
+            template <typename T>
+            void parseMultiSendOutputs(const T& array, std::vector<cosmos::MultiSendOutput>& out) {
+                auto index = 0;
+                out.assign((std::size_t) array.Size(), cosmos::MultiSendOutput());
+                for (const auto& n : array) {
+                    auto output = n.GetObject();
+                    out[index].toAddress = output[kAddress].GetString();
+                    parseCoinVector(output[kCoins].GetArray(), out[index].coins);
+                    index += 1;
+                }
+            }
+
+
+            template <typename T>
+            void parseDescription(const T& descriptionNode, cosmos::ValidatorDescription& out) {
+                assert((descriptionNode.HasMember(kMoniker)));
+                out.moniker = descriptionNode[kMoniker].GetString();
+                if (descriptionNode.HasMember(kWebsite) && descriptionNode[kWebsite].IsString()) {
+                    out.identity = optional<std::string>(descriptionNode[kWebsite].GetString());
+                }
+                if (descriptionNode.HasMember(kIdentity) && descriptionNode[kIdentity].IsString()) {
+                    out.website = optional<std::string>(descriptionNode[kIdentity].GetString());
+                }
+                if (descriptionNode.HasMember(kDetails) && descriptionNode[kDetails].IsString()) {
+                    out.details = optional<std::string>(descriptionNode[kDetails].GetString());
+                }
+            }
+
+            template <typename T>
+            void parseCommission(const T& commissionNode, cosmos::ValidatorCommission& out) {
+                assert((commissionNode.HasMember(kUpdateTime)));
+                assert((commissionNode.HasMember(kCommissionRate)));
+                assert((commissionNode.HasMember(kCommissionMaxRate)));
+                assert((commissionNode.HasMember(kCommissionMaxChangeRate)));
+                out.updateTime = DateUtils::fromJSON(commissionNode[kMoniker].GetString());
+                out.rates.rate = commissionNode[kWebsite].GetString();
+                out.rates.maxRate = commissionNode[kIdentity].GetString();
+                out.rates.maxChangeRate = commissionNode[kDetails].GetString();
+            }
+
             template <class T>
             void parseBlock(const T& node, const std::string& currencyName, cosmos::Block& out) {
                 out.currencyName = currencyName;
@@ -228,6 +280,98 @@ namespace ledger {
             }
 
             template <typename T>
+            void parseMsgMultiSend(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgMultiSend msg;
+
+                assert((n.HasMember(kInputs)));
+                assert((n.HasMember(kOutputs)));
+
+                // inputs: list<CosmosLikeMultiSendInput>;
+                auto inputsArray = n[kInputs].GetArray();
+                parseMultiSendInputs(inputsArray, msg.inputs);
+
+                // outputs: list<CosmosLikeMultiSendOutput>;
+                auto outputsArray = n[kInputs].GetArray();
+                parseMultiSendOutputs(outputsArray, msg.outputs);
+
+                out = msg;
+            }
+
+            template <typename T>
+            void parseMsgCreateValidator(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgCreateValidator msg;
+                assert((n.HasMember(kDescription)));
+                assert((n.HasMember(kCommission)));
+                assert((n.HasMember(kMinSelfDelegation)));
+                assert((n.HasMember(kDelegatorAddress)));
+                assert((n.HasMember(kValidatorAddress)));
+                assert((n.HasMember(kPubKey)));
+                assert((n.HasMember(kValue)));
+                parseDescription(n[kDescription].GetObject(), msg.description);
+                parseCommission(n[kCommission].GetObject(), msg.commission);
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                msg.pubkey = n[kPubKey].GetString();
+                msg.minSelfDelegation = n[kMinSelfDelegation].GetString();
+                parseCoin(n[kValue].GetObject(), msg.value);
+
+                out = msg;
+            }
+
+            template <typename T>
+            void parseMsgEditValidator(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgEditValidator msg;
+
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                if (n.HasMember(kCommissionRate) && n[kCommissionRate].IsString()) {
+                    msg.commissionRate = optional<std::string>(n[kCommissionRate].GetString());
+                }
+                if (n.HasMember(kMinSelfDelegation) && n[kMinSelfDelegation].IsString()) {
+                    msg.minSelfDelegation = optional<std::string>(n[kMinSelfDelegation].GetString());
+                }
+                if (n.HasMember(kDescription) && n[kDescription].IsObject()) {
+                    cosmos::ValidatorDescription desc;
+                    parseDescription(n[kDescription].GetObject(), desc);
+                    msg.description = optional<cosmos::ValidatorDescription>(desc);
+                }
+                out = msg;
+            }
+
+            template <typename T>
+            void parseMsgSetWithdrawAddress(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgSetWithdrawAddress msg;
+
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.withdrawAddress = n[kWithdrawAddress].GetString();
+                out = msg;
+            }
+
+            template <typename T>
+            void parseMsgWithdrawDelegatorReward(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgWithdrawDelegatorReward msg;
+
+                msg.delegatorAddress = n[kDelegatorAddress].GetString();
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                out = msg;
+            }
+
+            template <typename T>
+            void parseMsgWithdrawValidatorCommission(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgWithdrawValidatorCommission msg;
+
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                out = msg;
+            }
+
+            template <typename T>
+            void parseMsgUnjail(const T& n, cosmos::MessageContent &out) {
+                cosmos::MsgUnjail msg;
+
+                msg.validatorAddress = n[kValidatorAddress].GetString();
+                out = msg;
+            }
+
+            template <typename T>
             void parseMessage(const T& messageNode, cosmos::Message& out) {
                 out.type = messageNode[kType].GetString();
                 const auto& contentNode = messageNode[kValue].GetObject();
@@ -239,6 +383,13 @@ namespace ledger {
                 COSMOS_PARSE_MSG_CONTENT(MsgVote)
                 COSMOS_PARSE_MSG_CONTENT(MsgDeposit)
                 COSMOS_PARSE_MSG_CONTENT(MsgWithdrawDelegationReward)
+                COSMOS_PARSE_MSG_CONTENT(MsgMultiSend)
+                COSMOS_PARSE_MSG_CONTENT(MsgCreateValidator)
+                COSMOS_PARSE_MSG_CONTENT(MsgEditValidator)
+                COSMOS_PARSE_MSG_CONTENT(MsgSetWithdrawAddress)
+                COSMOS_PARSE_MSG_CONTENT(MsgWithdrawDelegatorReward)
+                COSMOS_PARSE_MSG_CONTENT(MsgWithdrawValidatorCommission)
+                COSMOS_PARSE_MSG_CONTENT(MsgUnjail)
             }
 
             template <class T>
@@ -284,7 +435,7 @@ namespace ledger {
                     const auto& msgArray = vNode[kMessage].GetArray();
                     transaction.messages.assign((std::size_t) msgArray.Capacity(), cosmos::Message());
                     auto index = 0;
-                    for (const auto &mNode : vNode[kMessage].GetArray()) {
+                    for (const auto &mNode : msgArray) {
                         parseMessage(mNode, transaction.messages[index]);
                         index++;
                     }
