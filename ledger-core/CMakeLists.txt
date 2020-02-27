@@ -31,6 +31,10 @@ set(CMAKE_MACOSX_RPATH 1)
 
 add_definitions("-DSQLITE_HAS_CODEC")
 
+if (PG_SUPPORT)
+    add_definitions("-DPG_SUPPORT")
+endif()
+
 string(FIND "${CMAKE_OSX_SYSROOT}" "iphone" IS_IOS)
 if(IS_IOS GREATER_EQUAL 0 OR TARGET_JNI OR ANDROID)
     set(BUILD_TESTING OFF CACHE BOOL "iOS build fail otherwise" FORCE)
@@ -106,6 +110,7 @@ install(
         bigd
         fmt
         soci_sqlite3
+        soci_postgresql
         soci_core_static
         leveldb
         spdlog
