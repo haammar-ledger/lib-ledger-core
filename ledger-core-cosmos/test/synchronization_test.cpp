@@ -359,7 +359,7 @@ TEST_F(CosmosLikeWalletSynchronization, AllTransactionsSynchronization) {
     std::set<std::string> emittedOperations;
 
     auto accountInfo = wait(wallet->getNextAccountCreationInfo());
-    accountInfo.publicKeys.push_back(hex::toByteArray(hexPubKey));
+    accountInfo.publicKeys.push_back(hex::toByteArray(DEFAULT_HEX_PUB_KEY));
     auto account = ledger::testing::cosmos::createCosmosLikeAccount(wallet, accountInfo.index, accountInfo);
 
     auto receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
@@ -401,7 +401,7 @@ TEST_F(CosmosLikeWalletSynchronization, AllTransactionsSynchronization) {
     for (auto op : ops) {
         auto cosmosOp = std::dynamic_pointer_cast<CosmosLikeOperation>(op);
 
-        std::cout << "Operation type: " << cosmosOp->getMessage()->getRawMessageType() << std::endl;
+        std::cout << "Found operation type: " << cosmosOp->getMessage()->getRawMessageType() << std::endl;
 
         switch (cosmosOp->getMessage()->getMessageType()) {
             case api::CosmosLikeMsgType::MSGSEND: foundMsgSend = true; break;
