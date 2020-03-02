@@ -68,7 +68,7 @@ namespace ledger {
                                                      int32_t index,
                                                      const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
                                                      const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
-                                                     const std::shared_ptr<CosmosLikeAccountSynchronizer> &synchronizer,
+                                                     const std::shared_ptr<CosmosBlockchainAccountSynchronizer> &synchronizer,
                                                      const std::shared_ptr<CosmosLikeKeychain> &keychain) : AbstractAccount(wallet->getServices(), wallet, index) {
                         _explorer = explorer;
                         _observer = observer;
@@ -412,7 +412,7 @@ namespace ledger {
                         auto eventPublisher = std::make_shared<EventPublisher>(getContext());
 
                         _currentSyncEventBus = eventPublisher->getEventBus();
-                        auto future = _synchronizer->synchronize(
+                        auto future = _synchronizer->synchronizeAccount(
                                 std::static_pointer_cast<CosmosLikeAccount>(shared_from_this()))->getFuture();
                         auto self = std::static_pointer_cast<CosmosLikeAccount>(shared_from_this());
 

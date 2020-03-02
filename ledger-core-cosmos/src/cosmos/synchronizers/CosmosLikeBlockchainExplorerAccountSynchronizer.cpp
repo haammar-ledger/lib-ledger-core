@@ -42,20 +42,6 @@ CosmosLikeBlockchainExplorerAccountSynchronizer::CosmosLikeBlockchainExplorerAcc
     _database = services->getDatabaseSessionPool();
 }
 
-std::shared_ptr<ProgressNotifier<Unit>>
-CosmosLikeBlockchainExplorerAccountSynchronizer::synchronize(
-    const std::shared_ptr<CosmosLikeAccount> &account) {
-    return synchronizeAccount(account);
-}
-
-bool CosmosLikeBlockchainExplorerAccountSynchronizer::isSynchronizing() const {
-    return _notifier != nullptr;
-}
-
-void CosmosLikeBlockchainExplorerAccountSynchronizer::reset(
-    const std::shared_ptr<CosmosLikeAccount> &account,
-    const std::chrono::system_clock::time_point &toDate) {}
-
 void CosmosLikeBlockchainExplorerAccountSynchronizer::updateCurrentBlock(
     std::shared_ptr<AbstractBlockchainExplorerAccountSynchronizer::SynchronizationBuddy> &buddy,
     const std::shared_ptr<api::ExecutionContext> &context) {

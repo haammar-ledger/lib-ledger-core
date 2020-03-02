@@ -38,7 +38,7 @@
 #include <core/async/DedicatedContext.hpp>
 #include <core/events/ProgressNotifier.hpp>
 
-#include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
+#include <cosmos/synchronizers/CosmosLikeBlockchainExplorerAccountSynchronizer.hpp>
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 
@@ -50,21 +50,12 @@ namespace ledger {
         using CosmosBlockchainAccountSynchronizer = AbstractBlockchainExplorerAccountSynchronizer<CosmosLikeAccount, CosmosLikeAddress, CosmosLikeKeychain, CosmosLikeBlockchainExplorer>;
 
         class CosmosLikeBlockchainExplorerAccountSynchronizer : public CosmosBlockchainAccountSynchronizer,
-                                                                public CosmosLikeAccountSynchronizer,
                                                                 public DedicatedContext,
                                                                 public std::enable_shared_from_this<CosmosLikeBlockchainExplorerAccountSynchronizer> {
         public:
 
             CosmosLikeBlockchainExplorerAccountSynchronizer(const std::shared_ptr<Services> &services,
                                                             const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer);
-
-            std::shared_ptr<ProgressNotifier<Unit>>
-            synchronize(const std::shared_ptr<CosmosLikeAccount> &account) override;
-
-            void reset(const std::shared_ptr<CosmosLikeAccount> &account,
-                       const std::chrono::system_clock::time_point &toDate) override;
-
-            bool isSynchronizing() const override;
 
             void updateCurrentBlock(
                     std::shared_ptr <AbstractBlockchainExplorerAccountSynchronizer::SynchronizationBuddy> &buddy,
