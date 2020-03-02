@@ -75,85 +75,102 @@ namespace ledger {
             auto msgType = row.get<std::string>(COL_MSGTYPE);
             msg.type = msgType;
             switch (cosmos::stringToMsgType(msgType.c_str())) {
-                case api::CosmosLikeMsgType::MSGSEND:
-                    {
-                        msg.content = cosmos::MsgSend();
-                        auto &content = boost::get<cosmos::MsgSend>(msg.content);
-                        content.fromAddress = row.get<std::string>(COL_FROMADDR);
-                        content.toAddress = row.get<std::string>(COL_TOADDR);
-                        soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.amount);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGDELEGATE:
-                    {
-                        msg.content = cosmos::MsgDelegate();
-                        auto &content = boost::get<cosmos::MsgDelegate>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
-                        content.validatorAddress = row.get<std::string>(COL_VALADDR);
-                        soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGUNDELEGATE:
-                    {
-                        msg.content = cosmos::MsgUndelegate();
-                        auto &content = boost::get<cosmos::MsgUndelegate>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
-                        content.validatorAddress = row.get<std::string>(COL_VALADDR);
-                        soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGREDELEGATE:
-                    {
-                        msg.content = cosmos::MsgRedelegate();
-                        auto &content = boost::get<cosmos::MsgRedelegate>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
-                        content.validatorSourceAddress = row.get<std::string>(COL_VALSRCADDR);
-                        content.validatorDestinationAddress = row.get<std::string>(COL_VALDESTADDR);
-                        soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGSUBMITPROPOSAL:
-                    {
-                        msg.content = cosmos::MsgSubmitProposal();
-                        auto &content = boost::get<cosmos::MsgSubmitProposal>(msg.content);
-                        content.content.type = row.get<std::string>(COL_PROPTYPE);
-                        content.content.title = row.get<std::string>(COL_PROPTITLE);
-                        content.content.description = row.get<std::string>(COL_PROPDESC);
-                        content.proposer = row.get<std::string>(COL_PROPOSER);
-                        soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.initialDeposit);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGVOTE:
-                    {
-                        msg.content = cosmos::MsgVote();
-                        auto &content = boost::get<cosmos::MsgVote>(msg.content);
-                        content.voter = row.get<std::string>(COL_VOTER);
-                        content.proposalId = row.get<std::string>(COL_PROPID);
-                        content.option = api::from_string<api::CosmosLikeVoteOption>(row.get<std::string>(COL_VOTEOPT));
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGDEPOSIT:
-                    {
-                        msg.content = cosmos::MsgDeposit();
-                        auto &content = boost::get<cosmos::MsgDeposit>(msg.content);
-                        content.depositor = row.get<std::string>(COL_DEPOSITOR);
-                        content.proposalId = row.get<std::string>(COL_PROPID);
-                        soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.amount);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD:
-                    {
-                        msg.content = cosmos::MsgWithdrawDelegationReward();
-                        auto &content = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
-                        content.delegatorAddress = row.get<std::string>(COL_DELADDR);
-                        content.validatorAddress = row.get<std::string>(COL_VALADDR);
-                    }
-                    break;
-                case api::CosmosLikeMsgType::UNSUPPORTED:
-                    {
-                        msg.content = cosmos::MsgUnsupported();
-                    }
-                    break;
+            case api::CosmosLikeMsgType::MSGSEND: {
+                msg.content = cosmos::MsgSend();
+                auto &content = boost::get<cosmos::MsgSend>(msg.content);
+                content.fromAddress = row.get<std::string>(COL_FROMADDR);
+                content.toAddress = row.get<std::string>(COL_TOADDR);
+                soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.amount);
+            } break;
+            case api::CosmosLikeMsgType::MSGDELEGATE: {
+                msg.content = cosmos::MsgDelegate();
+                auto &content = boost::get<cosmos::MsgDelegate>(msg.content);
+                content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                content.validatorAddress = row.get<std::string>(COL_VALADDR);
+                soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
+            } break;
+            case api::CosmosLikeMsgType::MSGUNDELEGATE: {
+                msg.content = cosmos::MsgUndelegate();
+                auto &content = boost::get<cosmos::MsgUndelegate>(msg.content);
+                content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                content.validatorAddress = row.get<std::string>(COL_VALADDR);
+                soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
+            } break;
+            case api::CosmosLikeMsgType::MSGREDELEGATE: {
+                msg.content = cosmos::MsgRedelegate();
+                auto &content = boost::get<cosmos::MsgRedelegate>(msg.content);
+                content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                content.validatorSourceAddress = row.get<std::string>(COL_VALSRCADDR);
+                content.validatorDestinationAddress = row.get<std::string>(COL_VALDESTADDR);
+                soci::stringToCoin(row.get<std::string>(COL_AMOUNT), content.amount);
+            } break;
+            case api::CosmosLikeMsgType::MSGSUBMITPROPOSAL: {
+                msg.content = cosmos::MsgSubmitProposal();
+                auto &content = boost::get<cosmos::MsgSubmitProposal>(msg.content);
+                content.content.type = row.get<std::string>(COL_PROPTYPE);
+                content.content.title = row.get<std::string>(COL_PROPTITLE);
+                content.content.description = row.get<std::string>(COL_PROPDESC);
+                content.proposer = row.get<std::string>(COL_PROPOSER);
+                soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.initialDeposit);
+            } break;
+            case api::CosmosLikeMsgType::MSGVOTE: {
+                msg.content = cosmos::MsgVote();
+                auto &content = boost::get<cosmos::MsgVote>(msg.content);
+                content.voter = row.get<std::string>(COL_VOTER);
+                content.proposalId = row.get<std::string>(COL_PROPID);
+                content.option =
+                    api::from_string<api::CosmosLikeVoteOption>(row.get<std::string>(COL_VOTEOPT));
+            } break;
+            case api::CosmosLikeMsgType::MSGDEPOSIT: {
+                msg.content = cosmos::MsgDeposit();
+                auto &content = boost::get<cosmos::MsgDeposit>(msg.content);
+                content.depositor = row.get<std::string>(COL_DEPOSITOR);
+                content.proposalId = row.get<std::string>(COL_PROPID);
+                soci::stringToCoins(row.get<std::string>(COL_AMOUNT), content.amount);
+            } break;
+            case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD: {
+                msg.content = cosmos::MsgWithdrawDelegationReward();
+                auto &content = boost::get<cosmos::MsgWithdrawDelegationReward>(msg.content);
+                content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                content.validatorAddress = row.get<std::string>(COL_VALADDR);
+            } break;
+            case api::CosmosLikeMsgType::MSGMULTISEND: {
+                msg.content = cosmos::MsgMultiSend();
+            } break;
+            case api::CosmosLikeMsgType::MSGCREATEVALIDATOR: {
+                msg.content = cosmos::MsgCreateValidator();
+
+            } break;
+            case api::CosmosLikeMsgType::MSGEDITVALIDATOR: {
+                msg.content = cosmos::MsgEditValidator();
+
+            } break;
+            case api::CosmosLikeMsgType::MSGSETWITHDRAWADDRESS: {
+                msg.content = cosmos::MsgSetWithdrawAddress();
+                auto &content = boost::get<cosmos::MsgSetWithdrawAddress>(msg.content);
+                content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                content.withdrawAddress = row.get<std::string>(COL_TOADDR);
+            } break;
+            case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATORREWARD: {
+                msg.content = cosmos::MsgWithdrawDelegatorReward();
+                auto &content = boost::get<cosmos::MsgWithdrawDelegatorReward>(msg.content);
+                content.delegatorAddress = row.get<std::string>(COL_DELADDR);
+                content.validatorAddress = row.get<std::string>(COL_VALADDR);
+            } break;
+            case api::CosmosLikeMsgType::MSGWITHDRAWVALIDATORCOMMISSION: {
+                msg.content = cosmos::MsgWithdrawValidatorCommission();
+                auto &content = boost::get<cosmos::MsgWithdrawValidatorCommission>(msg.content);
+                content.validatorAddress = row.get<std::string>(COL_VALADDR);
+            } break;
+            case api::CosmosLikeMsgType::MSGUNJAIL: {
+                msg.content = cosmos::MsgUnjail();
+                auto &content = boost::get<cosmos::MsgUnjail>(msg.content);
+                content.validatorAddress = row.get<std::string>(COL_VALADDR);
+            } break;
+            case api::CosmosLikeMsgType::UNSUPPORTED:
+            default: {
+                msg.content = cosmos::MsgUnsupported();
+            } break;
             }
         }
 
