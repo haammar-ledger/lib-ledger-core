@@ -159,33 +159,36 @@ namespace ledger {
                 50);
             auto received_transactions = getTransactions(
                 fuseFilters(
-                    {filterWithAttribute(kEventTypeTransfer, kAttributeKeyRecipient, address)}),
-                1,
-                50);
-            auto delegator_transactions = getTransactions(
-                fuseFilters(
-                    {filterWithAttribute(kEventTypeDelegate, kAttributeKeyDelegator, address)}),
-                1,
-                50);
-            auto redelegator_transactions = getTransactions(
-                fuseFilters(
-                    {filterWithAttribute(kEventTypeRedelegate, kAttributeKeyDelegator, address)}),
-                1,
-                50);
-            auto undelegator_transactions = getTransactions(
-                fuseFilters(
-                    {filterWithAttribute(kEventTypeUnbond, kAttributeKeyDelegator, address)}),
-                1,
-                50);
-            std::vector<Future<cosmos::TransactionList>> transaction_promises(
-                {sent_transactions,
-                 received_transactions,
-                 delegator_transactions,
-                 redelegator_transactions,
-                 undelegator_transactions});
+                     {filterWithAttribute(kEventTypeTransfer, kAttributeKeyRecipient, address)}),
+                 1,
+                 50);
 
-            return async::sequence(getContext(), transaction_promises)
-                .flatMap<cosmos::TransactionList>(getContext(), [](auto& vector_of_lists) {
+            // NOTE: MsgUn/Re/Delegate are covered by 'message.sender'
+
+            /*
+             auto delegation_transactions = getTransactions(
+                 fuseFilters(
+                    {filterWithAttribute(kEventTypeDelegate, kAttributeKeyDelegator, address)}), // No event 'delegate.delegator' ...
+                 1,
+                 50);
+             auto redelegation_transactions = getTransactions(
+                 fuseFilters(
+                    {filterWithAttribute(kEventTypeRedelegate, kAttributeKeyDelegator, address)}), // No event 'redelegate.delegator' ...
+                 1,
+                 50);
+             auto undelegation_transactions = getTransactions(
+                 fuseFilters(
+                    {filterWithAttribute(kEventTypeUnbond, kAttributeKeyDelegator, address)}), // No event 'undelegate.delegator' ...
+                 1,
+                 50);
+            */
+
+             std::vector<Future<cosmos::TransactionList>> transaction_promises(
+                 {sent_transactions,
+                 received_transactions});
+
+             return async::sequence(getContext(), transaction_promises)
+                 .flatMap<cosmos::TransactionList>(getContext(), [](auto& vector_of_lists) {
                     cosmos::TransactionList result;
                     for (auto&& list : vector_of_lists) {
                         // Forced to copy because of flatMap API

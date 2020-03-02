@@ -39,6 +39,7 @@
 #include <core/api/Configuration.hpp>
 #include <core/api/KeychainEngines.hpp>
 #include <core/utils/DateUtils.hpp>
+#include <core/utils/Hex.hpp>
 #include <core/collections/DynamicObject.hpp>
 #include <integration/BaseFixture.hpp>
 
@@ -51,6 +52,7 @@
 #include <cosmos/CosmosLikeWallet.hpp>
 #include <cosmos/CosmosLikeOperationQuery.hpp>
 #include <cosmos/CosmosLikeConstants.hpp>
+#include <cosmos/bech32/CosmosBech32.hpp>
 
 using namespace std;
 using namespace ledger::core;
@@ -62,7 +64,7 @@ class CosmosLikeWalletSynchronization : public BaseFixture {
 public:
     void SetUp() override {
         BaseFixture::SetUp();
-        backend->enableQueryLogging(true);
+        //backend->enableQueryLogging(true);
     }
 };
 
@@ -265,9 +267,7 @@ TEST_F(CosmosLikeWalletSynchronization, GetDelegateWithExplorer) {
 }
 
 TEST_F(CosmosLikeWalletSynchronization, GetCurrentBlockWithExplorer) {
-    std::string address = "cosmos16xkkyj97z7r83sx45xwk9uwq0mj0zszlf6c6mq";
-    auto context = this->dispatcher->getSerialExecutionContext("context");
-    auto services = this->newDefaultServices();
+    auto services = newDefaultServices();
 
     auto explorer = std::make_shared<GaiaCosmosLikeBlockchainExplorer>(
             services->getDispatcher()->getSerialExecutionContext("explorer"),
@@ -338,4 +338,103 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
             fmt::print("Ops: {}\n", ops.size());
         }
     }
+}
+
+TEST_F(CosmosLikeWalletSynchronization, AllTransactionsSynchronization) {
+    // FIXME Use pubkey of an account that has all expected types of transactions
+    auto hexPubKey = "0388459b2653519948b12492f1a0b464720110c147a8155d23d423a5cc3c21d89a"; // Obelix
+
+    auto walletName = "e847815f-488a-4301-b67c-378a5e9c8a61";
+    auto services = newDefaultServices();
+    auto walletStore = newWalletStore(services);
+    wait(walletStore->addCurrency(currencies::ATOM));
+
+    auto factory = std::make_shared<CosmosLikeWalletFactory>(currencies::ATOM, services);
+    walletStore->registerFactory(currencies::ATOM, factory);
+
+    auto configuration = DynamicObject::newInstance();
+    configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME, "44'/<coin_type>'/<account>'/<node>/<address>");
+    auto wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
+            wait(walletStore->createWallet(walletName, currencies::ATOM.name, configuration)));
+    std::set<std::string> emittedOperations;
+
+    auto accountInfo = wait(wallet->getNextAccountCreationInfo());
+    accountInfo.publicKeys.push_back(hex::toByteArray(hexPubKey));
+    auto account = ledger::testing::cosmos::createCosmosLikeAccount(wallet, accountInfo.index, accountInfo);
+
+    auto receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
+        fmt::print("Received event {}\n", api::to_string(event->getCode()));
+        if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED)
+            return;
+        EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
+
+        auto balance = wait(account->getBalance());
+        fmt::print("Balance: {} uatom\n", balance->toString());
+        dispatcher->stop();
+    });
+
+    account->synchronize()->subscribe(dispatcher->getMainExecutionContext(), receiver);
+    dispatcher->waitUntilStopped();
+
+    auto block = wait(account->getLastBlock());
+    fmt::print("Block height: {}\n", block.height);
+
+    auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
+    fmt::print("Ops: {}\n", ops.size());
+
+    auto foundMsgSend = false;
+    auto foundMsgDelegate = false;
+    auto foundMsgRedelegate = false;
+    auto foundMsgUndelegate = false;
+    auto foundMsgSubmitProposal = false;
+    auto foundMsgVote = false;
+    auto foundMsgDeposit = false;
+    auto foundMsgWithdrawDelegationReward = false;
+    auto foundMsgMultiSend = false;
+    auto foundMsgCreateValidator = false;
+    auto foundMsgEditValidator = false;
+    auto foundMsgSetWithdrawAddress = false;
+    auto foundMsgWithdrawDelegatorReward = false;
+    auto foundMsgWithdrawValidatorCommission = false;
+    auto foundMsgUnjail = false;
+
+    for (auto op : ops) {
+        auto cosmosOp = std::dynamic_pointer_cast<CosmosLikeOperation>(op);
+
+        std::cout << "Operation type: " << cosmosOp->getMessage()->getRawMessageType() << std::endl;
+
+        switch (cosmosOp->getMessage()->getMessageType()) {
+            case api::CosmosLikeMsgType::MSGSEND: foundMsgSend = true; break;
+            case api::CosmosLikeMsgType::MSGDELEGATE: foundMsgDelegate = true; break;
+            case api::CosmosLikeMsgType::MSGREDELEGATE: foundMsgRedelegate = true; break;
+            case api::CosmosLikeMsgType::MSGUNDELEGATE: foundMsgUndelegate = true; break;
+            case api::CosmosLikeMsgType::MSGSUBMITPROPOSAL: foundMsgSubmitProposal = true; break;
+            case api::CosmosLikeMsgType::MSGVOTE: foundMsgVote = true; break;
+            case api::CosmosLikeMsgType::MSGDEPOSIT: foundMsgDeposit = true; break;
+            case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATIONREWARD: foundMsgWithdrawDelegationReward = true; break;
+            case api::CosmosLikeMsgType::MSGMULTISEND: foundMsgMultiSend = true; break;
+            case api::CosmosLikeMsgType::MSGCREATEVALIDATOR: foundMsgCreateValidator = true; break;
+            case api::CosmosLikeMsgType::MSGEDITVALIDATOR: foundMsgEditValidator = true; break;
+            case api::CosmosLikeMsgType::MSGSETWITHDRAWADDRESS: foundMsgSetWithdrawAddress = true; break;
+            case api::CosmosLikeMsgType::MSGWITHDRAWDELEGATORREWARD: foundMsgWithdrawDelegatorReward = true; break;
+            case api::CosmosLikeMsgType::MSGWITHDRAWVALIDATORCOMMISSION: foundMsgWithdrawValidatorCommission = true; break;
+            case api::CosmosLikeMsgType::MSGUNJAIL: foundMsgUnjail = true; break;
+        }
+    }
+
+    EXPECT_TRUE(foundMsgSend);
+    EXPECT_TRUE(foundMsgDelegate);
+    EXPECT_TRUE(foundMsgRedelegate);
+    EXPECT_TRUE(foundMsgUndelegate);
+    EXPECT_TRUE(foundMsgSubmitProposal);
+    EXPECT_TRUE(foundMsgVote);
+    EXPECT_TRUE(foundMsgDeposit);
+    EXPECT_TRUE(foundMsgWithdrawDelegationReward);
+    EXPECT_TRUE(foundMsgMultiSend);
+    EXPECT_TRUE(foundMsgCreateValidator);
+    EXPECT_TRUE(foundMsgEditValidator);
+    EXPECT_TRUE(foundMsgSetWithdrawAddress);
+    EXPECT_TRUE(foundMsgWithdrawDelegatorReward);
+    EXPECT_TRUE(foundMsgWithdrawValidatorCommission);
+    EXPECT_TRUE(foundMsgUnjail);
 }
