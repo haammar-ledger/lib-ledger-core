@@ -55,11 +55,8 @@ TEST_F(CosmosDBTests, BasicDBTest) {
 
     std::chrono::system_clock::time_point timeRef = DateUtils::now();
 
-    Message msg;
-    setupSendMessage(msg, timeRef);
-
-    Transaction tx;
-    setupTransaction(tx, std::vector<Message>{ msg }, timeRef);
+    Message msg = setupSendMessage(timeRef);
+    Transaction tx = setupTransaction(std::vector<Message>{ msg }, timeRef);
 
     // Test writing into DB
     {
@@ -96,11 +93,8 @@ TEST_F(CosmosDBTests, OperationQueryTest) {
 
     std::chrono::system_clock::time_point timeRef = DateUtils::now();
 
-    Message msg;
-    setupSendMessage(msg, timeRef);
-
-    Transaction tx;
-    setupTransaction(tx, std::vector<Message>{ msg }, timeRef);
+    Message msg = setupSendMessage(timeRef);
+    Transaction tx = setupTransaction(std::vector<Message>{ msg }, timeRef);
 
     {
         soci::session sql(services->getDatabaseSessionPool()->getPool());
@@ -145,11 +139,8 @@ TEST_F(CosmosDBTests, UnsuportedMsgTypeTest) {
 
     std::chrono::system_clock::time_point timeRef = DateUtils::now();
 
-    Message msg;
-    setupSendMessage(msg, timeRef);
-
-    Transaction tx;
-    setupTransaction(tx, std::vector<Message>{ msg }, timeRef);
+    Message msg = setupSendMessage(timeRef);
+    Transaction tx = setupTransaction(std::vector<Message>{ msg }, timeRef);
 
     // Change message type
     tx.messages[0].type = "unknown-message-type";
@@ -179,14 +170,9 @@ TEST_F(CosmosDBTests, MultipleMsgTest) {
 
     std::chrono::system_clock::time_point timeRef = DateUtils::now();
 
-    Message msgSend;
-    setupSendMessage(msgSend, timeRef);
-
-    Message msgVote;
-    setupVoteMessage(msgVote, timeRef);
-
-    Transaction tx;
-    setupTransaction(tx, std::vector<Message>{ msgSend, msgVote }, timeRef);
+    Message msgSend = setupSendMessage(timeRef);
+    Message msgVote = setupVoteMessage(timeRef);
+    Transaction tx = setupTransaction(std::vector<Message>{ msgSend, msgVote }, timeRef);
 
     {
         soci::session sql(services->getDatabaseSessionPool()->getPool());

@@ -45,7 +45,7 @@
 #include <cosmos/api_impl/CosmosLikeOperation.hpp>
 #include <cosmos/api/CosmosLikeTransactionBuilder.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
-#include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
+#include <cosmos/synchronizers/CosmosLikeBlockchainExplorerAccountSynchronizer.hpp>
 #include <cosmos/observers/CosmosLikeBlockchainObserver.hpp>
 #include <cosmos/keychains/CosmosLikeKeychain.hpp>
 
@@ -59,7 +59,7 @@ namespace ledger {
                                                   int32_t index,
                                                   const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
                                                   const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
-                                                  const std::shared_ptr<CosmosLikeAccountSynchronizer> &synchronizer,
+                                                  const std::shared_ptr<CosmosBlockchainAccountSynchronizer> &synchronizer,
                                                   const std::shared_ptr<CosmosLikeKeychain> &keychain);
 
                                 std::shared_ptr<api::CosmosLikeAccount> asCosmosLikeAccount();
@@ -113,7 +113,7 @@ namespace ledger {
                                 std::shared_ptr<CosmosLikeKeychain> _keychain;
                                 std::string _accountAddress;
                                 std::shared_ptr<CosmosLikeBlockchainExplorer> _explorer;
-                                std::shared_ptr<CosmosLikeAccountSynchronizer> _synchronizer;
+                                std::shared_ptr<CosmosBlockchainAccountSynchronizer> _synchronizer;
                                 std::shared_ptr<CosmosLikeBlockchainObserver> _observer;
                                 uint64_t _currentBlockHeight;
                                 std::shared_ptr<api::EventBus> _currentSyncEventBus;
