@@ -66,6 +66,52 @@ public:
         BaseFixture::SetUp();
         //backend->enableQueryLogging(true);
     }
+
+    void setupTest(std::shared_ptr<Services>& services,
+                   std::shared_ptr<CosmosLikeAccount>& account,
+                   std::shared_ptr<CosmosLikeWallet>& wallet,
+                   std::string& pubKey) {
+
+        services = newDefaultServices();
+
+        auto walletStore = newWalletStore(services);
+        wait(walletStore->addCurrency(currencies::ATOM));
+
+        auto factory = std::make_shared<CosmosLikeWalletFactory>(currencies::ATOM, services);
+        walletStore->registerFactory(currencies::ATOM, factory);
+
+        auto configuration = DynamicObject::newInstance();
+        configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME, "44'/<coin_type>'/<account>'/<node>/<address>");
+        wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
+                            wait(walletStore->createWallet("e847815f-488a-4301-b67c-378a5e9c8a61", "atom", configuration)));
+
+        auto accountInfo = wait(wallet->getNextAccountCreationInfo());
+        EXPECT_EQ(accountInfo.index, 0);
+        accountInfo.publicKeys.push_back(hex::toByteArray(pubKey));
+
+        account = ledger::testing::cosmos::createCosmosLikeAccount(wallet, accountInfo.index, accountInfo);
+    }
+
+    void performSynchro(const std::shared_ptr<CosmosLikeAccount>& account) {
+        auto receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
+            fmt::print("Received event {}\n", api::to_string(event->getCode()));
+            if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED)
+                return;
+            EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
+
+            auto balance = wait(account->getBalance());
+            fmt::print("Balance: {} uatom\n", balance->toString());
+
+            auto block = wait(account->getLastBlock());
+            fmt::print("Block height: {}\n", block.height);
+            EXPECT_GT(block.height, 0);
+
+            dispatcher->stop();
+        });
+
+        account->synchronize()->subscribe(dispatcher->getMainExecutionContext(), receiver);
+        dispatcher->waitUntilStopped();
+    }
 };
 
 TEST_F(CosmosLikeWalletSynchronization, GetAccountWithExplorer) {
@@ -334,53 +380,30 @@ TEST_F(CosmosLikeWalletSynchronization, MediumXpubSynchronization) {
 
             auto block = wait(account->getLastBlock());
             fmt::print("Block height: {}\n", block.height);
+            EXPECT_GT(block.height, 0);
+
             auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
             fmt::print("Ops: {}\n", ops.size());
+            EXPECT_GT(ops.size(), 0);
         }
     }
 }
 
 TEST_F(CosmosLikeWalletSynchronization, AllTransactionsSynchronization) {
-    // FIXME Use pubkey of an account that has all expected types of transactions
-    auto hexPubKey = "0388459b2653519948b12492f1a0b464720110c147a8155d23d423a5cc3c21d89a"; // Obelix
+    // FIXME Use an account that has all expected types of transactions
+    std::string hexPubKey = "0388459b2653519948b12492f1a0b464720110c147a8155d23d423a5cc3c21d89a"; // Obelix
 
-    auto walletName = "e847815f-488a-4301-b67c-378a5e9c8a61";
-    auto services = newDefaultServices();
-    auto walletStore = newWalletStore(services);
-    wait(walletStore->addCurrency(currencies::ATOM));
+    std::shared_ptr<Services> services;
+    std::shared_ptr<CosmosLikeAccount> account;
+    std::shared_ptr<CosmosLikeWallet> wallet;
 
-    auto factory = std::make_shared<CosmosLikeWalletFactory>(currencies::ATOM, services);
-    walletStore->registerFactory(currencies::ATOM, factory);
+    setupTest(services, account, wallet, hexPubKey);
 
-    auto configuration = DynamicObject::newInstance();
-    configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME, "44'/<coin_type>'/<account>'/<node>/<address>");
-    auto wallet = std::dynamic_pointer_cast<CosmosLikeWallet>(
-            wait(walletStore->createWallet(walletName, currencies::ATOM.name, configuration)));
-    std::set<std::string> emittedOperations;
-
-    auto accountInfo = wait(wallet->getNextAccountCreationInfo());
-    accountInfo.publicKeys.push_back(hex::toByteArray(DEFAULT_HEX_PUB_KEY));
-    auto account = ledger::testing::cosmos::createCosmosLikeAccount(wallet, accountInfo.index, accountInfo);
-
-    auto receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
-        fmt::print("Received event {}\n", api::to_string(event->getCode()));
-        if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED)
-            return;
-        EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
-
-        auto balance = wait(account->getBalance());
-        fmt::print("Balance: {} uatom\n", balance->toString());
-        dispatcher->stop();
-    });
-
-    account->synchronize()->subscribe(dispatcher->getMainExecutionContext(), receiver);
-    dispatcher->waitUntilStopped();
-
-    auto block = wait(account->getLastBlock());
-    fmt::print("Block height: {}\n", block.height);
+    performSynchro(account);
 
     auto ops = wait(std::dynamic_pointer_cast<CosmosLikeOperationQuery>(account->queryOperations()->complete())->execute());
     fmt::print("Ops: {}\n", ops.size());
+    EXPECT_GT(ops.size(), 0);
 
     auto foundMsgSend = false;
     auto foundMsgDelegate = false;
@@ -438,3 +461,29 @@ TEST_F(CosmosLikeWalletSynchronization, AllTransactionsSynchronization) {
     EXPECT_TRUE(foundMsgWithdrawValidatorCommission);
     EXPECT_TRUE(foundMsgUnjail);
 }
+
+/*
+TEST_F(CosmosLikeWalletSynchronization, SuccessiveSynchronizations) {
+    std::shared_ptr<Services> services;
+    std::shared_ptr<CosmosLikeAccount> account;
+    std::shared_ptr<CosmosLikeWallet> wallet;
+
+    std::string pubKey(ledger::testing::cosmos::DEFAULT_HEX_PUB_KEY);
+    setupTest(services, account, wallet, pubKey);
+
+    // First synchro
+    performSynchro(account);
+    auto blockHeight1 = wait(account->getLastBlock()).height;
+
+    // Wait 8s (new Cosmos block every 7s)
+    fmt::print("Waiting new Cosmos block for 8s...\n");
+    std::this_thread::sleep_for(std::chrono::seconds(8));
+
+    // Second synchro
+    // FIXME Fails due to limitation of test framework??
+    performSynchro(account);
+    auto blockHeight2 = wait(account->getLastBlock()).height;
+
+    EXPECT_NE(blockHeight1, blockHeight2);
+}
+*/
