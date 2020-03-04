@@ -163,6 +163,11 @@ namespace ledger {
 			// Small helpers to avoid very long types
 			using TransactionList = std::list<std::shared_ptr<Transaction>>;
 			using MsgType = ::ledger::core::api::CosmosLikeMsgType;
+
+                        struct TransactionsBulk {
+                                std::vector<cosmos::Transaction> transactions;
+                                bool hasNext;
+                        };
 		}
 	}
 }

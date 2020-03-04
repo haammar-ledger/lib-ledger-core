@@ -42,6 +42,7 @@
 #include <cosmos/database/CosmosLikeOperationDatabaseHelper.hpp>
 #include <cosmos/explorers/CosmosLikeBlockchainExplorer.hpp>
 #include <cosmos/transaction_builders/CosmosLikeTransactionBuilder.hpp>
+#include <cosmos/synchronizers/CosmosLikeAccountSynchronizer.hpp>
 #include <cosmos/CosmosLikeOperationQuery.hpp>
 
 #include <core/database/SociNumber.hpp>
@@ -56,7 +57,6 @@
 #include <core/collections/Vector.hpp>
 #include <core/operation/OperationDatabaseHelper.hpp>
 #include <core/wallet/BlockDatabaseHelper.hpp>
-#include <core/synchronizers/AbstractBlockchainExplorerAccountSynchronizer.hpp>
 #include <core/wallet/CurrenciesDatabaseHelper.hpp>
 
 using namespace soci;
@@ -68,7 +68,7 @@ namespace ledger {
                                                      int32_t index,
                                                      const std::shared_ptr<CosmosLikeBlockchainExplorer> &explorer,
                                                      const std::shared_ptr<CosmosLikeBlockchainObserver> &observer,
-                                                     const std::shared_ptr<CosmosBlockchainAccountSynchronizer> &synchronizer,
+                                                     const std::shared_ptr<CosmosLikeAccountSynchronizer> &synchronizer,
                                                      const std::shared_ptr<CosmosLikeKeychain> &keychain) : AbstractAccount(wallet->getServices(), wallet, index) {
                         _explorer = explorer;
                         _observer = observer;
@@ -375,7 +375,7 @@ namespace ledger {
                         log->debug(" Start erasing data of account : {}", getAccountUid());
                         soci::session sql(getWallet()->getDatabase()->getPool());
                         //Update account's internal preferences (for synchronization)
-                        auto savedState = getInternalPreferences()->getSubPreferences("BlockchainExplorerAccountSynchronizer")->getObject<BlockchainExplorerAccountSynchronizationSavedState>("state");
+                        auto savedState = getInternalPreferences()->getSubPreferences("CosmosLikeAccountSynchronizer")->getObject<cosmos::AccountSynchronizationSavedState>("state");
                         if (savedState.nonEmpty()) {
                                 //Reset batches to blocks mined before given date
                                 auto previousBlock = BlockDatabaseHelper::getPreviousBlockInDatabase(sql,
@@ -390,7 +390,11 @@ namespace ledger {
                                                 batch.blockHash = "";
                                         }
                                 }
-                                getInternalPreferences()->getSubPreferences("BlockchainExplorerAccountSynchronizer")->editor()->putObject<BlockchainExplorerAccountSynchronizationSavedState>("state", savedState.getValue())->commit();
+                                getInternalPreferences()
+                                        ->getSubPreferences("CosmosLikeAccountSynchronizer")
+                                        ->editor()
+                                        ->putObject<cosmos::AccountSynchronizationSavedState>("state", savedState.getValue())
+                                        ->commit();
                         }
                         auto accountUid = getAccountUid();
                         sql << "DELETE FROM operations WHERE account_uid = :account_uid AND date >= :date ", soci::use(
@@ -418,7 +422,7 @@ namespace ledger {
 
                         //Update current block height (needed to compute trust level)
                         _explorer->getCurrentBlock().onComplete(getContext(),
-                                                                [self](const TryPtr<CosmosLikeBlockchainExplorer::Block> &block) mutable {
+                                                                [self](const TryPtr<cosmos::Block> &block) mutable {
                                                                         if (block.isSuccess()) {
                                                                                 self->_currentBlockHeight = block.getValue()->height;
                                                                         }
