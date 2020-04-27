@@ -35,54 +35,44 @@
 
 
 namespace ledger {
-namespace core {
-namespace algorand {
+    namespace core {
 
-    Address::Address(const api::Currency& currency, const std::vector<uint8_t> & pubKey) :
-        ledger::core::Address(currency, optional<std::string>("")),
-        _publicKey(pubKey)
-    {
-        _address = Address::fromPublicKey(pubKey);
+        AlgorandAddress::AlgorandAddress(const std::vector<uint8_t> & pubKey) :
+            Address(
+                currencies::algorand(),
+                optional<std::string>("")),
+            _publicKey(pubKey)
+        {
+            _address = AlgorandAddress::fromPublicKey(pubKey);
+        }
+
+        std::string AlgorandAddress::toString() {
+            return _address;
+        }
+
+        std::vector<uint8_t> AlgorandAddress::getPublicKey() {
+            return _publicKey;
+        }
+
+        // FIXME Test this
+        std::string AlgorandAddress::fromPublicKey(const std::vector<uint8_t> & pubKey) {
+            // 1. pubkey --> pubKeyHash
+            const std::vector<uint8_t> pubKeyHash = SHA512256::bytesToBytesHash(pubKey);
+            // 2. 4 last bytes of pubKeyHash
+            const std::vector<uint8_t> pubKeyHashChecksum(pubKeyHash.cbegin() + pubKeyHash.size() - CHECKSUM_LEN_BYTES, pubKeyHash.cend());
+            // 3. pubkey + 4 last bytes of pubKeyHash
+            const std::vector<uint8_t> addressBytes = vector::concat<uint8_t>(pubKey, pubKeyHashChecksum);
+            // 4. Encode to Base32
+            return BaseConverter::encode(addressBytes, BaseConverter::BASE32_RFC4648_NO_PADDING);
+        }
+
+        // FIXME Test this
+        std::vector<uint8_t> AlgorandAddress::toPublicKey(const std::string & address) {
+            std::vector<uint8_t> addressBytes;
+            // 1. Decode from Base32
+            BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, addressBytes);
+            // 2. Strip last 4 bytes
+            return std::vector<uint8_t>(addressBytes.cbegin(), addressBytes.cbegin() + addressBytes.size() - CHECKSUM_LEN_BYTES);
+        }
     }
-
-    Address::Address(const api::Currency& currency, const std::string & address) :
-        ledger::core::Address(currency, optional<std::string>("")),
-        _address(address)
-    {
-        _publicKey = Address::toPublicKey(address);
-    }
-
-    std::string Address::toString() {
-        return _address;
-    }
-
-    std::vector<uint8_t> Address::getPublicKey() const {
-        return _publicKey;
-    }
-
-    // FIXME Test this
-    std::string Address::fromPublicKey(const std::vector<uint8_t> & pubKey) {
-        // 1. pubkey --> pubKeyHash
-        const std::vector<uint8_t> pubKeyHash = SHA512256::bytesToBytesHash(pubKey);
-        // 2. 4 last bytes of pubKeyHash
-        const std::vector<uint8_t> pubKeyHashChecksum(pubKeyHash.cbegin() + pubKeyHash.size() - CHECKSUM_LEN_BYTES, pubKeyHash.cend());
-        // 3. pubkey + 4 last bytes of pubKeyHash
-        const std::vector<uint8_t> addressBytes = vector::concat<uint8_t>(pubKey, pubKeyHashChecksum);
-        // 4. Encode to Base32
-        return BaseConverter::encode(addressBytes, BaseConverter::BASE32_RFC4648_NO_PADDING);
-    }
-
-    // FIXME Test this
-    std::vector<uint8_t> Address::toPublicKey(const std::string & address) {
-        std::vector<uint8_t> decoded;
-        decoded.reserve(PUBKEY_LEN_BYTES + CHECKSUM_LEN_BYTES);
-        // 1. Decode from Base32
-        BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, decoded);
-        // 2. Strip last 4 bytes to keep only the public key
-        decoded.resize(PUBKEY_LEN_BYTES);
-        return decoded;
-    }
-
-} // namespace algorand
-} // namespace core
-} // namespace ledger
+}

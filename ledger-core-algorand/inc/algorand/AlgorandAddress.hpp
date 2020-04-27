@@ -39,18 +39,16 @@
 
 namespace ledger {
 namespace core {
-namespace algorand {
 
-    class Address : public ledger::core::Address {
+    class AlgorandAddress : public Address {
 
     public:
 
-        Address(const api::Currency& currency, const std::vector<uint8_t> & pubKey);
-        Address(const api::Currency& currency, const std::string & address);
+        AlgorandAddress(const std::vector<uint8_t> & pubKey);
 
-        std::string toString() override;
+        std::string toString() override ;
 
-        std::vector<uint8_t> getPublicKey() const;
+        std::vector<uint8_t> getPublicKey();
 
         // Utility methods for easy conversion, could be useful for tests
         static std::string fromPublicKey(const std::vector<uint8_t> & pubKey);
@@ -58,7 +56,6 @@ namespace algorand {
 
     private:
 
-        static const int32_t PUBKEY_LEN_BYTES = 32;
         static const int32_t CHECKSUM_LEN_BYTES = 4;
 
         std::string _address;
@@ -66,7 +63,6 @@ namespace algorand {
 
     };
 
-} // namespace algorand
 } // namespace core
 } // namespace ledger
 
