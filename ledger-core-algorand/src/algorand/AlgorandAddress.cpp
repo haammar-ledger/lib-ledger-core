@@ -46,11 +46,20 @@ namespace ledger {
             _address = AlgorandAddress::fromPublicKey(pubKey);
         }
 
+        AlgorandAddress::AlgorandAddress(const std::string & address) :
+            Address(
+                currencies::algorand(),
+                optional<std::string>("")),
+            _address(address)
+        {
+            _publicKey = AlgorandAddress::toPublicKey(address);
+        }
+
         std::string AlgorandAddress::toString() {
             return _address;
         }
 
-        std::vector<uint8_t> AlgorandAddress::getPublicKey() {
+        std::vector<uint8_t> AlgorandAddress::getPublicKey() const {
             return _publicKey;
         }
 
@@ -68,11 +77,13 @@ namespace ledger {
 
         // FIXME Test this
         std::vector<uint8_t> AlgorandAddress::toPublicKey(const std::string & address) {
-            std::vector<uint8_t> addressBytes;
+            std::vector<uint8_t> decoded;
+            decoded.reserve(PUBKEY_LEN_BYTES + CHECKSUM_LEN_BYTES);
             // 1. Decode from Base32
-            BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, addressBytes);
-            // 2. Strip last 4 bytes
-            return std::vector<uint8_t>(addressBytes.cbegin(), addressBytes.cbegin() + addressBytes.size() - CHECKSUM_LEN_BYTES);
+            BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, decoded);
+            // 2. Strip last 4 bytes to keep only the public key
+            decoded.resize(PUBKEY_LEN_BYTES);
+            return decoded;
         }
     }
 }
