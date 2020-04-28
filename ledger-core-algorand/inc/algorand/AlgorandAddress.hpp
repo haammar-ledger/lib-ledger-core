@@ -57,7 +57,7 @@ namespace core {
 
     private:
 
-        static const int32_t PUBKEY_LEN_BYTES = 36;
+        static const int32_t PUBKEY_LEN_BYTES = 32;
         static const int32_t CHECKSUM_LEN_BYTES = 4;
 
         std::string _address;
