@@ -45,10 +45,11 @@ namespace core {
     public:
 
         AlgorandAddress(const std::vector<uint8_t> & pubKey);
+        AlgorandAddress(const std::string & address);
 
-        std::string toString() override ;
+        std::string toString() override;
 
-        std::vector<uint8_t> getPublicKey();
+        std::vector<uint8_t> getPublicKey() const;
 
         // Utility methods for easy conversion, could be useful for tests
         static std::string fromPublicKey(const std::vector<uint8_t> & pubKey);
@@ -56,6 +57,7 @@ namespace core {
 
     private:
 
+        static const int32_t PUBKEY_LEN_BYTES = 36;
         static const int32_t CHECKSUM_LEN_BYTES = 4;
 
         std::string _address;
