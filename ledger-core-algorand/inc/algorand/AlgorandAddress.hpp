@@ -39,13 +39,14 @@
 
 namespace ledger {
 namespace core {
+namespace algorand {
 
-    class AlgorandAddress : public Address {
+    class Address : public ledger::core::Address {
 
     public:
 
-        AlgorandAddress(const std::vector<uint8_t> & pubKey);
-        AlgorandAddress(const std::string & address);
+        Address(const std::vector<uint8_t> & pubKey);
+        Address(const std::string & address);
 
         std::string toString() override;
 
@@ -65,6 +66,7 @@ namespace core {
 
     };
 
+} // namespace algorand
 } // namespace core
 } // namespace ledger
 
