@@ -45,11 +45,15 @@ namespace ledger {
 namespace core {
 namespace algorand {
 
-    class Account : public api::AlgorandAccount, public AbstractAccount {
-
     // TODO implementation; this is currently just a mock up
 
+    class Operation;
+
+    class Account : public api::AlgorandAccount, public AbstractAccount {
+
     public:
+
+        static const int FLAG_TRANSACTION_IGNORED = 0x00;
 
         Account(const std::shared_ptr<AbstractWallet> &wallet,
                 int32_t index,
@@ -60,7 +64,11 @@ namespace algorand {
             {}
 
 
-        // From api::algorandAccount
+        bool putBlock(soci::session &sql, const api::Block &block);
+
+        int putTransaction(soci::session &sql, const model::Transaction &transaction);
+
+        // From api::AlgorandAccount
         void getAssets(const std::shared_ptr<api::AlgorandAssetParamsListCallback> & callback) override {}
 
         void getCreatedAssets(const std::shared_ptr<api::AlgorandAssetParamsListCallback> & callback) override {}
@@ -106,6 +114,10 @@ namespace algorand {
             { return Future<api::ErrorCode>::failure(Exception(api::ErrorCode::ACCOUNT_ALREADY_EXISTS, "whatever")); }
 
     private:
+
+        static void inflateOperation(Operation &operation,
+                                     const std::shared_ptr<const AbstractWallet> &wallet,
+                                     const model::Transaction &tx);
 
         algorand::Address _address;
 
