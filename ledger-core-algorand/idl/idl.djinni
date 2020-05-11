@@ -35,15 +35,6 @@ AlgorandOperationType = enum {
     UNSUPPORTED;
 }
 
-AlgorandTransactionType = enum {
-    PAYMENT;
-    KEY_REGISTRATION;
-    ASSET_CONFIGURATION;
-    ASSET_TRANSFER;
-    ASSET_FREEZE;
-    UNSUPPORTED;
-}
-
 AlgorandAssetParams = record {
     # The unique asset identifier
     assetId: optional<string>;
@@ -148,7 +139,7 @@ AlgorandAssetFreezeInfo = record {
 
 AlgorandTransaction = interface +c {
     const getId(): string;
-    const getType(): AlgorandTransactionType;
+    const getType(): string;
     const getSender(): string;
     const getFee(): Amount;
     const getNote(): string;

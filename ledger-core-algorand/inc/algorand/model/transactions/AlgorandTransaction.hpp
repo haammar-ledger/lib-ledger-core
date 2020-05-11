@@ -30,12 +30,10 @@
 #pragma once
 
 #include <algorand/AlgorandAddress.hpp>
-#include <algorand/AlgorandConstants.hpp>
 #include <algorand/utils/B64String.hpp>
 #include <algorand/model/transactions/AlgorandAsset.hpp>
 #include <algorand/model/transactions/AlgorandKeyreg.hpp>
 #include <algorand/model/transactions/AlgorandPayment.hpp>
-
 
 #include <core/utils/Option.hpp>
 
@@ -51,6 +49,7 @@ namespace model {
 
     class Transaction
     {
+
     public:
         class Header
         {
@@ -64,7 +63,7 @@ namespace model {
                    Option<std::vector<uint8_t>> lease,
                    Option<std::vector<uint8_t>> note,
                    Address sender,
-                   constants::TxType type)
+                   std::string type)
                 : fee(fee)
                 , firstValid(firstValid)
                 , genesisId(std::move(genesisId))
@@ -86,7 +85,7 @@ namespace model {
             Option<std::vector<uint8_t>> lease;
             Option<std::vector<uint8_t>> note;
             Address sender;
-            constants::TxType type;
+            std::string type;
         };
 
         using TransactionDetails = boost::variant<KeyRegTxnFields,

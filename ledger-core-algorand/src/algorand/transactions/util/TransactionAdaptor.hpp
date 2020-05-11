@@ -34,7 +34,6 @@
 #include "MsgpackHelpers.hpp"
 
 #include <algorand/AlgorandAddress.hpp>
-#include <algorand/AlgorandConstants.hpp>
 #include <algorand/utils/B64String.hpp>
 #include <algorand/model/transactions/AlgorandAsset.hpp>
 #include <algorand/model/transactions/AlgorandAssetParams.hpp>
@@ -132,7 +131,6 @@ namespace adaptor {
     using ledger::core::algorand::model::PaymentTxnFields;
     using ledger::core::algorand::model::SignedTransaction;
     using ledger::core::algorand::model::Transaction;
-    using ledger::core::algorand::constants::TxType;
     using ledger::core::algorand::model::AssetParams;
 
     namespace {
@@ -172,15 +170,6 @@ namespace adaptor {
                     KeyValue<Option<Address>>(constants::r, params.reserveAddr),
                     KeyValue<Option<uint64_t>>(constants::t, params.total),
                     KeyValue<Option<std::string>>(constants::un, params.unitName));
-        }
-
-        template<typename Stream>
-        packer<Stream>& packTransactionType(packer<Stream>& o, TxType type)
-        {
-            using namespace ledger::core::algorand;
-
-            o.pack(std::string(constants::txTypeToChars(type)));
-            return o;
         }
 
         class TransactionDetailsFieldsCounter : public boost::static_visitor<uint32_t>
@@ -280,7 +269,7 @@ namespace adaptor {
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
                         KeyValue<std::string>(constants::selkey, fields.selectionPk),
                         KeyValue<Address>(constants::snd, header.sender),
-                        KeyValue<constants::TxType>(constants::type, header.type),
+                        KeyValue<std::string>(constants::type, header.type),
                         KeyValue<uint64_t>(constants::votefst, fields.voteFirst),
                         KeyValue<uint64_t>(constants::votekd, fields.voteKeyDilution),
                         KeyValue<std::string>(constants::votekey, fields.votePk),
@@ -304,7 +293,7 @@ namespace adaptor {
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
                         KeyValue<Address>(constants::rcv, fields.receiver),
                         KeyValue<Address>(constants::snd, header.sender),
-                        KeyValue<constants::TxType>(constants::type, header.type));
+                        KeyValue<std::string>(constants::type, header.type));
             }
 
             packer<Stream>& operator()(const AssetConfigTxnFields& fields) const
@@ -323,7 +312,7 @@ namespace adaptor {
                         KeyValue<Option<std::vector<uint8_t>>>(constants::lx, header.lease),
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
                         KeyValue<Address>(constants::snd, header.sender),
-                        KeyValue<constants::TxType>(constants::type, header.type));
+                        KeyValue<std::string>(constants::type, header.type));
             }
 
             packer<Stream>& operator()(const AssetTransferTxnFields& fields) const
@@ -344,7 +333,7 @@ namespace adaptor {
                         KeyValue<Option<std::vector<uint8_t>>>(constants::lx, header.lease),
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
                         KeyValue<Address>(constants::snd, header.sender),
-                        KeyValue<constants::TxType>(constants::type, header.type),
+                        KeyValue<std::string>(constants::type, header.type),
                         KeyValue<uint64_t>(constants::xaid, fields.xferAsset));
             }
 
@@ -365,7 +354,7 @@ namespace adaptor {
                         KeyValue<Option<std::vector<uint8_t>>>(constants::lx, header.lease),
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
                         KeyValue<Address>(constants::snd, header.sender),
-                        KeyValue<constants::TxType>(constants::type, header.type));
+                        KeyValue<std::string>(constants::type, header.type));
             }
 
         private:
@@ -412,17 +401,6 @@ namespace adaptor {
             return packAssetParams(o, fields);
         }
 
-    };
-
-    template<>
-    struct pack<TxType>
-    {
-        template<typename Stream>
-        packer<Stream>& operator()(packer<Stream>& o,
-                                   const TxType& type) const
-        {
-            return packTransactionType(o, type);
-        }
     };
 
     template<>
