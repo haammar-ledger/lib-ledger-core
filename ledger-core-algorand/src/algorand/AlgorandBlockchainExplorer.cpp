@@ -60,7 +60,7 @@ namespace algorand {
             .mapPtr<api::Block>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 auto block = std::make_shared<api::Block>();
                 const auto& json = std::get<1>(response)->GetObject();
-                AlgorandJsonParser::parseBlock(json, currencies::algorand().name, *block);
+                JsonParser::parseBlock(json, currencies::algorand().name, *block);
                 return block;
             });
     }
@@ -75,31 +75,31 @@ namespace algorand {
                 [] (const HttpRequest::JsonResult &response) {
                     auto account = model::Account();
                     const auto &json = std::get<1>(response)->GetObject();
-                    AlgorandJsonParser::parseAccount(json, account);
+                    JsonParser::parseAccount(json, account);
                     return FuturePtr<model::Account>::successful(std::make_shared<model::Account>(account));
                 });
     }
 
-    FuturePtr<model::Transaction>
+    FuturePtr<model::ExplorerTransaction>
     BlockchainExplorer::getTransactionById(const std::string & txId) const {
         return _http->GET(fmt::format(constants::purestakeTransactionEndpoint, txId))
             .json(false)
-            .mapPtr<model::Transaction>(getContext(), [] (const HttpRequest::JsonResult& response) {
+            .mapPtr<model::ExplorerTransaction>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject();
-                auto tx = std::make_shared<model::Transaction>();
-                AlgorandJsonParser::parseTransaction(json, *tx);
+                auto tx = std::make_shared<model::ExplorerTransaction>();
+                JsonParser::parseTransaction(json, *tx);
                 return tx;
             });
     }
 
-    FuturePtr<model::TransactionsBulk>
+    FuturePtr<model::ExplorerTransactionsBulk>
     BlockchainExplorer::getTransactionsForAddress(const std::string & address, const uint64_t & fromBlockHeight) const {
         return _http->GET(fmt::format(constants::purestakeAccountTransactionsEndpoint, address))
             .json(false)
-            .mapPtr<model::TransactionsBulk>(getContext(), [] (const HttpRequest::JsonResult& response) {
+            .mapPtr<model::ExplorerTransactionsBulk>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject()[constants::transactions.c_str()].GetArray();
-                auto tx = std::make_shared<model::TransactionsBulk>();
-                AlgorandJsonParser::parseTransactions(json, tx->transactions);
+                auto tx = std::make_shared<model::ExplorerTransactionsBulk>();
+                JsonParser::parseTransactions(json, tx->transactions);
                 // TODO Manage tx->hasNext ? Pagination ?
                 return tx;
             });
@@ -125,7 +125,7 @@ namespace algorand {
             .mapPtr<model::TransactionParams>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject();
                 auto txParams = std::make_shared<model::TransactionParams>();
-                AlgorandJsonParser::parseTransactionParams(json, *txParams);
+                JsonParser::parseTransactionParams(json, *txParams);
                 return txParams;
             });
     }

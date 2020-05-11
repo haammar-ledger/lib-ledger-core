@@ -33,8 +33,8 @@
 #define LEDGER_CORE_ALGORANDJSONPARSER_H
 
 #include <algorand/AlgorandAddress.hpp>
-#include <algorand/AlgorandModel.hpp>
-#include <algorand/api/AlgorandTransactionType.hpp>
+#include <algorand/AlgorandModel.hpp> // FIXME Deprecated
+#include <algorand/model/transactions/AlgorandExplorerTransaction.hpp>
 
 #include <core/math/BigInt.hpp>
 #include <core/utils/Hex.hpp>
@@ -120,33 +120,9 @@ namespace constants {
     static const std::string minFee = "fee";
     static const std::string consensusVersion = "consensusVersion";
 
-    using TxType = ledger::core::api::AlgorandTransactionType;
-
-    const std::string txTypeToString(const TxType type) {
-        switch (type) {
-            case TxType::PAYMENT: return constants::payment;
-            case TxType::KEY_REGISTRATION: return constants::keyreg;
-            case TxType::ASSET_CONFIGURATION: return constants::curcfg;
-            case TxType::ASSET_TRANSFER: return constants::curxfer;
-            case TxType::ASSET_FREEZE: return constants::curfrz;
-            case TxType::UNSUPPORTED:
-            default:
-                return "";
-        }
-    }
-
-    const TxType stringToTxType(const std::string string) {
-        if (string == constants::payment) return TxType::PAYMENT;
-        if (string == constants::keyreg) return TxType::KEY_REGISTRATION;
-        if (string == constants::curcfg) return TxType::ASSET_CONFIGURATION;
-        if (string == constants::curxfer) return TxType::ASSET_TRANSFER;
-        if (string == constants::curfrz) return TxType::ASSET_FREEZE;
-        return TxType::UNSUPPORTED;
-    }
-
 } // namespace constants
 
-    class AlgorandJsonParser {
+    class JsonParser {
 
     public:
 
@@ -265,70 +241,54 @@ namespace constants {
         }
 
         template <class T>
-        static void parseTransaction(const T& node, model::Transaction & out) {
+        static void parseTransaction(const T& node, model::ExplorerTransaction & out) {
 
-            assert(node.HasMember(constants::type.c_str()));
-            out.type = constants::stringToTxType(node[constants::type.c_str()].GetString());
-
+            getMandatoryStringField(node, constants::type, out.baseTransaction.type);
             getMandatoryStringField(node, constants::tx, out.id);
-            getMandatoryStringField(node, constants::from, out.senderAddress);
-            getMandatoryUint64Field(node, constants::firstRound, out.firstRound);
-            getMandatoryUint64Field(node, constants::lastRound, out.lastRound);
+            getMandatoryStringField(node, constants::from, out.baseTransaction.senderAddress);
+            getMandatoryUint64Field(node, constants::firstRound, out.baseTransaction.firstRound);
+            getMandatoryUint64Field(node, constants::lastRound, out.baseTransaction.lastRound);
             getMandatoryUint64Field(node, constants::round, out.round);
-            getMandatoryUint64Field(node, constants::fee, out.fee);
-            getMandatoryStringField(node, constants::genesisHashB64, out.genesisHash);
+            getMandatoryUint64Field(node, constants::fee, out.baseTransaction.fee);
+            getMandatoryStringField(node, constants::genesisHashB64, out.baseTransaction.genesisHash);
 
-            getOptionalStringField(node, constants::genesisId, out.genesisId);
-            getOptionalStringField(node, constants::noteB64, out.note);
+            getOptionalStringField(node, constants::genesisId, *out.baseTransaction.genesisId);
+            getOptionalStringField(node, constants::noteB64, *out.baseTransaction.note);
             getOptionalUint64Field(node, constants::fromRewards, out.fromRewards);
-            getOptionalStringField(node, constants::group, out.group);
-            getOptionalStringField(node, constants::lease, out.lease);
+            getOptionalStringField(node, constants::group, *out.baseTransaction.group);
+            getOptionalStringField(node, constants::lease, *out.baseTransaction.lease);
 
-            switch (out.type) {
-                case TxType::PAYMENT:
+            if (out.baseTransaction.type == constants::pay) {
                     assert((node.HasMember(constants::payment.c_str())));
-                    out.details = model::PaymentInfo();
+                    out.baseTransaction.details = model::PaymentInfo();
                     parsePaymentInfo(node[constants::payment.c_str()].GetObject(),
-                                    boost::get<model::PaymentInfo>(out.details));
-                    break;
-
-                case TxType::KEY_REGISTRATION:
+                                    boost::get<model::PaymentInfo>(out.baseTransaction.details));
+            } else if (out.baseTransaction.type == constants::keyreg) {
                     assert((node.HasMember(constants::keyreg.c_str())));
-                    out.details = model::ParticipationInfo();
+                    out.baseTransaction.details = model::ParticipationInfo();
                     parseParticipationInfo(node[constants::keyreg.c_str()].GetObject(),
-                                        boost::get<model::ParticipationInfo>(out.details));
-                    break;
-
-                case TxType::ASSET_CONFIGURATION:
+                                        boost::get<model::ParticipationInfo>(out.baseTransaction.details));
+            } else if (out.baseTransaction.type == constants::acfg) {
                     assert((node.HasMember(constants::curcfg.c_str())));
-                    out.details = model::AssetConfigurationInfo();
+                    out.baseTransaction.details = model::AssetConfigurationInfo();
                     parseAssetConfigurationInfo(node[constants::curcfg.c_str()].GetObject(),
-                                                boost::get<model::AssetConfigurationInfo>(out.details));
-                    break;
-
-                case TxType::ASSET_TRANSFER:
+                                                boost::get<model::AssetConfigurationInfo>(out.baseTransaction.details));
+            } else if (out.baseTransaction.type == constants::axfer) {
                     assert((node.HasMember(constants::curxfer.c_str())));
-                    out.details = model::AssetTransferInfo();
+                    out.baseTransaction.details = model::AssetTransferInfo();
                     parseAssetTransferInfo(node[constants::curxfer.c_str()].GetObject(),
-                                        boost::get<model::AssetTransferInfo>(out.details));
-                    break;
-
-                case TxType::ASSET_FREEZE:
+                                        boost::get<model::AssetTransferInfo>(out.baseTransaction.details));
+            } else if (out.baseTransaction.type == constants::afrz) {
                     assert((node.HasMember(constants::curfrz.c_str())));
-                    out.details = model::AssetFreezeInfo();
+                    out.baseTransaction.details = model::AssetFreezeInfo();
                     parseAssetFreezeInfo(node[constants::curfrz.c_str()].GetObject(),
-                                        boost::get<model::AssetFreezeInfo>(out.details));
-                    break;
-
-                case TxType::UNSUPPORTED:
-                default:
-                    break;
+                                        boost::get<model::AssetFreezeInfo>(out.baseTransaction.details));
             }
         }
 
         template <class T>
-        static void parseTransactions(const T& array, std::vector<model::Transaction> & out) {
-            out.assign((std::size_t) array.Size(), model::Transaction());
+        static void parseTransactions(const T& array, std::vector<model::ExplorerTransaction> & out) {
+            out.assign((std::size_t) array.Size(), model::ExplorerTransaction());
             auto index = 0;
             for (const auto& node : array) {
                 parseTransaction(node.GetObject(), out[index]);

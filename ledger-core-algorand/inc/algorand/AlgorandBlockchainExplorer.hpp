@@ -32,7 +32,8 @@
 
 #include <algorand/api/AlgorandTransaction.hpp>
 #include <algorand/api/AlgorandNetworkParameters.hpp>
-#include <algorand/AlgorandModel.hpp>
+#include <algorand/AlgorandModel.hpp> // FIXME Deprecated
+#include <algorand/model/transactions/AlgorandExplorerTransaction.hpp>
 
 #include <core/async/DedicatedContext.hpp>
 #include <core/utils/ConfigurationMatchable.hpp>
@@ -76,11 +77,11 @@ namespace constants {
         FuturePtr<model::Account> getAccount(const std::string & address) const;
 
         // Single transaction querier (found by hash)
-        FuturePtr<model::Transaction> getTransactionById(const std::string & txId) const;
+        FuturePtr<model::ExplorerTransaction> getTransactionById(const std::string & txId) const;
 
         // Get all transactions relevant to an address
         // Concatenates multiple API calls for all relevant transaction types
-        FuturePtr<model::TransactionsBulk> getTransactionsForAddress(const std::string &address, const uint64_t & fromBlockHeight = 0) const;
+        FuturePtr<model::ExplorerTransactionsBulk> getTransactionsForAddress(const std::string &address, const uint64_t & fromBlockHeight = 0) const;
 
         // Get suggested fee for a transaction
         Future<uint64_t> getSuggestedFee(const std::shared_ptr<api::AlgorandTransaction> & transaction) const;
