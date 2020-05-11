@@ -28,7 +28,7 @@
  */
 
 #include <algorand/AlgorandBlockchainExplorer.hpp>
-#include <algorand/AlgorandJsonParsers.hpp>
+#include <algorand/AlgorandJsonParser.hpp>
 
 #include <core/net/HttpClient.hpp>
 #include <core/api/Configuration.hpp>
@@ -55,12 +55,12 @@ namespace algorand {
     }
 
     FuturePtr<api::Block> BlockchainExplorer::getBlock(uint64_t &blockHeight) const {
-        return _http->GET(fmt::format(json::constants::purestakeBlockEndpoint, blockHeight))
+        return _http->GET(fmt::format(constants::purestakeBlockEndpoint, blockHeight))
             .json(false)
             .mapPtr<api::Block>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 auto block = std::make_shared<api::Block>();
                 const auto& json = std::get<1>(response)->GetObject();
-                json::parseBlock(json, currencies::algorand().name, *block);
+                AlgorandJsonParser::parseBlock(json, currencies::algorand().name, *block);
                 return block;
             });
     }
@@ -68,38 +68,38 @@ namespace algorand {
     FuturePtr<model::Account> BlockchainExplorer::getAccount(const std::string & address) const {
         const bool parseJsonNumbersAsStrings = false; // FIXME Is this safe?
 
-        return _http->GET(fmt::format(json::constants::purestakeAccountEndpoint, address))
+        return _http->GET(fmt::format(constants::purestakeAccountEndpoint, address))
             .json(false)
             .template flatMapPtr<model::Account>(
                 getContext(),
                 [] (const HttpRequest::JsonResult &response) {
                     auto account = model::Account();
                     const auto &json = std::get<1>(response)->GetObject();
-                    json::parseAccount(json, account);
+                    AlgorandJsonParser::parseAccount(json, account);
                     return FuturePtr<model::Account>::successful(std::make_shared<model::Account>(account));
                 });
     }
 
     FuturePtr<model::Transaction>
     BlockchainExplorer::getTransactionById(const std::string & txId) const {
-        return _http->GET(fmt::format(json::constants::purestakeTransactionEndpoint, txId))
+        return _http->GET(fmt::format(constants::purestakeTransactionEndpoint, txId))
             .json(false)
             .mapPtr<model::Transaction>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject();
                 auto tx = std::make_shared<model::Transaction>();
-                json::parseTransaction(json, *tx);
+                AlgorandJsonParser::parseTransaction(json, *tx);
                 return tx;
             });
     }
 
     FuturePtr<model::TransactionsBulk>
     BlockchainExplorer::getTransactionsForAddress(const std::string & address, const uint64_t & fromBlockHeight) const {
-        return _http->GET(fmt::format(json::constants::purestakeAccountTransactionsEndpoint, address))
+        return _http->GET(fmt::format(constants::purestakeAccountTransactionsEndpoint, address))
             .json(false)
             .mapPtr<model::TransactionsBulk>(getContext(), [] (const HttpRequest::JsonResult& response) {
-                const auto& json = std::get<1>(response)->GetObject()[json::constants::transactions].GetArray();
+                const auto& json = std::get<1>(response)->GetObject()[constants::transactions.c_str()].GetArray();
                 auto tx = std::make_shared<model::TransactionsBulk>();
-                json::parseTransactions(json, tx->transactions);
+                AlgorandJsonParser::parseTransactions(json, tx->transactions);
                 // TODO Manage tx->hasNext ? Pagination ?
                 return tx;
             });
@@ -107,34 +107,34 @@ namespace algorand {
 
     Future<uint64_t> BlockchainExplorer::getSuggestedFee(const std::shared_ptr<api::AlgorandTransaction> &transaction) const {
         const auto txBytes = transaction->serialize();
-        return _http->GET(json::constants::purestakeTransactionsParamsEndpoint)
+        return _http->GET(constants::purestakeTransactionsParamsEndpoint)
             .json(false)
             .map<uint64_t>(getContext(), [&txBytes] (const HttpRequest::JsonResult& response) -> uint64_t {
                 const auto& json = std::get<1>(response)->GetObject();
-                const auto minimumFee = json[json::constants::minFee].GetUint64();
+                const auto minimumFee = json[constants::minFee.c_str()].GetUint64();
                 // FIXME May need to apply a majoration coefficient here,
                 // because tx is missing fields signature and fee at this point
-                const auto recommendedFee = txBytes.size() * json[json::constants::fee].GetUint64();
+                const auto recommendedFee = txBytes.size() * json[constants::fee.c_str()].GetUint64();
                 return std::max(minimumFee, recommendedFee);
             });
     }
 
     FuturePtr<model::TransactionParams> BlockchainExplorer::getTransactionParams() const {
-        return _http->GET(json::constants::purestakeTransactionsParamsEndpoint)
+        return _http->GET(constants::purestakeTransactionsParamsEndpoint)
             .json(false)
             .mapPtr<model::TransactionParams>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject();
                 auto txParams = std::make_shared<model::TransactionParams>();
-                json::parseTransactionParams(json, *txParams);
+                AlgorandJsonParser::parseTransactionParams(json, *txParams);
                 return txParams;
             });
     }
 
     Future<std::string> BlockchainExplorer::pushTransaction(const std::vector<uint8_t> & transaction) {
-        return _http->POST(json::constants::purestakeTransactionsEndpoint, transaction)
+        return _http->POST(constants::purestakeTransactionsEndpoint, transaction)
             .json(false)
             .template map<std::string>(_executionContext, [] (const HttpRequest::JsonResult& response) -> std::string {
-                return std::get<1>(response)->GetObject()[json::constants::txId].GetString();
+                return std::get<1>(response)->GetObject()[constants::txId.c_str()].GetString();
             });
     }
 

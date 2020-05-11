@@ -43,6 +43,19 @@
 namespace ledger {
 namespace core {
 namespace algorand {
+namespace constants {
+
+    // Explorer endpoints
+    static const std::string apiVersion = "v1";
+    static const std::string purestakeVersion = "ps1";
+    static const std::string purestakeBlockEndpoint = purestakeVersion + "/" + apiVersion + "/block/{}";
+    static const std::string purestakeAccountEndpoint = purestakeVersion + "/" + apiVersion + "/account/{}";
+    static const std::string purestakeAccountTransactionsEndpoint = purestakeVersion + "/" + apiVersion + "/account/{}/transactions";
+    static const std::string purestakeTransactionEndpoint = purestakeVersion + "/" + apiVersion + "/transaction/{}";
+    static const std::string purestakeTransactionsEndpoint = purestakeVersion + "/" + apiVersion + "/transactions";
+    static const std::string purestakeTransactionsParamsEndpoint = purestakeVersion + "/" + apiVersion + "/transactions/params";
+
+}
 
     class BlockchainExplorer : public ConfigurationMatchable, public DedicatedContext {
 
