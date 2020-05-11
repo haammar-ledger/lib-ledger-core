@@ -41,14 +41,18 @@
 #include <core/api/Configuration.hpp>
 #include <core/api/SynchronizationEngines.hpp>
 
-#define STRING(key, def) entry.configuration->getString(key).value_or(def)
-
 namespace ledger {
 namespace core {
 namespace algorand {
 
+    // Aliases for long constants names
+    const std::string ALGORAND_API_ENDPOINT  = api::AlgorandConfigurationDefaults::ALGORAND_API_ENDPOINT;
+    const std::string ALGORAND_NODE_EXPLORER = api::AlgorandBlockchainExplorerEngines::ALGORAND_NODE;
+    const std::string ALGORAND_NODE_OBSERVER = api::AlgorandBlockchainObserverEngines::ALGORAND_NODE;
+
     WalletFactory::WalletFactory(const api::Currency &currency, const std::shared_ptr<Services> &services) :
-            AbstractWalletFactory(currency, services) {
+        AbstractWalletFactory(currency, services)
+    {
         // create the DB structure if not already created
         services->getDatabaseSessionPool()->forwardMigration<AlgorandMigration>();
     }
@@ -72,7 +76,7 @@ namespace algorand {
         if (explorer == nullptr) {
             throw make_exception(api::ErrorCode::UNKNOWN_BLOCKCHAIN_EXPLORER_ENGINE,
                                  "Engine '{}' is not a supported explorer engine.",
-                                 STRING(api::Configuration::BLOCKCHAIN_EXPLORER_ENGINE, "undefined"));
+                                 entry.configuration->getString(api::Configuration::BLOCKCHAIN_EXPLORER_ENGINE).value_or("undefined"));
         }
 
         // Configure observer
@@ -80,15 +84,15 @@ namespace algorand {
         if (observer == nullptr) {
             services->logger()->warn(
                     "Observer engine '{}' is not supported. Wallet {} was created anyway. Real time events won't be handled by this instance.",
-                    STRING(api::Configuration::BLOCKCHAIN_OBSERVER_ENGINE, "undefined"), entry.name);
+                    entry.configuration->getString(api::Configuration::BLOCKCHAIN_OBSERVER_ENGINE).value_or("undefined"), entry.name);
         }
 
         // Configure synchronizer
+        auto syncEngine = entry.configuration->getString(api::Configuration::SYNCHRONIZATION_ENGINE)
+                                               .value_or(api::SynchronizationEngines::BLOCKCHAIN_EXPLORER_SYNCHRONIZATION);
         Option<AlgorandAccountSynchronizerFactory> synchronizerFactory;
         {
-            auto engine = entry.configuration->getString(api::Configuration::SYNCHRONIZATION_ENGINE)
-                                            .value_or(api::SynchronizationEngines::BLOCKCHAIN_EXPLORER_SYNCHRONIZATION);
-            if (engine == api::SynchronizationEngines::BLOCKCHAIN_EXPLORER_SYNCHRONIZATION) {
+            if (syncEngine == api::SynchronizationEngines::BLOCKCHAIN_EXPLORER_SYNCHRONIZATION) {
                 std::weak_ptr<Services> weakServices = services;
                 synchronizerFactory = Option<AlgorandAccountSynchronizerFactory>([weakServices, explorer]() {
                     auto services = weakServices.lock();
@@ -103,11 +107,12 @@ namespace algorand {
         if (synchronizerFactory.isEmpty()) {
             throw make_exception(api::ErrorCode::UNKNOWN_SYNCHRONIZATION_ENGINE,
                                 "Engine '{}' is not a supported synchronization engine.",
-                                STRING(api::Configuration::SYNCHRONIZATION_ENGINE, "undefined"));
+                                syncEngine);
         }
 
         // Sets the derivation scheme
-        DerivationScheme scheme(STRING(api::Configuration::KEYCHAIN_DERIVATION_SCHEME, "44'/<coin_type>'/<account>'/<node>/<address>"));
+        DerivationScheme scheme(entry.configuration->getString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME)
+                                                    .value_or("44'/<coin_type>'/<account>'/<node>/<address>"));
 
         // Build wallet
         return std::make_shared<Wallet>(
@@ -139,25 +144,21 @@ namespace algorand {
 
         std::shared_ptr<BlockchainExplorer> explorer = nullptr;
 
-        auto engine = configuration->getString(api::Configuration::BLOCKCHAIN_EXPLORER_ENGINE)
-                                    .value_or(api::AlgorandBlockchainExplorerEngines::ALGORAND_NODE);
-
-        if (engine == api::AlgorandBlockchainExplorerEngines::ALGORAND_NODE) {
+        auto engine = configuration->getString(api::Configuration::BLOCKCHAIN_EXPLORER_ENGINE).value_or(ALGORAND_NODE_EXPLORER);
+        if (engine == ALGORAND_NODE_EXPLORER) {
             auto &networkParams = networks::getAlgorandNetworkParameters(getCurrency().name);
             auto services = getServices();
-            auto http = services->getHttpClient(fmt::format("{}",
-                                                configuration->getString(api::Configuration::BLOCKCHAIN_EXPLORER_API_ENDPOINT)
-                                                               .value_or(api::AlgorandConfigurationDefaults::ALGORAND_API_ENDPOINT)));
+            auto http = services->getHttpClient(
+                configuration->getString(api::Configuration::BLOCKCHAIN_EXPLORER_API_ENDPOINT).value_or(ALGORAND_API_ENDPOINT)
+            );
             auto context = services->getDispatcher()->getSerialExecutionContext(
-                    fmt::format("{}-{}-explorer",
-                                api::AlgorandBlockchainExplorerEngines::ALGORAND_NODE,
-                                networkParams.genesisHash)
+                    fmt::format("{}-{}-explorer", ALGORAND_NODE_EXPLORER, networkParams.genesisHash)
             );
 
             explorer = std::make_shared<BlockchainExplorer>(context,
-                                                                    http,
-                                                                    networkParams,
-                                                                    configuration);
+                                                            http,
+                                                            networkParams,
+                                                            configuration);
         }
 
         if (explorer) {
@@ -185,26 +186,22 @@ namespace algorand {
 
         std::shared_ptr<BlockchainObserver> observer;
 
-        auto engine = configuration->getString(api::Configuration::BLOCKCHAIN_OBSERVER_ENGINE)
-                                     .value_or(api::AlgorandBlockchainObserverEngines::ALGORAND_NODE);
-
-        if (engine == api::AlgorandBlockchainObserverEngines::ALGORAND_NODE) {
+        auto engine = configuration->getString(api::Configuration::BLOCKCHAIN_OBSERVER_ENGINE).value_or(ALGORAND_NODE_OBSERVER);
+        if (engine == ALGORAND_NODE_OBSERVER) {
             const auto &currency = getCurrency();
             auto &networkParams = networks::getAlgorandNetworkParameters(currency.name);
             auto services = getServices();
             auto logger = services->logger();
             auto webSocketClient = services->getWebSocketClient();
             auto context = services->getDispatcher()->getSerialExecutionContext(
-                    fmt::format("{}-{}-explorer",
-                                api::AlgorandBlockchainObserverEngines::ALGORAND_NODE,
-                                networkParams.genesisHash)
+                    fmt::format("{}-{}-explorer", ALGORAND_NODE_OBSERVER, networkParams.genesisHash)
             );
 
             observer = std::make_shared<BlockchainObserver>(context,
-                                                                    webSocketClient,
-                                                                    configuration,
-                                                                    logger,
-                                                                    currency);
+                                                            webSocketClient,
+                                                            configuration,
+                                                            logger,
+                                                            currency);
         }
 
         if (observer) {
