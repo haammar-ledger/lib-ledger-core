@@ -80,25 +80,25 @@ namespace algorand {
                 });
     }
 
-    FuturePtr<model::ExplorerTransaction>
+    FuturePtr<model::Transaction>
     BlockchainExplorer::getTransactionById(const std::string & txId) const {
         return _http->GET(fmt::format(constants::purestakeTransactionEndpoint, txId))
             .json(false)
-            .mapPtr<model::ExplorerTransaction>(getContext(), [] (const HttpRequest::JsonResult& response) {
+            .mapPtr<model::Transaction>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject();
-                auto tx = std::make_shared<model::ExplorerTransaction>();
+                auto tx = std::make_shared<model::Transaction>();
                 JsonParser::parseTransaction(json, *tx);
                 return tx;
             });
     }
 
-    FuturePtr<model::ExplorerTransactionsBulk>
+    FuturePtr<model::TransactionsBulk>
     BlockchainExplorer::getTransactionsForAddress(const std::string & address, const uint64_t & fromBlockHeight) const {
         return _http->GET(fmt::format(constants::purestakeAccountTransactionsEndpoint, address))
             .json(false)
-            .mapPtr<model::ExplorerTransactionsBulk>(getContext(), [] (const HttpRequest::JsonResult& response) {
+            .mapPtr<model::TransactionsBulk>(getContext(), [] (const HttpRequest::JsonResult& response) {
                 const auto& json = std::get<1>(response)->GetObject()[constants::transactions.c_str()].GetArray();
-                auto tx = std::make_shared<model::ExplorerTransactionsBulk>();
+                auto tx = std::make_shared<model::TransactionsBulk>();
                 JsonParser::parseTransactions(json, tx->transactions);
                 // TODO Manage tx->hasNext ? Pagination ?
                 return tx;

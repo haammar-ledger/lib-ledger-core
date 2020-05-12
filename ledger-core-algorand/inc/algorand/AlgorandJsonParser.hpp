@@ -33,10 +33,13 @@
 #define LEDGER_CORE_ALGORANDJSONPARSER_H
 
 #include <algorand/AlgorandAddress.hpp>
-#include <algorand/AlgorandModel.hpp> // FIXME Deprecated
-#include <algorand/model/transactions/AlgorandExplorerTransaction.hpp>
+#include <algorand/model/transactions/AlgorandTransaction.hpp>
+#include <algorand/model/transactions/AlgorandAssetParams.hpp>
+#include <algorand/model/AlgorandAssetAmount.hpp>
+#include <algorand/utils/B64String.hpp>
 
 #include <core/math/BigInt.hpp>
+#include <core/math/BaseConverter.hpp>
 #include <core/utils/Hex.hpp>
 
 namespace ledger {
@@ -109,8 +112,14 @@ namespace constants {
     static const std::string group = "group";
     static const std::string lease = "lease";
 
-    static const std::string payment = "payment";
+    static const std::string pay = "pay";
     static const std::string keyreg = "keyreg";
+    static const std::string acfg = "acfg";
+    static const std::string axfer = "axfer";
+    static const std::string afreeze = "afrz";
+
+    static const std::string payment = "payment";
+    static const std::string keyregs = "keyreg";
     static const std::string curcfg = "curcfg";
     static const std::string curxfer = "curxfer";
     static const std::string curfrz = "curfrz";
@@ -127,14 +136,14 @@ namespace constants {
     public:
 
         template <class T>
-        static void parseBlock(const T& node, const std::string& currencyName, api::Block & out) {
-            out.currencyName = currencyName;
-            getMandatoryStringField(node, constants::hash, out.blockHash);
+        static void parseBlock(const T& node, const std::string& currencyName, api::Block & block) {
+            block.currencyName = currencyName;
+            getMandatoryStringField(node, constants::hash, block.blockHash);
 
             // FIXME Test this!
-            out.time = std::chrono::time_point<std::chrono::system_clock>(std::chrono::seconds(node[constants::timestamp.c_str()].GetUint64()));
-            //out.time = DateUtils::fromJSON(node[constants::timestampField].GetUint64());
-            //getMandatoryUint64Field(node, constants::timestampField, out.time);
+            block.time = std::chrono::time_point<std::chrono::system_clock>(std::chrono::seconds(node[constants::timestamp.c_str()].GetUint64()));
+            //block.time = DateUtils::fromJSON(node[constants::timestampField].GetUint64());
+            //getMandatoryUint64Field(node, constants::timestampField, block.time);
 
             // FIXME Test this!
             uint64_t blockHeight = 0;
@@ -142,192 +151,191 @@ namespace constants {
             if (blockHeight > std::numeric_limits<int64_t>::max()) {
                 throw make_exception(api::ErrorCode::OUT_OF_RANGE, "Block height exceeds maximum value");
             }
-            out.height = (int64_t) blockHeight;
-            //out.height = BigInt::fromScalar<uint64_t>(node[constants::round].GetUint64()).toInt64();
+            block.height = (int64_t) blockHeight;
+            //block.height = BigInt::fromScalar<uint64_t>(node[constants::round].GetUint64()).toInt64();
         }
 
         template <class T>
-        static void parseAssetAmount(const T& node, model::AssetAmount & out) {
-            getMandatoryStringField(node, constants::creator, out.creatorAddress);
-            getMandatoryUint64Field(node, constants::amount, out.amount);
-            getMandatoryBoolField(node, constants::frozen, out.frozen);
+        static void parseAssetAmount(const T& node, model::AssetAmount & assetAmount) {
+            getMandatoryAddressField(node, constants::creator, assetAmount.creatorAddress);
+            getMandatoryUint64Field(node, constants::amount, assetAmount.amount);
+            getMandatoryBoolField(node, constants::frozen, assetAmount.frozen);
         }
 
         template <class T>
-        static void parseAssetsAmounts(const T& node, std::map<uint64_t, model::AssetAmount> & out) {
+        static void parseAssetsAmounts(const T& node, std::map<uint64_t, model::AssetAmount> & assetsAmounts) {
             for (rapidjson::Value::ConstMemberIterator child = node.MemberBegin(); child != node.MemberEnd(); ++child) {
                 model::AssetAmount assetAmount;
                 const auto coinId = child->name.GetUint64();
                 parseAssetAmount(child->value, assetAmount);
-                out[coinId] = assetAmount;
+                assetsAmounts[coinId] = assetAmount;
             }
         }
 
         template <typename T>
-        static void parseAssetParams(const T& node, const uint64_t & assetId, model::AssetParams & out) {
+        static void parseAssetParams(const T& node, model::AssetParams & assetParams) {
 
-            *out.assetId = assetId;
+            getMandatoryAddressField(node, constants::creator, *assetParams.creatorAddr);
+            getMandatoryUint64Field(node, constants::total, assetParams.total);
+            assert(node.HasMember(constants::decimals.c_str()));
+            assetParams.decimals = node[constants::decimals.c_str()].GetUint();
+            getMandatoryBoolField(node, constants::defaultFrozen, *assetParams.defaultFrozen);
+            getMandatoryStringField(node, constants::unitName, *assetParams.unitName);
+            getMandatoryStringField(node, constants::assetName, *assetParams.assetName);
 
-            getMandatoryStringField(node, constants::creator, out.creatorAddress);
-            getMandatoryUint64Field(node, constants::total, out.total);
-            getMandatoryUint64Field(node, constants::decimals, out.decimals);
-            getMandatoryBoolField(node, constants::defaultFrozen, *out.defaultFrozen);
-            getMandatoryStringField(node, constants::unitName, *out.unitName);
-            getMandatoryStringField(node, constants::assetName, *out.assetName);
-
-            getOptionalStringField(node, constants::managerKey, *out.managerAddress);
-            getOptionalStringField(node, constants::freezeAddr, *out.freezeAddress);
-            getOptionalStringField(node, constants::clawbackAddr, *out.clawbackAddress);
-            getOptionalStringField(node, constants::reserveAddr, *out.reserveAddress);
-            getOptionalStringField(node, constants::metadataHash, *out.metadataHash);
-            getOptionalStringField(node, constants::url, *out.url);
+            getOptionalAddressField(node, constants::managerKey, *assetParams.managerAddr);
+            getOptionalAddressField(node, constants::freezeAddr, *assetParams.freezeAddr);
+            getOptionalAddressField(node, constants::clawbackAddr, *assetParams.clawbackAddr);
+            getOptionalAddressField(node, constants::reserveAddr, *assetParams.reserveAddr);
+            getOptionalBinaryField(node, constants::metadataHash, *assetParams.metaDataHash);
+            getOptionalStringField(node, constants::url, *assetParams.url);
         }
 
         template <class T>
-        static void parseAssetsParams(const T& node, std::map<uint64_t, model::AssetParams> & out) {
+        static void parseAssetsParams(const T& node, std::map<uint64_t, model::AssetParams> & assetsParams) {
             for (rapidjson::Value::ConstMemberIterator child = node.MemberBegin(); child != node.MemberEnd(); ++child) {
                 model::AssetParams assetParams;
                 const auto assetId = child->name.GetUint64();
-                parseAssetParams(child->value, assetId, assetParams);
-                out[assetId] = assetParams;
+                parseAssetParams(child->value, assetParams);
+                assetsParams[assetId] = assetParams;
             }
         }
 
         template <class T>
-        static void parsePaymentInfo(const T& node, model::PaymentInfo & out) {
-            getMandatoryStringField(node, constants::to, out.recipientAddress);
-            getMandatoryUint64Field(node, constants::amount, out.amount);
+        static void parsePaymentInfo(const T& node, model::PaymentTxnFields & details) {
+            getMandatoryAddressField(node, constants::to, details.receiverAddr);
+            getMandatoryUint64Field(node, constants::amount, details.amount);
 
-            getOptionalStringField(node, constants::close, *out.closeAddress);
-            getOptionalUint64Field(node, constants::closeAmount, *out.closeAmount);
-            getOptionalUint64Field(node, constants::closeRewards, *out.closeRewards);
-            getOptionalUint64Field(node, constants::toRewards, *out.recipientRewards);
+            getOptionalAddressField(node, constants::close, *details.closeAddr);
+            getOptionalUint64Field(node, constants::closeAmount, *details.closeAmount);
+            getOptionalUint64Field(node, constants::closeRewards, *details.closeRewards);
+            getOptionalUint64Field(node, constants::toRewards, *details.receiverRewards);
         }
 
         // WARNING This has not been tested
         template <class T>
-        static void parseParticipationInfo(const T& node, model::ParticipationInfo & out) {
-            getMandatoryStringField(node, constants::votekey , out.rootPublicKey);
-            getMandatoryStringField(node, constants::selkey, out.vrfPublicKey);
-            getMandatoryStringField(node, constants::votekd, out.voteKeyDilution);
-            getMandatoryStringField(node, constants::votefst, out.voteFirstRound);
-            getMandatoryStringField(node, constants::votelst, out.voteLastRound);
+        static void parseParticipationInfo(const T& node, model::KeyRegTxnFields & details) {
+            getMandatoryStringField(node, constants::votekey , details.selectionPk);
+            getMandatoryStringField(node, constants::selkey, details.votePk);
+            getMandatoryUint64Field(node, constants::votekd, details.voteKeyDilution);
+            getMandatoryUint64Field(node, constants::votefst, details.voteFirst);
+            getMandatoryUint64Field(node, constants::votelst, details.voteLast);
         }
 
         template <class T>
-        static void parseAssetConfigurationInfo(const T& node, model::AssetConfigurationInfo & out) {
-            getMandatoryUint64Field(node, constants::id, *out.assetId);
+        static void parseAssetConfigurationInfo(const T& node, model::AssetConfigTxnFields & details) {
+            getMandatoryUint64Field(node, constants::id, *details.assetId);
 
             assert(node.HasMember(constants::params.c_str()));
-            parseAssetParams(node[constants::params.c_str()].GetObject(), *out.assetId, *out.assetParams);
+            parseAssetParams(node[constants::params.c_str()].GetObject(), *details.assetParams);
         }
 
         template <class T>
-        static void parseAssetTransferInfo(const T& node, model::AssetTransferInfo & out) {
-            getMandatoryUint64Field(node, constants::id, out.assetId);
-            getMandatoryStringField(node, constants::rcv, out.recipientAddress);
-            getMandatoryUint64Field(node, constants::amt, out.amount);
+        static void parseAssetTransferInfo(const T& node, model::AssetTransferTxnFields & details) {
+            getMandatoryUint64Field(node, constants::id, details.assetId);
+            getMandatoryAddressField(node, constants::rcv, details.assetReceiver);
+            getMandatoryUint64Field(node, constants::amt, *details.assetAmount);
 
-            getOptionalStringField(node, constants::closeTo, *out.closeAddress);
-            getOptionalStringField(node, constants::snd, *out.clawedBackAddress);
+            getOptionalAddressField(node, constants::closeTo, *details.assetCloseTo);
+            getOptionalAddressField(node, constants::snd, *details.assetSender);
         }
 
         // WARNING This has not been tested
         template <class T>
-        static void parseAssetFreezeInfo(const T& node, model::AssetFreezeInfo & out) {
-            getMandatoryUint64Field(node, constants::id, out.assetId);
-            getMandatoryStringField(node, constants::acct, out.frozenAddress);
-            getMandatoryBoolField(node, constants::freeze, out.frozen);
+        static void parseAssetFreezeInfo(const T& node, model::AssetFreezeTxnFields & details) {
+            getMandatoryUint64Field(node, constants::id, details.assetId);
+            getMandatoryAddressField(node, constants::acct, details.frozenAddress);
+            getMandatoryBoolField(node, constants::freeze, details.assetFrozen);
         }
 
         template <class T>
-        static void parseTransaction(const T& node, model::ExplorerTransaction & out) {
+        static void parseTransaction(const T& node, model::Transaction & tx) {
 
-            getMandatoryStringField(node, constants::type, out.baseTransaction.type);
-            getMandatoryStringField(node, constants::tx, out.id);
-            getMandatoryStringField(node, constants::from, out.baseTransaction.senderAddress);
-            getMandatoryUint64Field(node, constants::firstRound, out.baseTransaction.firstRound);
-            getMandatoryUint64Field(node, constants::lastRound, out.baseTransaction.lastRound);
-            getMandatoryUint64Field(node, constants::round, out.round);
-            getMandatoryUint64Field(node, constants::fee, out.baseTransaction.fee);
-            getMandatoryStringField(node, constants::genesisHashB64, out.baseTransaction.genesisHash);
+            getMandatoryStringField(node, constants::type, tx.header.type);
+            getMandatoryStringField(node, constants::tx, *tx.header.id);
+            getMandatoryAddressField(node, constants::from, tx.header.sender);
+            getMandatoryUint64Field(node, constants::firstRound, tx.header.firstValid);
+            getMandatoryUint64Field(node, constants::lastRound, tx.header.lastValid);
+            getMandatoryUint64Field(node, constants::round, *tx.header.round);
+            getMandatoryUint64Field(node, constants::fee, tx.header.fee);
+            getMandatoryB64StringField(node, constants::genesisHashB64, tx.header.genesisHash);
 
-            getOptionalStringField(node, constants::genesisId, *out.baseTransaction.genesisId);
-            getOptionalStringField(node, constants::noteB64, *out.baseTransaction.note);
-            getOptionalUint64Field(node, constants::fromRewards, out.fromRewards);
-            getOptionalStringField(node, constants::group, *out.baseTransaction.group);
-            getOptionalStringField(node, constants::lease, *out.baseTransaction.lease);
+            getOptionalStringField(node, constants::genesisId, *tx.header.genesisId);
+            getOptionalBinaryField(node, constants::noteB64, *tx.header.note);
+            getOptionalUint64Field(node, constants::fromRewards, *tx.header.fromRewards);
+            getOptionalBinaryField(node, constants::group, *tx.header.group);
+            getOptionalBinaryField(node, constants::lease, *tx.header.lease);
 
-            if (out.baseTransaction.type == constants::pay) {
+            if (tx.header.type == constants::pay) {
                     assert((node.HasMember(constants::payment.c_str())));
-                    out.baseTransaction.details = model::PaymentInfo();
+                    tx.details = model::PaymentTxnFields();
                     parsePaymentInfo(node[constants::payment.c_str()].GetObject(),
-                                    boost::get<model::PaymentInfo>(out.baseTransaction.details));
-            } else if (out.baseTransaction.type == constants::keyreg) {
-                    assert((node.HasMember(constants::keyreg.c_str())));
-                    out.baseTransaction.details = model::ParticipationInfo();
-                    parseParticipationInfo(node[constants::keyreg.c_str()].GetObject(),
-                                        boost::get<model::ParticipationInfo>(out.baseTransaction.details));
-            } else if (out.baseTransaction.type == constants::acfg) {
+                                        boost::get<model::PaymentTxnFields>(tx.details));
+            } else if (tx.header.type == constants::keyreg) {
+                    assert((node.HasMember(constants::keyregs.c_str())));
+                    tx.details = model::KeyRegTxnFields();
+                    parseParticipationInfo(node[constants::keyregs.c_str()].GetObject(),
+                                        boost::get<model::KeyRegTxnFields>(tx.details));
+            } else if (tx.header.type == constants::acfg) {
                     assert((node.HasMember(constants::curcfg.c_str())));
-                    out.baseTransaction.details = model::AssetConfigurationInfo();
+                    tx.details = model::AssetConfigTxnFields();
                     parseAssetConfigurationInfo(node[constants::curcfg.c_str()].GetObject(),
-                                                boost::get<model::AssetConfigurationInfo>(out.baseTransaction.details));
-            } else if (out.baseTransaction.type == constants::axfer) {
+                                        boost::get<model::AssetConfigTxnFields>(tx.details));
+            } else if (tx.header.type == constants::axfer) {
                     assert((node.HasMember(constants::curxfer.c_str())));
-                    out.baseTransaction.details = model::AssetTransferInfo();
+                    tx.details = model::AssetTransferTxnFields();
                     parseAssetTransferInfo(node[constants::curxfer.c_str()].GetObject(),
-                                        boost::get<model::AssetTransferInfo>(out.baseTransaction.details));
-            } else if (out.baseTransaction.type == constants::afrz) {
+                                        boost::get<model::AssetTransferTxnFields>(tx.details));
+            } else if (tx.header.type == constants::afreeze) {
                     assert((node.HasMember(constants::curfrz.c_str())));
-                    out.baseTransaction.details = model::AssetFreezeInfo();
+                    tx.details = model::AssetFreezeTxnFields();
                     parseAssetFreezeInfo(node[constants::curfrz.c_str()].GetObject(),
-                                        boost::get<model::AssetFreezeInfo>(out.baseTransaction.details));
+                                        boost::get<model::AssetFreezeTxnFields>(tx.details));
             }
         }
 
         template <class T>
-        static void parseTransactions(const T& array, std::vector<model::ExplorerTransaction> & out) {
-            out.assign((std::size_t) array.Size(), model::ExplorerTransaction());
+        static void parseTransactions(const T& array, std::vector<model::Transaction> & txs) {
+            txs.assign((std::size_t) array.Size(), model::Transaction());
             auto index = 0;
             for (const auto& node : array) {
-                parseTransaction(node.GetObject(), out[index]);
+                parseTransaction(node.GetObject(), txs[index]);
                 index++;
             }
         }
 
         template <class T>
-        static void parseTransactionParams(const T& node, model::TransactionParams & out) {
-            getMandatoryStringField(node, constants::genesisId, out.genesisID);
-            getMandatoryStringField(node, constants::genesisHashB64, out.genesisHash);
-            getMandatoryUint64Field(node, constants::lastRound, out.lastRound);
-            getMandatoryUint64Field(node, constants::fee, out.suggestedFeePerByte);
-            getMandatoryUint64Field(node, constants::minFee, out.minFee);
-            getMandatoryUint64Field(node, constants::consensusVersion, out.consensusVersion);
+        static void parseTransactionParams(const T& node, model::TransactionParams & txParams) {
+            getMandatoryStringField(node, constants::genesisId, txParams.genesisID);
+            getMandatoryStringField(node, constants::genesisHashB64, txParams.genesisHash);
+            getMandatoryUint64Field(node, constants::lastRound, txParams.lastRound);
+            getMandatoryUint64Field(node, constants::fee, txParams.suggestedFeePerByte);
+            getMandatoryUint64Field(node, constants::minFee, txParams.minFee);
+            getMandatoryStringField(node, constants::consensusVersion, txParams.consensusVersion);
         }
 
         template <class T>
-        static void parseAccount(const T& node, model::Account & out) {
-            getMandatoryUint64Field(node, constants::round, out.round);
-            getMandatoryStringField(node, constants::address, out.address);
-            out.pubKeyHex = hex::toString(Address::toPublicKey(out.address));
-            getMandatoryUint64Field(node, constants::amount, out.amount);
-            getMandatoryUint64Field(node, constants::pendingRewards, out.pendingRewards);
-            getMandatoryUint64Field(node, constants::amountWithoutPendingRewards, out.amountWithoutPendingRewards);
-            getMandatoryUint64Field(node, constants::rewards, out.rewards);
+        static void parseAccount(const T& node, model::Account & account) {
+            getMandatoryUint64Field(node, constants::round, account.round);
+            getMandatoryStringField(node, constants::address, account.address);
+            account.pubKeyHex = hex::toString(Address::toPublicKey(account.address));
+            getMandatoryUint64Field(node, constants::amount, account.amount);
+            getMandatoryUint64Field(node, constants::pendingRewards, account.pendingRewards);
+            getMandatoryUint64Field(node, constants::amountWithoutPendingRewards, account.amountWithoutPendingRewards);
+            getMandatoryUint64Field(node, constants::rewards, account.rewards);
 
-            getOptionalStringField(node, constants::status, out.status);
+            getOptionalStringField(node, constants::status, account.status);
 
             if (node.HasMember(constants::assets.c_str())) {
-                parseAssetsAmounts(node[constants::assets.c_str()].GetObject(), out.assetsAmounts);
+                parseAssetsAmounts(node[constants::assets.c_str()].GetObject(), account.assetsAmounts);
             }
 
             if (node.HasMember(constants::thisAssetTotal.c_str())) {
-                parseAssetsParams(node[constants::thisAssetTotal.c_str()].GetObject(), out.createdAssets);
+                parseAssetsParams(node[constants::thisAssetTotal.c_str()].GetObject(), account.createdAssets);
             }
 
             if (node.HasMember(constants::participation.c_str())) {
-                parseParticipationInfo(node[constants::participation.c_str()].GetObject(), *out.participation);
+                parseParticipationInfo(node[constants::participation.c_str()].GetObject(), *account.participation);
             }
         }
 
@@ -341,7 +349,7 @@ namespace constants {
 
         template <class T>
         static void getMandatoryUint64Field(const T & node, const std::string & fieldName, uint64_t & field) {
-            assert(node.HasMember(fieldName));
+            assert(node.HasMember(fieldName.c_str()));
             field = node[fieldName.c_str()].GetUint64();
         }
 
@@ -350,6 +358,28 @@ namespace constants {
             assert(node.HasMember(fieldName.c_str()));
             field = node[fieldName.c_str()].GetBool();
         }
+
+        template <class T>
+        static void getMandatoryAddressField(const T & node, const std::string & fieldName, Address & field) {
+            assert(node.HasMember(fieldName.c_str()));
+            auto addr = node[fieldName.c_str()].GetString();
+            // FIXME Should be set to wallet currency instead of hardcoded here
+            field = Address(currencies::algorand(), addr);
+        }
+
+        template <class T>
+        static void getMandatoryB64StringField(const T & node, const std::string & fieldName, B64String & field) {
+            assert(node.HasMember(fieldName.c_str()));
+            field = B64String(node[fieldName.c_str()].GetString());
+        }
+
+        template <class T>
+        static void getMandatoryBinaryField(const T & node, const std::string & fieldName, std::vector<uint8_t> & field) {
+            assert(node.HasMember(fieldName.c_str()));
+            BaseConverter::decode(node[fieldName.c_str()].GetString(), BaseConverter::BASE64_RFC4648, field);
+        }
+
+        // ~~~
 
         template <class T>
         static void getOptionalStringField(const T & node, const std::string & fieldName, std::string & field) {
@@ -371,6 +401,31 @@ namespace constants {
                 field = node[fieldName.c_str()].GetBool();
             }
         }
+
+        template <class T>
+        static void getOptionalAddressField(const T & node, const std::string & fieldName, Address & field) {
+            if (node.HasMember(fieldName.c_str())) {
+                auto addr = node[fieldName.c_str()].GetString();
+                // FIXME Should be set to wallet currency instead of hardcoded here
+                field = Address(currencies::algorand(), addr);
+            }
+        }
+
+        template <class T>
+        static void getOptionalB64StringField(const T & node, const std::string & fieldName, B64String & field) {
+            if (node.HasMember(fieldName.c_str())) {
+                auto addr = node[fieldName.c_str()].GetString();
+                field = B64String(node[fieldName.c_str()].GetString());
+            }
+        }
+
+        template <class T>
+        static void getOptionalBinaryField(const T & node, const std::string & fieldName, std::vector<uint8_t> & field) {
+            if (node.HasMember(fieldName.c_str())) {
+                BaseConverter::decode(node[fieldName.c_str()].GetString(), BaseConverter::BASE64_RFC4648, field);
+            }
+        }
+
     };
 
 } // namespace algorand
