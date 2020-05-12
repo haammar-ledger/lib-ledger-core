@@ -45,6 +45,7 @@
 namespace ledger {
 namespace core {
 namespace algorand {
+
 namespace model {
 
     class Transaction
@@ -54,6 +55,7 @@ namespace model {
         class Header
         {
         public:
+            Header() {}
             Header(uint64_t fee,
                    uint64_t firstValid,
                    Option<std::string> genesisId,
@@ -76,6 +78,9 @@ namespace model {
                 , type(type)
             {}
 
+            Address sender;
+            std::string type;
+
             uint64_t fee;
             uint64_t firstValid;
             Option<std::string> genesisId;
@@ -84,8 +89,12 @@ namespace model {
             uint64_t lastValid;
             Option<std::vector<uint8_t>> lease;
             Option<std::vector<uint8_t>> note;
-            Address sender;
-            std::string type;
+
+            // Additional fields retrieved from the blockchain
+            Option<std::string> id;
+            Option<uint64_t> round;
+            Option<uint64_t> fromRewards;
+
         };
 
         using TransactionDetails = boost::variant<KeyRegTxnFields,
@@ -94,6 +103,7 @@ namespace model {
                                                   AssetTransferTxnFields,
                                                   AssetFreezeTxnFields>;
 
+        Transaction() {}
         Transaction(Header header, TransactionDetails details)
             : header(std::move(header))
             , details(std::move(details))
@@ -101,6 +111,11 @@ namespace model {
 
         Header header;
         TransactionDetails details;
+    };
+
+    struct TransactionsBulk {
+        std::vector<Transaction> transactions;
+        bool hasNext;
     };
 
 } // namespace model

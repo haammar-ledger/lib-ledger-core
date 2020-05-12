@@ -163,12 +163,12 @@ namespace adaptor {
                     KeyValue<Option<std::string>>(constants::an, params.assetName),
                     KeyValue<Option<std::string>>(constants::au, params.url),
                     KeyValue<Option<Address>>(constants::c, params.clawbackAddr),
-                    KeyValue<Option<uint32_t>>(constants::dc, params.decimals),
+                    KeyValue<uint32_t>(constants::dc, params.decimals),
                     KeyValue<Option<bool>>(constants::df, params.defaultFrozen),
                     KeyValue<Option<Address>>(constants::f, params.freezeAddr),
                     KeyValue<Option<Address>>(constants::m, params.managerAddr),
                     KeyValue<Option<Address>>(constants::r, params.reserveAddr),
-                    KeyValue<Option<uint64_t>>(constants::t, params.total),
+                    KeyValue<uint64_t>(constants::t, params.total),
                     KeyValue<Option<std::string>>(constants::un, params.unitName));
         }
 
@@ -190,15 +190,15 @@ namespace adaptor {
             {
                 return countValidValues(
                         fields.amount,
-                        fields.closeRemainderTo,
-                        fields.receiver);
+                        fields.closeAddr,
+                        fields.receiverAddr);
             }
 
             uint32_t operator()(const AssetConfigTxnFields& fields) const
             {
                 return countValidValues(
                         fields.assetParams,
-                        fields.configAsset);
+                        fields.assetId);
             }
 
             uint32_t operator()(const AssetTransferTxnFields& fields) const
@@ -208,15 +208,15 @@ namespace adaptor {
                         fields.assetCloseTo,
                         fields.assetReceiver,
                         fields.assetSender,
-                        fields.xferAsset);
+                        fields.assetId);
             }
 
             uint32_t operator()(const AssetFreezeTxnFields& fields) const
             {
                 return countValidValues(
                         fields.assetFrozen,
-                        fields.freezeAccount,
-                        fields.freezeAsset);
+                        fields.frozenAddress,
+                        fields.assetId);
             }
         };
 
@@ -282,7 +282,7 @@ namespace adaptor {
 
                 return packKeyValues(out,
                         KeyValue<uint64_t>(constants::amt, fields.amount),
-                        KeyValue<Option<Address>>(constants::close, fields.closeRemainderTo),
+                        KeyValue<Option<Address>>(constants::close, fields.closeAddr),
                         KeyValue<uint64_t>(constants::fee, header.fee),
                         KeyValue<uint64_t>(constants::fv, header.firstValid),
                         KeyValue<Option<std::string>>(constants::gen, header.genesisId),
@@ -291,7 +291,7 @@ namespace adaptor {
                         KeyValue<uint64_t>(constants::lv, header.lastValid),
                         KeyValue<Option<std::vector<uint8_t>>>(constants::lx, header.lease),
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
-                        KeyValue<Address>(constants::rcv, fields.receiver),
+                        KeyValue<Address>(constants::rcv, fields.receiverAddr),
                         KeyValue<Address>(constants::snd, header.sender),
                         KeyValue<std::string>(constants::type, header.type));
             }
@@ -302,7 +302,7 @@ namespace adaptor {
 
                 return packKeyValues(out,
                         KeyValue<Option<AssetParams>>(constants::apar, fields.assetParams),
-                        KeyValue<Option<uint64_t>>(constants::caid, fields.configAsset),
+                        KeyValue<Option<uint64_t>>(constants::caid, fields.assetId),
                         KeyValue<uint64_t>(constants::fee, header.fee),
                         KeyValue<uint64_t>(constants::fv, header.firstValid),
                         KeyValue<Option<std::string>>(constants::gen, header.genesisId),
@@ -334,7 +334,7 @@ namespace adaptor {
                         KeyValue<Option<std::vector<uint8_t>>>(constants::note, header.note),
                         KeyValue<Address>(constants::snd, header.sender),
                         KeyValue<std::string>(constants::type, header.type),
-                        KeyValue<uint64_t>(constants::xaid, fields.xferAsset));
+                        KeyValue<uint64_t>(constants::xaid, fields.assetId));
             }
 
             packer<Stream>& operator()(const AssetFreezeTxnFields& fields) const
@@ -343,8 +343,8 @@ namespace adaptor {
 
                 return packKeyValues(out,
                         KeyValue<bool>(constants::afrz, fields.assetFrozen),
-                        KeyValue<Address>(constants::fadd, fields.freezeAccount),
-                        KeyValue<uint64_t>(constants::faid, fields.freezeAsset),
+                        KeyValue<Address>(constants::fadd, fields.frozenAddress),
+                        KeyValue<uint64_t>(constants::faid, fields.assetId),
                         KeyValue<uint64_t>(constants::fee, header.fee),
                         KeyValue<uint64_t>(constants::fv, header.firstValid),
                         KeyValue<Option<std::string>>(constants::gen, header.genesisId),
