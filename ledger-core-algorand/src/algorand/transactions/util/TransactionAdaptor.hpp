@@ -163,12 +163,12 @@ namespace adaptor {
                     KeyValue<Option<std::string>>(constants::an, params.assetName),
                     KeyValue<Option<std::string>>(constants::au, params.url),
                     KeyValue<Option<Address>>(constants::c, params.clawbackAddr),
-                    KeyValue<uint32_t>(constants::dc, params.decimals),
+                    KeyValue<Option<uint32_t>>(constants::dc, params.decimals),
                     KeyValue<Option<bool>>(constants::df, params.defaultFrozen),
                     KeyValue<Option<Address>>(constants::f, params.freezeAddr),
                     KeyValue<Option<Address>>(constants::m, params.managerAddr),
                     KeyValue<Option<Address>>(constants::r, params.reserveAddr),
-                    KeyValue<uint64_t>(constants::t, params.total),
+                    KeyValue<Option<uint64_t>>(constants::t, params.total),
                     KeyValue<Option<std::string>>(constants::un, params.unitName));
         }
 

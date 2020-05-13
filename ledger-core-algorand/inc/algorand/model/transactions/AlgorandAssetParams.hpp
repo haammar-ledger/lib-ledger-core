@@ -73,12 +73,12 @@ namespace model {
         Option<std::string> assetName;
         Option<std::string> url;
         Option<Address> clawbackAddr;
-        uint32_t decimals;
+        Option<uint32_t> decimals;
         Option<bool> defaultFrozen;
         Option<Address> freezeAddr;
         Option<Address> managerAddr;
         Option<Address> reserveAddr;
-        uint64_t total;
+        Option<uint64_t> total;
         Option<std::string> unitName;
 
         // Additional fields retrieved from the blockchain

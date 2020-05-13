@@ -176,9 +176,9 @@ namespace constants {
         static void parseAssetParams(const T& node, model::AssetParams & assetParams) {
 
             getMandatoryAddressField(node, constants::creator, *assetParams.creatorAddr);
-            getMandatoryUint64Field(node, constants::total, assetParams.total);
+            getMandatoryUint64Field(node, constants::total, *assetParams.total);
             assert(node.HasMember(constants::decimals.c_str()));
-            assetParams.decimals = node[constants::decimals.c_str()].GetUint();
+            *assetParams.decimals = node[constants::decimals.c_str()].GetUint();
             getMandatoryBoolField(node, constants::defaultFrozen, *assetParams.defaultFrozen);
             getMandatoryStringField(node, constants::unitName, *assetParams.unitName);
             getMandatoryStringField(node, constants::assetName, *assetParams.assetName);
