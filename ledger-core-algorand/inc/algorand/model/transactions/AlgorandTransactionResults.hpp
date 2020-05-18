@@ -39,6 +39,8 @@ namespace core {
 namespace algorand {
 namespace model {
 
+    // Unused!
+    // TODO remove?
     // Contains information about the side effects of a transaction
     struct TransactionResults {
         Option<uint64_t> createdAsset; // The ID of an asset created by this transaction.
