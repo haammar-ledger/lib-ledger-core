@@ -35,7 +35,6 @@
 #include <algorand/model/transactions/AlgorandAssetParams.hpp>
 #include <algorand/model/transactions/AlgorandTransactionParams.hpp>
 #include <algorand/model/AlgorandAssetAmount.hpp>
-#include <algorand/utils/B64String.hpp>
 
 #include <core/math/BigInt.hpp>
 #include <core/math/BaseConverter.hpp>
@@ -165,9 +164,9 @@ namespace constants {
         static void parseAssetsAmounts(const T& node, std::map<uint64_t, model::AssetAmount> & assetsAmounts) {
             for (rapidjson::Value::ConstMemberIterator child = node.MemberBegin(); child != node.MemberEnd(); ++child) {
                 model::AssetAmount assetAmount;
-                const auto coinId = BigInt::from_dec(child->name.GetString())->toUint64();
+                const auto assetId = std::stoull(child->name.GetString());
                 parseAssetAmount(child->value, assetAmount);
-                assetsAmounts[coinId] = assetAmount;
+                assetsAmounts[assetId] = assetAmount;
             }
         }
 
@@ -194,7 +193,7 @@ namespace constants {
         static void parseAssetsParams(const T& node, std::map<uint64_t, model::AssetParams> & assetsParams) {
             for (rapidjson::Value::ConstMemberIterator child = node.MemberBegin(); child != node.MemberEnd(); ++child) {
                 model::AssetParams assetParams;
-                const auto assetId = BigInt::from_dec(child->name.GetString())->toUint64();
+                const auto assetId = std::stoull(child->name.GetString());
                 parseAssetParams(child->value, assetParams);
                 assetsParams[assetId] = assetParams;
             }
