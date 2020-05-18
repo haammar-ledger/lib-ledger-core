@@ -32,20 +32,19 @@
 #include <core/wallet/CurrencyBuilder.hpp>
 
 namespace ledger {
-    namespace core {
-        namespace currencies {
+namespace core {
+namespace currencies {
 
-            static constexpr uint64_t COIN_ID = 283;
+    api::Currency algorand() {
+        static api::Currency const CURRENCY = CurrencyBuilder("algorand")
+            .bip44(algorand::constants::COIN_ID)
+            .paymentUri("algorand")
+            .unit("uALGO", 0, "uALGO")
+            .unit("ALGO", 3, "uALGO");
 
-            api::Currency algorand() {
-                static api::Currency const CURRENCY = CurrencyBuilder("algorand")
-                    .bip44(COIN_ID)
-                    .paymentUri("algorand")
-                    .unit("uALGO", 0, "uALGO")
-                    .unit("ALGO", 3, "uALGO");
-
-                return CURRENCY;
-            }
-        }
+        return CURRENCY;
     }
+
+}
+}
 }
