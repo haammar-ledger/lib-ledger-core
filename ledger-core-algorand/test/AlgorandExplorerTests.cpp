@@ -63,12 +63,12 @@ TEST_F(AlgorandExplorerTest, GetBlock) {
 
     EXPECT_EQ(block->height, blockHeight);
     EXPECT_EQ(block->blockHash, "SWM7OIULX7F7KMGZSGU54FCEVVVCV6XWT6CEG7EH7WI4LHWHNB7A");
-    EXPECT_EQ(block->time, std::chrono::system_clock::time_point(std::chrono::seconds(1586345796)));
+    EXPECT_EQ(block->time, blockTime);
 }
 
 TEST_F(AlgorandExplorerTest, GetAccount) {
 
-    auto address = ::algorand::Address("RGX5XA7DWZOZ5SLG4WQSNIFKIG4CNX4VOH23YCEX56523DQEAL3QL56XZM"); // Obelix
+    auto address = ::algorand::Address(OBELIX_ADDRESS);
     std::shared_ptr<model::Account> account = ::wait(explorer->getAccount(address.toString()));
 
     EXPECT_EQ(account->address, address.toString());
