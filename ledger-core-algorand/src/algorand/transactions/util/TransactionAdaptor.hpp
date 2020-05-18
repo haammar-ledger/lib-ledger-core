@@ -51,6 +51,75 @@
 #include <cstdint>
 #include <string>
 
+namespace ledger {
+namespace core {
+namespace algorand {
+namespace constants {
+
+    // Header
+    static constexpr char fee[] = "fee";
+    static constexpr char fv[] = "fv";
+    static constexpr char gen[] = "gen";
+    static constexpr char gh[] = "gh";
+    static constexpr char grp[] = "grp";
+    static constexpr char lv[] = "lv";
+    static constexpr char lx[] = "lx";
+    static constexpr char note[] = "note";
+    static constexpr char snd[] = "snd";
+    static constexpr char type[] = "type";
+
+    // Key Registration Transaction
+    static constexpr char nonpart[] = "nonpart";
+    static constexpr char selkey[] = "selkey";
+    static constexpr char votefst[] = "votefst";
+    static constexpr char votekd[] = "votekd";
+    static constexpr char votekey[] = "votekey";
+    static constexpr char votelst[] = "votelst";
+
+    // Payment Transaction
+    static constexpr char amt[] = "amt";
+    static constexpr char close[] = "close";
+    static constexpr char rcv[] = "rcv";
+
+    // Asset configuration Transaction
+    static constexpr char apar[] = "apar";
+    static constexpr char caid[] = "caid";
+    // Asset parameters
+    static constexpr char am[] = "am";
+    static constexpr char an[] = "an";
+    static constexpr char au[] = "au";
+    static constexpr char c[] = "c";
+    static constexpr char dc[] = "dc";
+    static constexpr char df[] = "df";
+    static constexpr char f[] = "f";
+    static constexpr char m[] = "m";
+    static constexpr char r[] = "r";
+    static constexpr char t[] = "t";
+    static constexpr char un[] = "un";
+
+    // Asset Transfer Transaction
+    static constexpr char aamt[] = "aamt";
+    static constexpr char aclose[] = "aclose";
+    static constexpr char arcv[] = "arcv";
+    static constexpr char asnd[] = "asnd";
+    static constexpr char xaid[] = "xaid";
+
+    // Asset Freeze Transaction
+    static constexpr char afrz[] = "afrz";
+    static constexpr char fadd[] = "fadd";
+    static constexpr char faid[] = "faid";
+
+    // Signed Transaction
+    static constexpr char lsig[] = "lsig";
+    static constexpr char msig[] = "msig";
+    static constexpr char sig[] = "sig";
+    static constexpr char txn[] = "txn";
+
+} // namespace constants
+} // namespace algorand
+} // namespace core
+} // namespace ledger
+
 namespace msgpack {
 MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
 namespace adaptor {
