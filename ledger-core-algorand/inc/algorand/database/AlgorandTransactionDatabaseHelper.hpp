@@ -31,7 +31,6 @@
 #define LEDGER_CORE_ALGORANDTRANSACTIONDATABASEHELPER_H
 
 #include <algorand/model/transactions/AlgorandTransaction.hpp>
-#include <algorand/api/AlgorandOperationType.hpp> // FIXME Remove?
 
 #include <soci.h>
 
@@ -48,7 +47,6 @@ namespace algorand {
 
         static bool getTransactionByHash(soci::session & sql,
                                          const std::string & hash,
-                                         //const std::string & operationUid, // FIXME Probably not needed
                                          model::Transaction & tx);
 
         static std::string createTransactionUid(const std::string & accountUid,
@@ -57,13 +55,7 @@ namespace algorand {
         static std::string putTransaction(soci::session & sql,
                                           const std::string & accountUid,
                                           const model::Transaction & tx);
-/*
-    private:
 
-        static void inflateTransaction(soci::session & sql,
-                                       const soci::row & row,
-                                       model::Transaction & tx);
-*/
     };
 
 } // namespace algorand
