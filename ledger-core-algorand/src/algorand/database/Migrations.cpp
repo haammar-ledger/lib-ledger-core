@@ -13,26 +13,9 @@ namespace core {
 
         sql << "CREATE TABLE algorand_accounts("
                 "uid VARCHAR(255) NOT NULL PRIMARY KEY REFERENCES accounts(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
-                // TODO Manage this with ledger::core::AccountDatabaseHelper
-                //"wallet_uid VARCHAR(255) NOT NULL REFERENCES wallets(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
-                // TODO Manage this with ledger::core::AccountDatabaseHelper
-                //"idx INTEGER NOT NULL,"
-                "round BIGINT NOT NULL,"
-                "pub_key VARCHAR(255) NOT NULL,"
+                "wallet_uid VARCHAR(255) NOT NULL REFERENCES wallets(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
+                "idx INTEGER NOT NULL,"
                 "address VARCHAR(255) NOT NULL,"
-                "amount BIGINT NOT NULL,"
-                "amount_without_pending_rewards BIGINT NOT NULL,"
-                "pending_rewards BIGINT NOT NULL,"
-                "rewards BIGINT NOT NULL,"
-                "status BIGINT NOT NULL,"
-
-                // Participation optional info
-                "non_participation INTEGER,"
-                "selection_pk VARCHAR(255),"
-                "vote_pk VARCHAR(255),"
-                "vote_key_dilution BIGINT,"
-                "vote_first BIGINT,"
-                "vote_last BIGINT"
                 ")";
 
         sql << "CREATE TABLE algorand_transactions("
@@ -51,8 +34,6 @@ namespace core {
                 "note VARCHAR(255),"
                 "group VARCHAR(255),"
                 "lease VARCHAR(255),"
-
-                "operation_type VARCHAR(255) NOT_NULL,"
 
                 // Fields for payment transactions
                 "pay_amount BIGINT,"
@@ -126,19 +107,15 @@ namespace core {
                 "url VARCHAR(255)"
         ")";
 
-        // FIXME This table or just an 'operation_type' column in algorand_transactions ???
-        /*
         sql << "CREATE TABLE algorand_operations("
                 "uid VARCHAR(255) PRIMARY KEY NOT NULL REFERENCES operations(uid) ON DELETE CASCADE,"
                 "transaction_uid VARCHAR(255) NOT NULL REFERENCES algorand_transactions(transaction_uid),"
-                "transaction_hash VARCHAR(255) NOT NULL," // FIXME Needed?
-                "operation_type VARCHAR(255) NOT NULL"
+                "transaction_hash VARCHAR(255) NOT NULL"
         ")";
-        */
     }
 
     template <> void rollback<1, AlgorandMigration>(soci::session& sql, api::DatabaseBackendType type) {
-        //sql << "DROP TABLE algorand_operations";
+        sql << "DROP TABLE algorand_operations";
 
         sql << "DROP TABLE algorand_asset_params";
 
