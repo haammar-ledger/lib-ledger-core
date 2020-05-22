@@ -115,6 +115,12 @@ namespace algorand {
     static void putPaymentTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& payment = boost::get<model::PaymentTxnFields>(tx.details);
 
+        auto b64note = BaseConverter::encode(*tx.header.note, BaseConverter::BASE64_RFC4648);
+        auto b64group = BaseConverter::encode(*tx.header.group, BaseConverter::BASE64_RFC4648);
+        auto b64lease = BaseConverter::encode(*tx.header.lease, BaseConverter::BASE64_RFC4648);
+
+        auto closeAddr = payment.closeAddr.hasValue() ? payment.closeAddr->toString() : nullptr;
+
         sql << "INSERT INTO algorand_transactions "
         // Header fields
         "(uid, hash, type, round, "
@@ -135,23 +141,27 @@ namespace algorand {
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(*tx.header.genesisId),
-            soci::use(tx.header.genesisHash),
-            soci::use(tx.header.sender),
+            soci::use(tx.header.genesisHash.getRawString()),
+            soci::use(tx.header.sender.toString()),
             soci::use(tx.header.fee),
             soci::use(*tx.header.fromRewards),
-            soci::use(*tx.header.note),
-            soci::use(*tx.header.group),
-            soci::use(*tx.header.lease),
+            soci::use(b64note),
+            soci::use(b64group),
+            soci::use(b64lease),
             soci::use(payment.amount),
-            soci::use(payment.receiverAddr),
+            soci::use(payment.receiverAddr.toString()),
             soci::use(*payment.receiverRewards),
-            soci::use(*payment.closeAddr),
+            soci::use(closeAddr),
             soci::use(*payment.closeAmount),
             soci::use(*payment.closeRewards);
     }
 
     static void putKeyRegTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& keyreg = boost::get<model::KeyRegTxnFields>(tx.details);
+
+        auto b64note = BaseConverter::encode(*tx.header.note, BaseConverter::BASE64_RFC4648);
+        auto b64group = BaseConverter::encode(*tx.header.group, BaseConverter::BASE64_RFC4648);
+        auto b64lease = BaseConverter::encode(*tx.header.lease, BaseConverter::BASE64_RFC4648);
 
         sql << "INSERT INTO algorand_transactions "
         // Header fields
@@ -172,14 +182,14 @@ namespace algorand {
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(*tx.header.genesisId),
-            soci::use(tx.header.genesisHash),
-            soci::use(tx.header.sender),
+            soci::use(tx.header.genesisHash.getRawString()),
+            soci::use(tx.header.sender.toString()),
             soci::use(tx.header.fee),
             soci::use(*tx.header.fromRewards),
-            soci::use(*tx.header.note),
-            soci::use(*tx.header.group),
-            soci::use(*tx.header.lease),
-            soci::use(*keyreg.nonParticipation),
+            soci::use(b64note),
+            soci::use(b64group),
+            soci::use(b64lease),
+            soci::use(static_cast<int32_t>(*keyreg.nonParticipation)),
             soci::use(keyreg.selectionPk),
             soci::use(keyreg.votePk),
             soci::use(keyreg.voteKeyDilution),
@@ -190,6 +200,18 @@ namespace algorand {
     static void putAssetConfigTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& assetConfig = boost::get<model::AssetConfigTxnFields>(tx.details);
         auto& assetParams = *assetConfig.assetParams;
+
+        auto b64note = BaseConverter::encode(*tx.header.note, BaseConverter::BASE64_RFC4648);
+        auto b64group = BaseConverter::encode(*tx.header.group, BaseConverter::BASE64_RFC4648);
+        auto b64lease = BaseConverter::encode(*tx.header.lease, BaseConverter::BASE64_RFC4648);
+
+        auto creatorAddr = assetParams.creatorAddr.hasValue() ? assetParams.creatorAddr->toString() : nullptr;
+        auto managerAddr = assetParams.managerAddr.hasValue() ? assetParams.managerAddr->toString() : nullptr;
+        auto reserveAddr = assetParams.reserveAddr.hasValue() ? assetParams.reserveAddr->toString() : nullptr;
+        auto freezeAddr = assetParams.freezeAddr.hasValue() ? assetParams.freezeAddr->toString() : nullptr;
+        auto clawbackAddr = assetParams.clawbackAddr.hasValue() ? assetParams.clawbackAddr->toString() : nullptr;
+
+        auto b64metadataHash = BaseConverter::encode(*assetParams.metaDataHash, BaseConverter::BASE64_RFC4648);
 
         sql << "INSERT INTO algorand_transactions "
         // Header fields
@@ -215,30 +237,37 @@ namespace algorand {
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(*tx.header.genesisId),
-            soci::use(tx.header.genesisHash),
-            soci::use(tx.header.sender),
+            soci::use(tx.header.genesisHash.getRawString()),
+            soci::use(tx.header.sender.toString()),
             soci::use(tx.header.fee),
             soci::use(*tx.header.fromRewards),
-            soci::use(*tx.header.note),
-            soci::use(*tx.header.group),
-            soci::use(*tx.header.lease),
+            soci::use(b64note),
+            soci::use(b64group),
+            soci::use(b64lease),
             soci::use(*assetConfig.assetId),
             soci::use(*assetParams.assetName),
             soci::use(*assetParams.unitName),
             soci::use(*assetParams.total),
             soci::use(*assetParams.decimals),
-            soci::use(*assetParams.defaultFrozen),
-            soci::use(*assetParams.creatorAddr),
-            soci::use(*assetParams.managerAddr),
-            soci::use(*assetParams.reserveAddr),
-            soci::use(*assetParams.freezeAddr),
-            soci::use(*assetParams.clawbackAddr),
-            soci::use(*assetParams.metaDataHash),
+            soci::use(static_cast<int32_t>(*assetParams.defaultFrozen)),
+            soci::use(creatorAddr),
+            soci::use(managerAddr),
+            soci::use(reserveAddr),
+            soci::use(freezeAddr),
+            soci::use(clawbackAddr),
+            soci::use(b64metadataHash),
             soci::use(*assetParams.url);
     }
 
     static void putAssetTransferTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& assetTransfer = boost::get<model::AssetTransferTxnFields>(tx.details);
+
+        auto b64note = BaseConverter::encode(*tx.header.note, BaseConverter::BASE64_RFC4648);
+        auto b64group = BaseConverter::encode(*tx.header.group, BaseConverter::BASE64_RFC4648);
+        auto b64lease = BaseConverter::encode(*tx.header.lease, BaseConverter::BASE64_RFC4648);
+
+        auto assetCloseTo = assetTransfer.assetCloseTo.hasValue() ? assetTransfer.assetCloseTo->toString() : nullptr;
+        auto assetSender = assetTransfer.assetSender.hasValue() ? assetTransfer.assetSender->toString() : nullptr;
 
         sql << "INSERT INTO algorand_transactions "
         // Header fields
@@ -260,22 +289,26 @@ namespace algorand {
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(*tx.header.genesisId),
-            soci::use(tx.header.genesisHash),
-            soci::use(tx.header.sender),
+            soci::use(tx.header.genesisHash.getRawString()),
+            soci::use(tx.header.sender.toString()),
             soci::use(tx.header.fee),
             soci::use(*tx.header.fromRewards),
-            soci::use(*tx.header.note),
-            soci::use(*tx.header.group),
-            soci::use(*tx.header.lease),
+            soci::use(b64note),
+            soci::use(b64group),
+            soci::use(b64lease),
             soci::use(assetTransfer.assetId),
             soci::use(*assetTransfer.assetAmount),
-            soci::use(assetTransfer.assetReceiver),
-            soci::use(*assetTransfer.assetCloseTo),
-            soci::use(*assetTransfer.assetSender);
+            soci::use(assetTransfer.assetReceiver.toString()),
+            soci::use(assetCloseTo),
+            soci::use(assetSender);
     }
 
     static void putAssetFreezeTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& assetFreeze = boost::get<model::AssetFreezeTxnFields>(tx.details);
+
+        auto b64note = BaseConverter::encode(*tx.header.note, BaseConverter::BASE64_RFC4648);
+        auto b64group = BaseConverter::encode(*tx.header.group, BaseConverter::BASE64_RFC4648);
+        auto b64lease = BaseConverter::encode(*tx.header.lease, BaseConverter::BASE64_RFC4648);
 
         sql << "INSERT INTO algorand_transactions "
         // Header fields
@@ -297,16 +330,16 @@ namespace algorand {
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(*tx.header.genesisId),
-            soci::use(tx.header.genesisHash),
-            soci::use(tx.header.sender),
+            soci::use(tx.header.genesisHash.getRawString()),
+            soci::use(tx.header.sender.toString()),
             soci::use(tx.header.fee),
             soci::use(*tx.header.fromRewards),
-            soci::use(*tx.header.note),
-            soci::use(*tx.header.group),
-            soci::use(*tx.header.lease),
+            soci::use(b64note),
+            soci::use(b64group),
+            soci::use(b64lease),
             soci::use(assetFreeze.assetId),
-            soci::use(assetFreeze.assetFrozen),
-            soci::use(assetFreeze.frozenAddress);
+            soci::use(static_cast<int32_t>(assetFreeze.assetFrozen)),
+            soci::use(assetFreeze.frozenAddress.toString());
     }
 
     static void inflateTransaction(soci::session & sql, const soci::row & row, model::Transaction & tx) {
@@ -407,8 +440,11 @@ namespace algorand {
                 assetParams.reserveAddr = row.get<std::string>(COL_TX_ACFG_RESERVE_ADDRESS);
                 assetParams.freezeAddr = row.get<std::string>(COL_TX_ACFG_FREEZE_ADDRESS);
                 assetParams.clawbackAddr = row.get<std::string>(COL_TX_ACFG_CLAWBACK_ADDRESS);
-                assetParams.metaDataHash = row.get<std::string>(COL_TX_ACFG_METADATA_HASH);
                 assetParams.url = row.get<std::string>(COL_TX_ACFG_URL);
+                if (row.get_indicator(COL_TX_ACFG_METADATA_HASH) != soci::i_null) {
+                    assetParams.metaDataHash = std::vector<uint8_t>();
+                    BaseConverter::decode(row.get<std::string>(COL_TX_ACFG_METADATA_HASH), BaseConverter::BASE64_RFC4648, *assetParams.metaDataHash);
+                }
             }
 
         } else if (tx.header.type == constants::xAxfer) {
