@@ -32,11 +32,54 @@
 
 #include <algorand/model/transactions/AlgorandTransaction.hpp>
 
+#include <boost/optional.hpp>
+
+#define SOCI_USE_BOOST
 #include <soci.h>
+#include <core/database/SociNumber.hpp>
 
 namespace ledger {
 namespace core {
 namespace algorand {
+
+    // Helpers to deal with Option<> types,
+    // because SOCI only understands boost::optional<>...
+
+    template<class Raw>
+    static auto optionalValue(Option<Raw> opt) {
+        return opt.hasValue() ? *opt : boost::optional<Raw>();
+    }
+
+    template<class Raw, class Transformed>
+    static auto optionalValueWithTransform(Option<Raw> opt, const std::function<Transformed(Raw)> & transform) {
+        return opt.hasValue() ? transform(*opt) : boost::optional<Transformed>();
+    }
+
+    static std::string getString(const soci::row & row, const int32_t colId) {
+        return row.get<std::string>(colId);
+    }
+
+    static Option<std::string> getOptionalString(const soci::row & row, const int32_t colId) {
+        return row.get_indicator(colId) != soci::i_null ? Option<std::string>(row.get<std::string>(colId)) : Option<std::string>::NONE;
+    }
+
+    template<class Transformed>
+    static Option<Transformed> getOptionalStringWithTransform(const soci::row & row, const int32_t colId, const std::function<Transformed(std::string)> & transform) {
+        return row.get_indicator(colId) != soci::i_null ? Option<Transformed>(transform(row.get<std::string>(colId))) : Option<Transformed>::NONE;
+    }
+
+    static uint64_t getNumber(const soci::row & row, const int32_t colId) {
+        return soci::get_number<uint64_t>(row, colId);
+    }
+
+    static Option<uint64_t> getOptionalNumber(const soci::row & row, const int32_t colId) {
+        return row.get_indicator(colId) != soci::i_null ? Option<uint64_t>(soci::get_number<uint64_t>(row, colId)) : Option<uint64_t>::NONE;
+    }
+
+    template<class Transformed>
+    static Option<Transformed> getOptionalNumberWithTransform(const soci::row & row, const int32_t colId, const std::function<Transformed(uint64_t)> & transform) {
+        return row.get_indicator(colId) != soci::i_null ? Option<Transformed>(transform(soci::get_number<uint64_t>(row, colId))) : Option<Transformed>::NONE;
+    }
 
     class TransactionDatabaseHelper {
 

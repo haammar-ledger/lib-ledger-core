@@ -30,17 +30,6 @@
 #include <algorand/database/AlgorandAccountDatabaseHelper.hpp>
 
 #include <core/database/SociNumber.hpp>
-/*
-#include <fmt/format.h>
-
-#include <core/wallet/AbstractAccount.hpp>
-#include <core/wallet/AccountDatabaseHelper.hpp>
-#include <core/crypto/SHA256.hpp>
-#include <core/utils/DateUtils.hpp>
-#include <core/collections/Strings.hpp>
-*/
-
-//using namespace soci;
 
 namespace ledger {
 namespace core {

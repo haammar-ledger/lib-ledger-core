@@ -15,7 +15,7 @@ namespace core {
                 "uid VARCHAR(255) NOT NULL PRIMARY KEY REFERENCES accounts(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
                 "wallet_uid VARCHAR(255) NOT NULL REFERENCES wallets(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
                 "idx INTEGER NOT NULL,"
-                "address VARCHAR(255) NOT NULL,"
+                "address VARCHAR(255) NOT NULL"
                 ")";
 
         sql << "CREATE TABLE algorand_transactions("
@@ -32,8 +32,8 @@ namespace core {
                 "fee BIGINT NOT NULL,"
                 "from_rewards BIGINT,"
                 "note VARCHAR(255),"
-                "group VARCHAR(255),"
-                "lease VARCHAR(255),"
+                "groupVal VARCHAR(255),"
+                "leaseVal VARCHAR(255),"
 
                 // Fields for payment transactions
                 "pay_amount BIGINT,"
@@ -83,9 +83,9 @@ namespace core {
                 "uid VARCHAR(255) PRIMARY KEY NOT NULL,"
                 "account_uid VARCHAR(255) NOT NULL "
                     "REFERENCES algorand_account(uid) ON DELETE CASCADE ON UPDATE CASCADE,"
-                "creator_address VARCHAR(255) NOT_NULL,"
-                "amount BIGINT NOT_NULL,"
-                "frozen INTEGER NOT_NULL"
+                "creator_address VARCHAR(255) NOT NULL,"
+                "amount BIGINT NOT NULL,"
+                "frozen INTEGER NOT NULL"
         ")";
 
         sql << "CREATE TABLE algorand_asset_params("
