@@ -168,6 +168,7 @@ namespace algorand {
             getMandatoryStringField(node, constants::xType, tx.header.type);
             getMandatoryStringField(node, constants::xTx, tx.header.id);
             getMandatoryAddressField(node, constants::xFrom, tx.header.sender);
+            getMandatoryUint64Field(node, constants::xTimestamp, tx.header.timestamp);
             getMandatoryUint64Field(node, constants::xFirstRound, tx.header.firstValid);
             getMandatoryUint64Field(node, constants::xLastRound, tx.header.lastValid);
             getMandatoryUint64Field(node, constants::xRound, tx.header.round);
@@ -257,44 +258,51 @@ namespace algorand {
     private:
 
         template <class T>
+        static void assertWithMessage(const T & node, const std::string & fieldName) {
+            if (!node.HasMember(fieldName.c_str())) {
+                throw make_exception(api::ErrorCode::NO_SUCH_ELEMENT, fmt::format("Missing '{}' field in JSON.", fieldName));
+            }
+        }
+
+        template <class T>
         static void getMandatoryStringField(const T & node, const std::string & fieldName, Option<std::string> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = node[fieldName.c_str()].GetString();
         }
 
         template <class T>
         static void getMandatoryStringField(const T & node, const std::string & fieldName, std::string & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = node[fieldName.c_str()].GetString();
         }
 
         template <class T>
         static void getMandatoryUint64Field(const T & node, const std::string & fieldName, Option<uint64_t> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = node[fieldName.c_str()].GetUint64();
         }
 
         template <class T>
         static void getMandatoryUint64Field(const T & node, const std::string & fieldName, uint64_t & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = node[fieldName.c_str()].GetUint64();
         }
 
         template <class T>
         static void getMandatoryBoolField(const T & node, const std::string & fieldName, Option<bool> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = node[fieldName.c_str()].GetBool();
         }
 
         template <class T>
         static void getMandatoryBoolField(const T & node, const std::string & fieldName, bool & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = node[fieldName.c_str()].GetBool();
         }
 
         template <class T>
         static void getMandatoryAddressField(const T & node, const std::string & fieldName, Option<Address> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             auto addr = node[fieldName.c_str()].GetString();
             // FIXME Should be set to wallet currency instead of hardcoded here
             field = Address(currencies::algorand(), addr);
@@ -302,7 +310,7 @@ namespace algorand {
 
         template <class T>
         static void getMandatoryAddressField(const T & node, const std::string & fieldName, Address & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             auto addr = node[fieldName.c_str()].GetString();
             // FIXME Should be set to wallet currency instead of hardcoded here
             field = Address(currencies::algorand(), addr);
@@ -310,19 +318,19 @@ namespace algorand {
 
         template <class T>
         static void getMandatoryB64StringField(const T & node, const std::string & fieldName, Option<B64String> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = B64String(node[fieldName.c_str()].GetString());
         }
 
         template <class T>
         static void getMandatoryB64StringField(const T & node, const std::string & fieldName, B64String & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             field = B64String(node[fieldName.c_str()].GetString());
         }
 
         template <class T>
         static void getMandatoryBinaryField(const T & node, const std::string & fieldName, Option<std::vector<uint8_t>> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             std::vector<uint8_t> newBinary;
             BaseConverter::decode(node[fieldName.c_str()].GetString(), BaseConverter::BASE64_RFC4648, newBinary);
             field = newBinary;
@@ -330,7 +338,7 @@ namespace algorand {
 
         template <class T>
         static void getMandatoryBinaryField(const T & node, const std::string & fieldName, std::vector<uint8_t> & field) {
-            assert(node.HasMember(fieldName.c_str()));
+            assertWithMessage(node, fieldName);
             BaseConverter::decode(node[fieldName.c_str()].GetString(), BaseConverter::BASE64_RFC4648, field);
         }
 

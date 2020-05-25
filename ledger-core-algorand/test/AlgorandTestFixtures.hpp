@@ -95,14 +95,15 @@ namespace algorand {
             tx.header.genesisHash = TESTNET_GENESIS_HASH;
             tx.header.firstValid = 6529846;
             tx.header.lastValid = 6530846;
-            tx.header.fromRewards = Option<uint64_t>(0);
+            tx.header.fromRewards = 0UL;
+            tx.header.timestamp = 1588586190;
 
             tx.details = model::PaymentTxnFields();
             auto& details = boost::get<model::PaymentTxnFields>(tx.details);
             details.receiverAddr = Address(TEST_ACCOUNT_ADDRESS);
             details.amount = 1000;
-            details.receiverRewards = Option<uint64_t>(0);
-            details.closeRewards = Option<uint64_t>(0);
+            details.receiverRewards = 0UL;
+            details.closeRewards = 0UL;
         }
 
         return tx;
@@ -123,11 +124,12 @@ namespace algorand {
             tx.header.genesisHash = TESTNET_GENESIS_HASH;
             tx.header.firstValid = 6305874;
             tx.header.lastValid = 6306874;
-            tx.header.fromRewards = Option<uint64_t>(0);
+            tx.header.fromRewards = 0UL;
+            tx.header.timestamp = 1587641643;
 
             tx.details = model::AssetConfigTxnFields();
             auto& details = boost::get<model::AssetConfigTxnFields>(tx.details);
-            details.assetId = Option<uint64_t>(0);
+            details.assetId = 0UL;
             details.assetParams = model::AssetParams();
             auto& assetParams = *details.assetParams;
             assetParams.total = 1000000;
@@ -159,7 +161,8 @@ namespace algorand {
             tx.header.genesisHash = TESTNET_GENESIS_HASH;
             tx.header.firstValid = 6734094;
             tx.header.lastValid = 6734193;
-            tx.header.fromRewards = Option<uint64_t>(0);
+            tx.header.fromRewards = 0UL;
+            tx.header.timestamp = 1589448692;
 
             tx.details = model::AssetTransferTxnFields();
             auto& details = boost::get<model::AssetTransferTxnFields>(tx.details);
@@ -228,6 +231,7 @@ namespace algorand {
         EXPECT_EQ(txRef.header.sender, txResult.header.sender);
         EXPECT_EQ(txRef.header.type, txResult.header.type);
         if (txRef.header.round.hasValue()) EXPECT_EQ(*txRef.header.round, *txResult.header.round);
+        if (txRef.header.timestamp.hasValue()) EXPECT_EQ(*txRef.header.timestamp, *txResult.header.timestamp);
         if (txRef.header.note.hasValue()) EXPECT_EQ(*txRef.header.note, *txResult.header.note);
         EXPECT_EQ(txRef.header.genesisHash, txResult.header.genesisHash);
         EXPECT_EQ(txRef.header.firstValid, txResult.header.firstValid);

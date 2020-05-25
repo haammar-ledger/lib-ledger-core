@@ -1,7 +1,5 @@
 #include <algorand/database/Migrations.hpp>
 
-// FIXME Test to fix SQL syntax...
-
 namespace ledger {
 namespace core {
 

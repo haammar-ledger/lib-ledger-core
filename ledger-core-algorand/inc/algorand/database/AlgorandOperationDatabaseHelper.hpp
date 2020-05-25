@@ -48,7 +48,7 @@ namespace algorand {
             sql << "INSERT INTO algorand_operations VALUES(:uid, :tx_uid, :tx_hash)",
                 soci::use(operation.uid),
                 soci::use(txUid),
-                soci::use(operation.getTransaction()->getId();
+                soci::use(operation.getTransaction()->getId());
         }
 
     };

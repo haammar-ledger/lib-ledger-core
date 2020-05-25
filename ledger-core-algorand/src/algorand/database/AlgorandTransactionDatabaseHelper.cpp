@@ -118,23 +118,19 @@ namespace algorand {
     static void putPaymentTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& payment = boost::get<model::PaymentTxnFields>(tx.details);
 
-        sql << "INSERT INTO algorand_transactions "
-        // Header fields
-        "(uid, hash, type, round, "
-        //"timestamp, " // TODO add this
-        "first_valid, last_valid, genesis_id, genesis_hash, "
-        "sender, fee, from_rewards, note, groupVal, leaseVal, "
-        // Details fields
-        "pay_amount, pay_receiver_address, pay_receiver_rewards, pay_close_address, pay_close_amount, pay_close_rewards) "
-        "VALUES(:tx_uid, :hash, :tx_type, :round, "
-        //":timestamp, "" // TODO add this
-        ":first_valid, :last_valid, :genesis_id, :genesis_hash, :sender, :fee, :from_rewards, :note, :group, :lease, "
-        ":amount, :receiver_addr, :receiver_rewards, :close_addr, :close_amount, :close_rewards)",
+        sql <<
+        "INSERT INTO algorand_transactions ("
+                "uid, hash, type, round, timestamp, first_valid, last_valid, genesis_id, genesis_hash, "
+                "sender, fee, from_rewards, note, groupVal, leaseVal, "
+                "pay_amount, pay_receiver_address, pay_receiver_rewards, pay_close_address, pay_close_amount, pay_close_rewards) "
+        "VALUES(:tx_uid, :hash, :tx_type, :round, :timestamp, :first_valid, :last_valid, :genesis_id, :genesis_hash, "
+                ":sender, :fee, :from_rewards, :note, :group, :lease, "
+                ":amount, :receiver_addr, :receiver_rewards, :close_addr, :close_amount, :close_rewards)",
             soci::use(txUid),
             soci::use(optionalValue<std::string>(tx.header.id)),
             soci::use(tx.header.type),
             soci::use(optionalValue<uint64_t>(tx.header.round)),
-            //soci::use(optionalValue<uint64_t>(tx.header.timestamp)), // TODO add this
+            soci::use(optionalValue<uint64_t>(tx.header.timestamp)),
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(optionalValue<std::string>(tx.header.genesisId)),
@@ -157,22 +153,19 @@ namespace algorand {
     static void putKeyRegTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& keyreg = boost::get<model::KeyRegTxnFields>(tx.details);
 
-        sql << "INSERT INTO algorand_transactions "
-        // Header fields
-        "(uid, hash, type, round, "
-        //"timestamp, " // TODO add this
-        "first_valid, last_valid, genesis_id, genesis_hash, sender, fee, from_rewards, note, groupVal, leaseVal, "
-        // Details fields
-        "keyreg_non_participation, keyreg_selection_pk, keyreg_vote_pk, keyreg_vote_key_dilution, keyreg_vote_first, keyreg_vote_last) "
-        "VALUES(:tx_uid, :hash, :tx_type, :round, "
-        //":timestamp, "" // TODO add this
-        ":first_valid, :last_valid, :genesis_id, :genesis_hash, :sender, :fee, :from_rewards, :note, :group, :lease, "
-        ":non_part, :selection_pk, :vote_pk, :vote_key_dilution, :vote_first, :vote_last)",
+        sql <<
+        "INSERT INTO algorand_transactions ("
+                "uid, hash, type, round, timestamp, first_valid, last_valid, genesis_id, genesis_hash, "
+                "sender, fee, from_rewards, note, groupVal, leaseVal, "
+                "keyreg_non_participation, keyreg_selection_pk, keyreg_vote_pk, keyreg_vote_key_dilution, keyreg_vote_first, keyreg_vote_last) "
+        "VALUES(:tx_uid, :hash, :tx_type, :round, :timestamp, :first_valid, :last_valid, :genesis_id, :genesis_hash, "
+                ":sender, :fee, :from_rewards, :note, :group, :lease, "
+                ":non_part, :selection_pk, :vote_pk, :vote_key_dilution, :vote_first, :vote_last)",
             soci::use(txUid),
             soci::use(optionalValue<std::string>(tx.header.id)),
             soci::use(tx.header.type),
             soci::use(optionalValue<uint64_t>(tx.header.round)),
-            //soci::use(optionalValue<uint64_t>(tx.header.timestamp)), // TODO add this
+            soci::use(optionalValue<uint64_t>(tx.header.timestamp)),
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(optionalValue<std::string>(tx.header.genesisId)),
@@ -195,27 +188,22 @@ namespace algorand {
         auto& assetConfig = boost::get<model::AssetConfigTxnFields>(tx.details);
         auto& assetParams = *assetConfig.assetParams;
 
-        sql << "INSERT INTO algorand_transactions "
-        // Header fields
-        "(uid, hash, type, round, "
-        //"timestamp, " // TODO add this
-        "first_valid, last_valid, genesis_id, genesis_hash, "
-        "sender, fee, from_rewards, note, groupVal, leaseVal, "
-        // Details fields
-        "acfg_asset_id, acfg_asset_name, acfg_unit_name, acfg_total, acfg_decimals, acfg_default_frozen, "
-        "acfg_creator_address, acfg_manager_address, acfg_reserve_address, acfg_freeze_address, acfg_clawback_address, "
-        "acfg_metadata_hash, acfg_url) "
-        "VALUES(:tx_uid, :hash, :tx_type, :round, "
-        //":timestamp, "" // TODO add this
-        ":first_valid, :last_valid, :genesis_id, :genesis_hash, :sender, :fee, :from_rewards, :note, :group, :lease, "
-        ":asset_id, :asset_name, :unit_name, :total, :decimals, :default_frozen, "
-        ":creator_addr, :manager_addr, :reserve_addr, :freeze_addr, :clawback_addr, "
-        ":metadata_hash, :url)",
+        sql <<
+        "INSERT INTO algorand_transactions ("
+                "uid, hash, type, round, timestamp, first_valid, last_valid, genesis_id, genesis_hash, "
+                "sender, fee, from_rewards, note, groupVal, leaseVal, "
+                "acfg_asset_id, acfg_asset_name, acfg_unit_name, acfg_total, acfg_decimals, acfg_default_frozen, "
+                "acfg_creator_address, acfg_manager_address, acfg_reserve_address, acfg_freeze_address, acfg_clawback_address, "
+                "acfg_metadata_hash, acfg_url) "
+        "VALUES(:tx_uid, :hash, :tx_type, :round, :timestamp, :first_valid, :last_valid, :genesis_id, :genesis_hash, "
+                ":sender, :fee, :from_rewards, :note, :group, :lease, "
+                ":asset_id, :asset_name, :unit_name, :total, :decimals, :default_frozen, :creator_addr, "
+                ":manager_addr, :reserve_addr, :freeze_addr, :clawback_addr, :metadata_hash, :url)",
             soci::use(txUid),
             soci::use(optionalValue<std::string>(tx.header.id)),
             soci::use(tx.header.type),
             soci::use(optionalValue<uint64_t>(tx.header.round)),
-            //soci::use(optionalValue<uint64_t>(tx.header.timestamp)), // TODO add this
+            soci::use(optionalValue<uint64_t>(tx.header.timestamp)),
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(optionalValue<std::string>(tx.header.genesisId)),
@@ -244,23 +232,19 @@ namespace algorand {
     static void putAssetTransferTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& assetTransfer = boost::get<model::AssetTransferTxnFields>(tx.details);
 
-        sql << "INSERT INTO algorand_transactions "
-        // Header fields
-        "(uid, hash, type, round, "
-        //"timestamp, " // TODO add this
-        "first_valid, last_valid, genesis_id, genesis_hash, "
-        "sender, fee, from_rewards, note, groupVal, leaseVal, "
-        // Details fields
-        "axfer_asset_id, axfer_asset_amount, axfer_receiver_address, axfer_close_address, axfer_sender_address) "
-        "VALUES(:tx_uid, :hash, :tx_type, :round, "
-        //":timestamp, "" // TODO add this
-        ":first_valid, :last_valid, :genesis_id, :genesis_hash, :sender, :fee, :from_rewards, :note, :group, :lease, "
-        ":asset_id, :amount, :receiver_addr, :close_addr, :sender_addr)",
+        sql <<
+        "INSERT INTO algorand_transactions ("
+                "uid, hash, type, round, timestamp, first_valid, last_valid, genesis_id, genesis_hash, "
+                "sender, fee, from_rewards, note, groupVal, leaseVal, "
+                "axfer_asset_id, axfer_asset_amount, axfer_receiver_address, axfer_close_address, axfer_sender_address) "
+        "VALUES(:tx_uid, :hash, :tx_type, :round, :timestamp, :first_valid, :last_valid, :genesis_id, :genesis_hash, "
+                ":sender, :fee, :from_rewards, :note, :group, :lease, "
+                ":asset_id, :amount, :receiver_addr, :close_addr, :sender_addr)",
             soci::use(txUid),
             soci::use(optionalValue<std::string>(tx.header.id)),
             soci::use(tx.header.type),
             soci::use(optionalValue<uint64_t>(tx.header.round)),
-            //soci::use(optionalValue<uint64_t>(tx.header.timestamp)), // TODO add this
+            soci::use(optionalValue<uint64_t>(tx.header.timestamp)),
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(optionalValue<std::string>(tx.header.genesisId)),
@@ -282,23 +266,19 @@ namespace algorand {
     static void putAssetFreezeTransaction(soci::session & sql, const std::string & txUid, const model::Transaction & tx) {
         auto& assetFreeze = boost::get<model::AssetFreezeTxnFields>(tx.details);
 
-        sql << "INSERT INTO algorand_transactions "
-        // Header fields
-        "(uid, hash, type, round, "
-        //"timestamp, " // TODO add this
-        "first_valid, last_valid, genesis_id, genesis_hash, "
-        "sender, fee, from_rewards, note, groupVal, leaseVal, "
-        // Details fields
-        "afrz_asset_id, afrz_frozen, afrz_frozen_address) "
-        "VALUES(:tx_uid, :hash, :tx_type, :round, "
-        //":timestamp, "" // TODO add this
-        ":first_valid, :last_valid, :genesis_id, :genesis_hash, :sender, :fee, :from_rewards, :note, :group, :lease, "
-        ":asset_id, :frozen, :frozen_addr)",
+        sql <<
+        "INSERT INTO algorand_transactions ("
+                "uid, hash, type, round, timestamp, first_valid, last_valid, genesis_id, genesis_hash, "
+                "sender, fee, from_rewards, note, groupVal, leaseVal, "
+                "afrz_asset_id, afrz_frozen, afrz_frozen_address) "
+        "VALUES(:tx_uid, :hash, :tx_type, :round, :timestamp, :first_valid, :last_valid, :genesis_id, :genesis_hash, "
+                ":sender, :fee, :from_rewards, :note, :group, :lease, "
+                ":asset_id, :frozen, :frozen_addr)",
             soci::use(txUid),
             soci::use(optionalValue<std::string>(tx.header.id)),
             soci::use(tx.header.type),
             soci::use(optionalValue<uint64_t>(tx.header.round)),
-            //soci::use(optionalValue<uint64_t>(tx.header.timestamp)), // TODO add this
+            soci::use(optionalValue<uint64_t>(tx.header.timestamp)),
             soci::use(tx.header.firstValid),
             soci::use(tx.header.lastValid),
             soci::use(optionalValue<std::string>(tx.header.genesisId)),
@@ -319,7 +299,7 @@ namespace algorand {
         tx.header.id = getOptionalString(row, COL_TX_HASH);
         tx.header.type = getString(row, COL_TX_TYPE);
         tx.header.round = getOptionalNumber(row, COL_TX_ROUND);
-        //tx.header.timestamp = getOptionalNumber(row, COL_TX_TIMESTAMP); // TODO Add this
+        tx.header.timestamp = getOptionalNumber(row, COL_TX_TIMESTAMP);
         tx.header.firstValid = getNumber(row, COL_TX_FIRST_VALID);
         tx.header.lastValid = getNumber(row, COL_TX_LAST_VALID);
         tx.header.genesisId = getOptionalString(row, COL_TX_GENESIS_ID);
