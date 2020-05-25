@@ -36,7 +36,7 @@ namespace core {
 namespace algorand {
 
     std::string AccountDatabaseHelper::createAccount(soci::session & sql,
-                                                     const std::string walletUid,
+                                                     const std::string & walletUid,
                                                      const AccountDatabaseEntry & account) {
 
         ledger::core::AccountDatabaseHelper::createAccount(sql, walletUid, account.index);

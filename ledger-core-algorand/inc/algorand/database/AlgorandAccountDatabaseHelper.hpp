@@ -54,7 +54,7 @@ namespace algorand {
 
         static std::string createAccount(
             soci::session & sql,
-            const std::string walletUid,
+            const std::string & walletUid,
             const AccountDatabaseEntry & account
         );
 

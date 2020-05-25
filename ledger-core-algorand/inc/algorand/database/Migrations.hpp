@@ -46,7 +46,7 @@ namespace ledger {
         // migrations
         template <> void migrate<1, AlgorandMigration>(soci::session& sql, api::DatabaseBackendType type);
         template <> void rollback<1, AlgorandMigration>(soci::session& sql, api::DatabaseBackendType type);
-  }
+    }
 }
 
 #endif // LEDGER_CORE_ALGORANDMIGRATIONS_H

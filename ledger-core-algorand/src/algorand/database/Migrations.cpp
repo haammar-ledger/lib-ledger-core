@@ -3,7 +3,6 @@
 namespace ledger {
 namespace core {
 
-    // FIXME Are those really needed?
     int constexpr AlgorandMigration::COIN_ID;
     uint32_t constexpr AlgorandMigration::CURRENT_VERSION;
 
