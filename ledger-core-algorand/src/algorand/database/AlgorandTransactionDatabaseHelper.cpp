@@ -349,38 +349,38 @@ namespace algorand {
 
         if (tx.header.type == constants::xPay) {
 
-            tx.details = model::PaymentTxnFields();
-            auto& payment = boost::get<model::PaymentTxnFields>(tx.details);
+            model::PaymentTxnFields paymentDetails;
 
-            payment.amount = getNumber(row, COL_TX_PAY_AMOUNT);
-            payment.receiverAddr = getString(row, COL_TX_PAY_RECEIVER_ADDRESS);
-            payment.receiverRewards = getOptionalNumber(row, COL_TX_PAY_RECEIVER_REWARDS);
-            payment.closeAddr = getOptionalStringWithTransform<Address>(row, COL_TX_PAY_CLOSE_ADDRESS, stringToAddr);
-            payment.closeAmount = getOptionalNumber(row, COL_TX_PAY_CLOSE_AMOUNT);
-            payment.closeRewards = getOptionalNumber(row, COL_TX_PAY_CLOSE_REWARDS);
+            paymentDetails.amount = getNumber(row, COL_TX_PAY_AMOUNT);
+            paymentDetails.receiverAddr = getString(row, COL_TX_PAY_RECEIVER_ADDRESS);
+            paymentDetails.receiverRewards = getOptionalNumber(row, COL_TX_PAY_RECEIVER_REWARDS);
+            paymentDetails.closeAddr = getOptionalStringWithTransform<Address>(row, COL_TX_PAY_CLOSE_ADDRESS, stringToAddr);
+            paymentDetails.closeAmount = getOptionalNumber(row, COL_TX_PAY_CLOSE_AMOUNT);
+            paymentDetails.closeRewards = getOptionalNumber(row, COL_TX_PAY_CLOSE_REWARDS);
+
+            tx.details = paymentDetails;
 
         } else if (tx.header.type == constants::xKeyregs) {
             // NOTE This has not beed tested
 
-            tx.details = model::KeyRegTxnFields();
-            auto& keyreg = boost::get<model::KeyRegTxnFields>(tx.details);
+            model::KeyRegTxnFields keyregDetails;
 
-            keyreg.nonParticipation = getOptionalNumberWithTransform<bool>(row, COL_TX_KEYREG_NONPART, numToBool);
-            keyreg.selectionPk = getString(row, COL_TX_KEYREG_SELECTION_PK);
-            keyreg.votePk = getString(row, COL_TX_KEYREG_VOTE_PK);
-            keyreg.voteKeyDilution = getNumber(row, COL_TX_KEYREG_VOTE_KEY_DILUTION);
-            keyreg.voteFirst = getNumber(row, COL_TX_KEYREG_VOTE_FIRST);
-            keyreg.voteLast = getNumber(row, COL_TX_KEYREG_VOTE_LAST);
+            keyregDetails.nonParticipation = getOptionalNumberWithTransform<bool>(row, COL_TX_KEYREG_NONPART, numToBool);
+            keyregDetails.selectionPk = getString(row, COL_TX_KEYREG_SELECTION_PK);
+            keyregDetails.votePk = getString(row, COL_TX_KEYREG_VOTE_PK);
+            keyregDetails.voteKeyDilution = getNumber(row, COL_TX_KEYREG_VOTE_KEY_DILUTION);
+            keyregDetails.voteFirst = getNumber(row, COL_TX_KEYREG_VOTE_FIRST);
+            keyregDetails.voteLast = getNumber(row, COL_TX_KEYREG_VOTE_LAST);
+
+            tx.details = keyregDetails;
 
         } else if (tx.header.type == constants::xAcfg) {
 
-            tx.details = model::AssetConfigTxnFields();
-            auto& assetConfig = boost::get<model::AssetConfigTxnFields>(tx.details);
+            model::AssetConfigTxnFields assetConfigDetails;
 
-            assetConfig.assetId = getOptionalNumber(row, COL_TX_ACFG_ASSET_ID);
+            assetConfigDetails.assetId = getOptionalNumber(row, COL_TX_ACFG_ASSET_ID);
             if (row.get_indicator(COL_TX_ACFG_TOTAL) != soci::i_null) {
-                assetConfig.assetParams = model::AssetParams();
-                auto& assetParams = *assetConfig.assetParams;
+                model::AssetParams assetParams;
 
                 assetParams.assetName = getOptionalString(row, COL_TX_ACFG_ASSET_NAME);
                 assetParams.unitName = getOptionalString(row, COL_TX_ACFG_UNIT_NAME);
@@ -394,28 +394,34 @@ namespace algorand {
                 assetParams.clawbackAddr = getOptionalStringWithTransform<Address>(row, COL_TX_ACFG_CLAWBACK_ADDRESS, stringToAddr);
                 assetParams.url = getOptionalString(row, COL_TX_ACFG_URL);
                 assetParams.metaDataHash = getOptionalStringWithTransform<std::vector<uint8_t>>(row, COL_TX_ACFG_METADATA_HASH, b64toBytes);
+
+                assetConfigDetails.assetParams = assetParams;
             }
+
+            tx.details = assetConfigDetails;
 
         } else if (tx.header.type == constants::xAxfer) {
 
-            tx.details = model::AssetTransferTxnFields();
-            auto& assetTransfer = boost::get<model::AssetTransferTxnFields>(tx.details);
+            model::AssetTransferTxnFields assetTransferDetails;
 
-            assetTransfer.assetId = getNumber(row, COL_TX_AXFER_ASSET_ID);
-            assetTransfer.assetAmount = getOptionalNumber(row, COL_TX_AXFER_ASSET_AMOUNT);
-            assetTransfer.assetReceiver = getString(row, COL_TX_AXFER_RECEIVER_ADDRESS);
-            assetTransfer.assetCloseTo = getOptionalStringWithTransform<Address>(row, COL_TX_AXFER_CLOSE_ADDRESS, stringToAddr);
-            assetTransfer.assetSender = getOptionalStringWithTransform<Address>(row, COL_TX_AXFER_SENDER_ADDRESS, stringToAddr);
+            assetTransferDetails.assetId = getNumber(row, COL_TX_AXFER_ASSET_ID);
+            assetTransferDetails.assetAmount = getOptionalNumber(row, COL_TX_AXFER_ASSET_AMOUNT);
+            assetTransferDetails.assetReceiver = getString(row, COL_TX_AXFER_RECEIVER_ADDRESS);
+            assetTransferDetails.assetCloseTo = getOptionalStringWithTransform<Address>(row, COL_TX_AXFER_CLOSE_ADDRESS, stringToAddr);
+            assetTransferDetails.assetSender = getOptionalStringWithTransform<Address>(row, COL_TX_AXFER_SENDER_ADDRESS, stringToAddr);
+
+            tx.details = assetTransferDetails;
 
         } else if (tx.header.type == constants::xAfreeze) {
             // NOTE This has not beed tested
 
-            tx.details = model::AssetFreezeTxnFields();
-            auto& assetFreeze = boost::get<model::AssetFreezeTxnFields>(tx.details);
+            model::AssetFreezeTxnFields assetFreezeDetails;
 
-            assetFreeze.assetId = getNumber(row, COL_TX_AFRZ_ASSET_ID);
-            assetFreeze.assetFrozen = !! getNumber(row, COL_TX_AFRZ_FROZEN);
-            assetFreeze.frozenAddress = getString(row, COL_TX_AFRZ_FROZEN_ADDRESS);
+            assetFreezeDetails.assetId = getNumber(row, COL_TX_AFRZ_ASSET_ID);
+            assetFreezeDetails.assetFrozen = !! getNumber(row, COL_TX_AFRZ_FROZEN);
+            assetFreezeDetails.frozenAddress = getString(row, COL_TX_AFRZ_FROZEN_ADDRESS);
+
+            tx.details = assetFreezeDetails;
         }
     }
 
