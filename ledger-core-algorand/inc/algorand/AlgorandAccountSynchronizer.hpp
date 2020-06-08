@@ -31,32 +31,108 @@
 #ifndef LEDGER_CORE_ALGORANDACCOUNTSYNCHRONIZER_H
 #define LEDGER_CORE_ALGORANDACCOUNTSYNCHRONIZER_H
 
+#include <algorand/AlgorandAddress.hpp>
 #include <algorand/AlgorandBlockchainExplorer.hpp>
 
-#include <core/synchronizers/AbstractAccountSynchronizer.hpp>
 #include <core/Services.hpp>
+#include <core/wallet/AbstractWallet.hpp>
+#include <core/events/ProgressNotifier.hpp>
+
+#include <string>
+#include <map>
+#include <vector>
 
 namespace ledger {
 namespace core {
 namespace algorand {
 
-    // TODO implementation; this is currently just a mock up
+        struct BatchSavedState {
+            //std::string blockHash;
+            uint32_t blockHeight;
+
+            BatchSavedState() : blockHeight(0) {}
+
+            template<class Archive>
+            void serialize(Archive & archive) {
+                archive(/*blockHash, */blockHeight); // serialize things by passing them to the archive
+            };
+        };
+
+        struct SavedState {
+            uint32_t halfBatchSize;
+            std::vector<BatchSavedState> batches;
+            std::map<std::string, std::string> pendingTxsHash;
+
+            SavedState(): halfBatchSize(0) {}
+
+            template<class Archive>
+            void serialize(Archive & archive) {
+                archive(halfBatchSize, batches, pendingTxsHash); // serialize things by passing them to the archive
+            }
+        };
 
     class Account;
 
-    class AccountSynchronizer : public AbstractAccountSynchronizer<Account> {
+        class AccountSynchronizer : public DedicatedContext,
+                                    public std::enable_shared_from_this<AccountSynchronizer> {
 
-    public:
+        public:
 
-        AccountSynchronizer(const std::shared_ptr<Services> &services,
-                            const std::shared_ptr<BlockchainExplorer> &explorer) {}
+            AccountSynchronizer(const std::shared_ptr<Services> &services,
+                                const std::shared_ptr<BlockchainExplorer> &explorer);
 
-        virtual void reset(const std::shared_ptr<Account>& account, const std::chrono::system_clock::time_point& toDate) override {}
+            std::shared_ptr<ProgressNotifier<Unit>> synchronizeAccount(const std::shared_ptr<Account>& account);
 
-        virtual std::shared_ptr<ProgressNotifier<Unit>> synchronize(const std::shared_ptr<Account>& account) override { return std::shared_ptr<ProgressNotifier<Unit>>(nullptr); };
+        private:
 
-        virtual bool isSynchronizing() const override { return false; }
-    };
+            struct SynchronizationBuddy {
+                std::shared_ptr<Preferences> preferences;
+                std::shared_ptr<spdlog::logger> logger;
+                std::chrono::system_clock::time_point startDate;
+                std::shared_ptr<AbstractWallet> wallet;
+                std::shared_ptr<DynamicObject> configuration;
+                uint32_t halfBatchSize;
+                //std::shared_ptr<Keychain> keychain;
+                Option<SavedState> savedState;
+                Option<void *> token;
+                std::shared_ptr<Account> account;
+                std::map<std::string, std::string> transactionsToDrop;
+            };
+
+
+            Future<Unit> performSynchronization(const std::shared_ptr<Account> &account);
+
+            // Synchronize batches.
+            //
+            // This function will synchronize all batches by iterating over batches and transactions
+            // bulks. The input buddy can be used to customize the behavior of the synchronization.
+            Future<Unit> synchronizeBatches(std::shared_ptr<SynchronizationBuddy> buddy,
+                                            const uint32_t currentBatchIndex);
+
+            // Synchronize a transactions batch.
+            //
+            // The currentBatchIndex is the currently synchronized batch. buddy is the
+            // synchronization object used to accumulate a state. hadTransactions is used to check
+            // whether more data is needed. If a block doesn’t have any transaction, it means that
+            // we must stop.
+            Future<bool> synchronizeBatch(std::shared_ptr<SynchronizationBuddy> buddy,
+                                          const uint32_t currentBatchIndex,
+                                          const bool hadTransactions = false);
+
+            void updateCurrentBlock(std::shared_ptr<SynchronizationBuddy> &buddy,
+                                    const std::shared_ptr<api::ExecutionContext> &context);
+
+            void updateOperationsToDrop(soci::session &sql,
+                                        std::shared_ptr<SynchronizationBuddy> &buddy,
+                                        const std::string &accountUid);
+
+            std::shared_ptr<Account> _account;
+            std::shared_ptr<BlockchainExplorer> _explorer;
+            std::shared_ptr<Preferences> _internalPreferences;
+            std::shared_ptr<ProgressNotifier<Unit>> _notifier;
+            std::mutex _lock;
+
+        };
 
 } // namespace algorand
 } // namespace core

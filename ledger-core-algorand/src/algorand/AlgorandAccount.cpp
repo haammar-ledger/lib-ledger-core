@@ -36,6 +36,8 @@
 #include <algorand/api/AlgorandAssetAmount.hpp>
 #include <algorand/api/AlgorandAssetParams.hpp>
 
+#include <core/events/Event.hpp>
+#include <core/database/SociDate.hpp>
 #include <core/math/BigInt.hpp>
 #include <core/utils/DateUtils.hpp>
 #include <core/utils/Hex.hpp>
@@ -65,16 +67,22 @@ namespace algorand {
         , _synchronizer(std::move(synchronizer))
     {}
 
-    bool Account::putBlock(soci::session& sql,
-                           const api::Block& block)
+    bool Account::putBlock(soci::session& sql, const api::Block& block)
     {
-        // TODO
-        return true;
+        if (BlockDatabaseHelper::putBlock(sql, block)) {
+            emitNewBlockEvent(block);
+            return true;
+        }
+        return false;
     }
 
-    int Account::putTransaction(soci::session& sql,
-                                const model::Transaction& transaction)
+    int Account::putTransaction(soci::session& sql, const model::Transaction& transaction)
     {
+        // FIXME Add a "fake" block here
+        //if (transaction.block.nonEmpty()) {
+        //    putBlock(sql, transaction.block.getValue());
+        //}
+
         const auto wallet = getWallet();
         if (wallet == nullptr) {
             throw Exception(api::ErrorCode::RUNTIME_ERROR, "Wallet reference is dead.");
@@ -348,10 +356,47 @@ namespace algorand {
         return _currentSyncEventBus != nullptr;
     }
 
+    // FIXME Test this
     std::shared_ptr<api::EventBus> Account::synchronize()
     {
-        // TODO
-        return nullptr;
+        std::lock_guard<std::mutex> lock(_synchronizationLock);
+        if (_currentSyncEventBus) {
+            return _currentSyncEventBus;
+        }
+
+        auto eventPublisher = std::make_shared<EventPublisher>(getContext());
+        _currentSyncEventBus = eventPublisher->getEventBus();
+
+
+        auto startTime = DateUtils::now();
+        eventPublisher->postSticky(
+            std::make_shared<Event>(api::EventCode::SYNCHRONIZATION_STARTED, api::DynamicObject::newInstance()),
+            0
+        );
+
+        auto self = std::static_pointer_cast<Account>(shared_from_this());
+        _synchronizer->synchronizeAccount(self)->getFuture()
+            .onComplete(getContext(), [&](const Try<Unit> &result) {
+                api::EventCode code;
+                auto payload = std::make_shared<DynamicObject>();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(DateUtils::now() - startTime).count();
+                payload->putLong(api::Account::EV_SYNC_DURATION_MS, duration);
+                if (result.isSuccess()) {
+                    code = api::EventCode::SYNCHRONIZATION_SUCCEED;
+                } else {
+                    code = api::EventCode::SYNCHRONIZATION_FAILED;
+                    payload->putString(api::Account::EV_SYNC_ERROR_CODE,
+                                       api::to_string(result.getFailure().getErrorCode()));
+                    payload->putInt(api::Account::EV_SYNC_ERROR_CODE_INT, (int32_t) result.getFailure().getErrorCode());
+                    payload->putString(api::Account::EV_SYNC_ERROR_MESSAGE, result.getFailure().getMessage());
+                }
+                eventPublisher->postSticky(std::make_shared<Event>(code, payload), 0);
+                std::lock_guard<std::mutex> lock(self->_synchronizationLock);
+                self->_currentSyncEventBus = nullptr;
+                return Future<Unit>::successful(result.getValue());
+            });
+
+        return eventPublisher->getEventBus();
     }
 
     void Account::startBlockchainObservation()
@@ -372,6 +417,11 @@ namespace algorand {
     std::string Account::getRestoreKey()
     {
         return hex::toString(_address.getPublicKey());
+    }
+
+    std::string Account::getAddress() const
+    {
+        return _address.toString();
     }
 
     FuturePtr<Amount> Account::getBalance()
@@ -479,8 +529,36 @@ namespace algorand {
 
     Future<api::ErrorCode> Account::eraseDataSince(const std::chrono::system_clock::time_point& date)
     {
-        // TODO
-        return Future<api::ErrorCode>::failure(Exception(api::ErrorCode::ACCOUNT_ALREADY_EXISTS, "whatever"));
+        auto accountUid = getAccountUid();
+
+        auto log = logger();
+        log->debug(" Start erasing data of account : {}", accountUid);
+
+        std::lock_guard<std::mutex> lock(_synchronizationLock);
+        _currentSyncEventBus = nullptr;
+
+        soci::session sql(getWallet()->getDatabase()->getPool());
+
+        // Update account's internal preferences (for synchronization)
+        auto savedState = getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer")->getObject<SavedState>("state");
+        if (savedState.nonEmpty()) {
+            // Reset batches to blocks mined before given date
+            auto previousBlock = BlockDatabaseHelper::getPreviousBlockInDatabase(sql, getWallet()->getCurrency().name, date);
+            for (auto& batch : savedState.getValue().batches) {
+                if (previousBlock.nonEmpty() && batch.blockHeight > previousBlock.getValue().height) {
+                    batch.blockHeight = (uint32_t) previousBlock.getValue().height;
+                    //batch.blockHash = previousBlock.getValue().blockHash;
+                } else if (!previousBlock.nonEmpty()) {//if no previous block, sync should go back from genesis block
+                    batch.blockHeight = 0;
+                    //batch.blockHash = "";
+                }
+            }
+            getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer")->editor()->putObject<SavedState>("state", savedState.getValue())->commit();
+        }
+
+        sql << "DELETE FROM operations WHERE account_uid = :account_uid AND date >= :date ", soci::use(accountUid), soci::use(date);
+        log->debug(" Finish erasing data of account : {}", accountUid);
+        return Future<api::ErrorCode>::successful(api::ErrorCode::FUTURE_WAS_SUCCESSFULL);
     }
 
     namespace {
@@ -540,11 +618,14 @@ namespace algorand {
         op.setTransaction(tx);
         op.accountUid = getAccountUid();
         op.walletUid = wallet->getWalletUid();
-        op.date =
-            std::chrono::system_clock::time_point(
-                    std::chrono::seconds(
-                        tx.header.timestamp.getValueOr(0)
-            ));
+        /*
+        if (tx.header.block.hasValue()) {
+            op.date = tx.header.block.getValue().time;
+        }
+        /*/
+        op.date = std::chrono::system_clock::time_point(
+            std::chrono::seconds(tx.header.timestamp.getValueOr(0)));
+        //*/
         op.senders = { tx.header.sender.toString() };
         setAmountAndRecipients(op, tx);
         op.fees = BigInt(static_cast<unsigned long long>(tx.header.fee));

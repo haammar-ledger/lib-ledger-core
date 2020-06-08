@@ -31,11 +31,23 @@
 #include <algorand/AlgorandJsonParser.hpp>
 #include <algorand/api/AlgorandConfigurationDefaults.hpp>
 
+#include <core/async/Algorithm.hpp>
+#include <core/collections/Vector.hpp>
 #include <core/api/Configuration.hpp>
+
+#include <unordered_set>
 
 namespace ledger {
 namespace core {
 namespace algorand {
+
+    Future<void *> BlockchainExplorer::startSession() {
+        return Future<void *>::successful(new std::string("", 0));
+    }
+
+    Future<Unit> BlockchainExplorer::killSession(void *session) {
+        return Future<Unit>::successful(unit);
+    }
 
     BlockchainExplorer::BlockchainExplorer(
             const std::shared_ptr<api::ExecutionContext>& context,
@@ -49,11 +61,6 @@ namespace algorand {
     {
         setConfiguration(configuration);
         _http->addHeader(constants::purestakeTokenHeader, api::AlgorandConfigurationDefaults::ALGORAND_API_TOKEN);
-    }
-
-    Future<api::Block> BlockchainExplorer::getCurrentBlock() const
-    {
-        // TODO ?
     }
 
     // TODO In algorand::Account set block.currencyName after calling BlockchainExplorer::getBlock !
@@ -99,12 +106,45 @@ namespace algorand {
     BlockchainExplorer::getTransactionById(const std::string & txId) const {
         return _http->GET(fmt::format(constants::purestakeTransactionEndpoint, txId))
             .json(false)
+            //.template flatMap -> Future<model::Transaction> ?
             .map<model::Transaction>(getContext(), [](const HttpRequest::JsonResult& response) {
                     const auto& json = std::get<1>(response)->GetObject();
                     auto tx = model::Transaction();
                     JsonParser::parseTransaction(json, tx);
+                    //return Future<model::Transaction>::successful(tx);
                     return tx;
             });
+            /*
+            // NOTE: In case we actually need to retrieve blocks for each tx...
+            
+            // Add block information to the transaction
+            .template flatMap<model::Transaction>(getContext(), [this](const model::Transaction &tx) -> Future<model::Transaction> {
+                auto output = model::Transaction(tx);
+                return getBlock(tx.header.round.getValue())
+                    .map<model::Transaction>(getContext(), [output](const api::Block &block) mutable {
+                        output.header.block = block;
+                        return output;
+                    });
+            });
+            */
+
+
+            /*
+                return _http->GET(fmt::format(constants::purestakeBlockEndpoint, tx.header.round.getValue()))
+                    .json(false)
+                    //.template flatMap -> Future<model::Transaction>
+                    .map<model::Transaction>(getContext(), [output](const HttpRequest::JsonResult &response) mutable {
+                        const auto& json = std::get<1>(response)->GetObject();
+                        //JsonParser::getMandatoryUint64Field(json, constants::xTimestamp, output.header.timestamp);
+                        //JsonParser::getMandatoryStringField(json, constants::xHash, output.header.blockHash);
+                        api::Block block;
+                        JsonParser::parseBlock(json, block);
+                        output.header.block = block;
+                        //return Future<model::Transaction>::successful(output);
+                        return output;
+                    });
+            });
+            */
     }
 
     Future<model::TransactionsBulk>
@@ -116,10 +156,47 @@ namespace algorand {
                     const auto& json = std::get<1>(response)->GetObject()[constants::xTransactions.c_str()].GetArray();
                     auto txs = model::TransactionsBulk();
                     JsonParser::parseTransactions(json, txs.transactions);
-                    // TODO Manage tx->hasNext ? Pagination ?
-                    txs.hasNext = false;
+                    // Manage tx->hasNext
+                    txs.hasNext = txs.transactions.size() >= 100;
+                    // TODO Manage pagination : offset, limit
                     return txs;
             });
+            /*
+            // NOTE: In case we actually need to retrieve blocks for each tx...
+
+            .template flatMap<model::TransactionsBulk>(getContext(), [this](const model::TransactionsBulk & txs) -> Future<model::TransactionsBulk> {
+
+                // - build set of (unique) blockHeights to fetch
+                const auto blockHeights = vector::map<uint64_t, model::Transaction>(txs.transactions,
+                    [](const model::Transaction& tx) {
+                        return tx.header.round.getValue();
+                    });
+                const std::unordered_set<uint64_t> uniqueBlockHeights(blockHeights.begin(), blockHeights.end());
+
+                // - build vector of promises for each block
+                std::vector<Future<api::Block>> blockPromises;
+                for (auto blockHeight : uniqueBlockHeights) {
+                    blockPromises.push_back(getBlock(blockHeight));
+                }
+
+                // - async::sequence
+                return async::sequence(getContext(), blockPromises)
+                    .flatMap<model::TransactionsBulk>(getContext(), [&txs](const std::vector<api::Block> & blocks) {
+                        // - build map of <blockHeight, api::Block> ?
+                        //auto blockPerHeight = std::unordered_map<uint64_t, api::Block>();
+                        auto txsMutable = const_cast<model::TransactionsBulk &>(txs); // FIXME Is this legit?
+                        for (auto& tx : txsMutable.transactions) {
+                            for (const auto& block : blocks) {
+                                if (tx.header.round.getValue() == block.height) {
+                                    tx.header.block = block;
+                                }
+                            }
+                        }
+
+                        return Future<model::TransactionsBulk>::successful(txsMutable);
+                    });
+            });
+            */
     }
 
     Future<model::TransactionParams> BlockchainExplorer::getTransactionParams() const
