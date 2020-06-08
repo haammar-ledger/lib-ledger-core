@@ -84,7 +84,7 @@ namespace algorand {
                 bool shouldEmitNow = false;
                 {
                     soci::session sql(account->getWallet()->getDatabase()->getPool());
-                    shouldEmitNow = account->putBlock(sql, block);
+                    shouldEmitNow = account->putBlock(sql, const_cast<api::Block &>(block));
                 }
                 if (shouldEmitNow)
                     account->emitEventsNow();

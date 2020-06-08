@@ -38,6 +38,7 @@
 #include <core/wallet/AbstractWallet.hpp>
 #include <core/events/ProgressNotifier.hpp>
 
+#include <mutex>
 #include <string>
 #include <map>
 #include <vector>
@@ -46,30 +47,31 @@ namespace ledger {
 namespace core {
 namespace algorand {
 
-        struct BatchSavedState {
-            //std::string blockHash;
-            uint32_t blockHeight;
+    // FIXME Should we use State???
+    struct BatchSavedState {
+        //std::string blockHash;
+        uint32_t blockHeight;
 
-            BatchSavedState() : blockHeight(0) {}
+        BatchSavedState() : blockHeight(0) {}
 
-            template<class Archive>
-            void serialize(Archive & archive) {
-                archive(/*blockHash, */blockHeight); // serialize things by passing them to the archive
-            };
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(/*blockHash, */blockHeight); // serialize things by passing them to the archive
         };
+    };
 
-        struct SavedState {
-            uint32_t halfBatchSize;
-            std::vector<BatchSavedState> batches;
-            std::map<std::string, std::string> pendingTxsHash;
+    struct SavedState {
+        uint32_t halfBatchSize;
+        std::vector<BatchSavedState> batches;
+        std::map<std::string, std::string> pendingTxsHash;
 
-            SavedState(): halfBatchSize(0) {}
+        SavedState(): halfBatchSize(0) {}
 
-            template<class Archive>
-            void serialize(Archive & archive) {
-                archive(halfBatchSize, batches, pendingTxsHash); // serialize things by passing them to the archive
-            }
-        };
+        template<class Archive>
+        void serialize(Archive & archive) {
+            archive(halfBatchSize, batches, pendingTxsHash); // serialize things by passing them to the archive
+        }
+    };
 
     class Account;
 
@@ -78,13 +80,18 @@ namespace algorand {
 
         public:
 
-            AccountSynchronizer(const std::shared_ptr<Services> &services,
-                                const std::shared_ptr<BlockchainExplorer> &explorer);
+            AccountSynchronizer(const std::shared_ptr<Services> & services,
+                                const std::shared_ptr<BlockchainExplorer> & explorer);
 
-            std::shared_ptr<ProgressNotifier<Unit>> synchronizeAccount(const std::shared_ptr<Account>& account);
+            std::shared_ptr<ProgressNotifier<Unit>> synchronizeAccount(const std::shared_ptr<Account> & account);
 
+            Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
+
+            Future<bool> synchronizeBatch(const std::shared_ptr<Account> & account,
+                                          const Option<uint64_t> & beforeRound,
+                                          const bool hadTransactions);
         private:
-
+/*
             struct SynchronizationBuddy {
                 std::shared_ptr<Preferences> preferences;
                 std::shared_ptr<spdlog::logger> logger;
@@ -100,7 +107,7 @@ namespace algorand {
             };
 
 
-            Future<Unit> performSynchronization(const std::shared_ptr<Account> &account);
+            Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
 
             // Synchronize batches.
             //
@@ -119,16 +126,16 @@ namespace algorand {
                                           const uint32_t currentBatchIndex,
                                           const bool hadTransactions = false);
 
-            void updateCurrentBlock(std::shared_ptr<SynchronizationBuddy> &buddy,
-                                    const std::shared_ptr<api::ExecutionContext> &context);
+            void updateCurrentBlock(std::shared_ptr<SynchronizationBuddy> & buddy,
+                                    const std::shared_ptr<api::ExecutionContext> & context);
 
-            void updateOperationsToDrop(soci::session &sql,
-                                        std::shared_ptr<SynchronizationBuddy> &buddy,
+            void updateOperationsToDrop(soci::session & sql,
+                                        std::shared_ptr<SynchronizationBuddy> & buddy,
                                         const std::string &accountUid);
-
+*/
             std::shared_ptr<Account> _account;
             std::shared_ptr<BlockchainExplorer> _explorer;
-            std::shared_ptr<Preferences> _internalPreferences;
+            //std::shared_ptr<Preferences> _internalPreferences;
             std::shared_ptr<ProgressNotifier<Unit>> _notifier;
             std::mutex _lock;
 

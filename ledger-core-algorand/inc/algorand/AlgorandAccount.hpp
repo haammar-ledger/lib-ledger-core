@@ -72,7 +72,7 @@ namespace algorand {
                 std::shared_ptr<AccountSynchronizer> synchronizer);
 
 
-        bool putBlock(soci::session& sql, const api::Block& block);
+        bool putBlock(soci::session& sql, api::Block& block);
 
         int putTransaction(soci::session& sql, const model::Transaction& transaction);
 

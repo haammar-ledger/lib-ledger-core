@@ -67,6 +67,173 @@ namespace ledger {
 namespace core {
 namespace algorand {
 
+    // SIMPLE VERSION
+
+    AccountSynchronizer::AccountSynchronizer(const std::shared_ptr<Services> & services,
+                                             const std::shared_ptr<BlockchainExplorer> & explorer) :
+        DedicatedContext(services->getDispatcher()->getThreadPoolExecutionContext("synchronizers")),
+        _explorer(explorer)
+    {
+        //_explorer = explorer;
+    }
+
+    std::shared_ptr<ProgressNotifier<Unit>> AccountSynchronizer::synchronizeAccount(const std::shared_ptr<Account>& account) {
+        std::lock_guard<std::mutex> lock(_lock);
+
+        if (!_account) {
+            _account = account;
+            _notifier = std::make_shared<ProgressNotifier<Unit>>();
+            auto self = shared_from_this();
+
+            performSynchronization(account)
+                .onComplete(getContext(), [self] (const Try<Unit> &result) {
+                    std::lock_guard<std::mutex> l(self->_lock);
+                    if (result.isFailure()) {
+                        self->_notifier->failure(result.getFailure());
+                    } else {
+                        self->_notifier->success(unit);
+                    }
+                    self->_notifier = nullptr;
+                    self->_account = nullptr;
+                });
+
+        } else if (account != _account) {
+            throw make_exception(api::ErrorCode::RUNTIME_ERROR, "This synchronizer is already in use");
+        }
+        return _notifier;
+    };
+
+    Future<Unit> AccountSynchronizer::performSynchronization(const std::shared_ptr<Account> & account) {
+
+        // FIXME call _explorer->getAccount() first?
+
+        // FIXME Benchmark?
+        //auto benchmark = std::make_shared<Benchmarker>(fmt::format("Synchronize batch {}", currentBatchIndex), buddy->logger);
+        //benchmark->start();
+
+        return synchronizeBatch(account, Option<uint64_t>(), false)
+            .template flatMap<Unit>(account->getContext(), [&] (const bool hadTransactions) -> Future<Unit> {
+                // FIXME Benchmark?
+                //benchmark->stop();
+
+                //buddy->preferences->editor()->template putObject<SavedState>("state", buddy->savedState.getValue())->commit();
+
+                return Future<Unit>::successful(unit);
+
+            }).recoverWith(ImmediateExecutionContext::INSTANCE, [&] (const Exception & exception) -> Future<Unit> {
+
+                // FIXME logger?
+                //buddy->logger->info("Recovering from failing synchronization : {}", exception.getMessage());
+
+                return Future<Unit>::failure(exception);
+
+                // FIXME Do we need a recovery mechanism?
+                /*
+                //A block reorganization happened
+                if (exception.getErrorCode() == api::ErrorCode::BLOCK_NOT_FOUND && buddy->savedState.nonEmpty()) {
+                    buddy->logger->info("Recovering from reorganization");
+
+                    //Get its block/block height
+                    auto& failedBatch = buddy->savedState.getValue().batches[currentBatchIndex];
+                    auto failedBlockHeight = failedBatch.blockHeight;
+                    //auto failedBlockHash = failedBatch.blockHash;
+
+                    if (failedBlockHeight > 0) {
+                        //Delete data related to failedBlock (and all blocks above it)
+                        buddy->logger->info("Deleting blocks above block height: {}", failedBlockHeight);
+
+                        soci::session sql(buddy->wallet->getDatabase()->getPool());
+                        sql << "DELETE FROM blocks where height >= :failedBlockHeight", soci::use(failedBlockHeight);
+
+                        //Get last block not part from reorg
+                        auto lastBlock = BlockDatabaseHelper::getLastBlock(sql, buddy->wallet->getCurrency().name);
+
+                        //Resync from the "beginning" if no last block in DB
+                        int64_t lastBlockHeight = 0;
+                        //std::string lastBlockHash;
+                        if (lastBlock.nonEmpty()) {
+                            lastBlockHeight = lastBlock.getValue().height;
+                            //lastBlockHash = lastBlock.getValue().blockHash;
+                        }
+
+                        //Update savedState's batches
+                        for (auto &batch : buddy->savedState.getValue().batches) {
+                            if (batch.blockHeight > lastBlockHeight) {
+                                batch.blockHeight = (uint32_t)lastBlockHeight;
+                                //batch.blockHash = lastBlockHash;
+                            }
+                        }
+
+                        //Save new savedState
+                        buddy->preferences->editor()->template putObject<SavedState>("state", buddy->savedState.getValue())->commit();
+
+                        //Synchronize same batch now with an existing block (of height lastBlockHeight)
+                        //if failedBatch was not the deepest block part of that reorg, this recursive call
+                        //will ensure to get (and delete from DB) to the deepest failed block (part of reorg)
+                        buddy->logger->info("Relaunch synchronization after recovering from reorganization");
+
+                        return self->synchronizeBatches(buddy, currentBatchIndex);
+                    }
+                } else {
+                    return Future<Unit>::failure(exception);
+                }
+
+                return Future<Unit>::successful(unit);
+                */
+            });
+    }
+
+    Future<bool> AccountSynchronizer::synchronizeBatch(const std::shared_ptr<Account> & account,
+                                                       const Option<uint64_t> & beforeRound,
+                                                       const bool hadTransactions) {
+        auto self = shared_from_this();
+        return _explorer->getTransactionsForAddress(account->getAddress(), beforeRound)
+            .template flatMap<bool>(getContext(), [&, account, self](const model::TransactionsBulk& bulk) -> Future<bool> {
+
+                soci::session sql(account->getWallet()->getDatabase()->getPool());
+                soci::transaction tr(sql);
+
+                // FIXME logger?
+                //buddy->logger->info("Got {} txs", bulk.transactions.size());
+                auto minTxRound = std::numeric_limits<uint64_t>::max();
+                for (const auto& tx : bulk.transactions) {
+
+                    // A lot of things could happen here, better wrap it
+                    auto tryPutTx = Try<int>::from([&] () {
+                        return account->putTransaction(sql, tx);
+                    });
+
+                    // Record the lowest round, to continue fetching txs below it if needed
+                    minTxRound = std::min(minTxRound, tx.header.round.getValueOr(minTxRound));
+
+                    // FIXME logger?
+                    //auto txId = tx.header.id.getValueOr("");
+                    //if (tryPutTx.isFailure()) {
+                    //    buddy->logger->error("Failed to put transaction {} for account {}, reason: {}", txId, buddy->account->getAccountUid(), tryPutTx.getFailure().getMessage());
+                    //}
+                }
+
+                tr.commit();
+
+                auto hadTX = hadTransactions || bulk.transactions.size() > 0;
+                if (bulk.hasNext) {
+                    return self->synchronizeBatch(account, minTxRound, hadTX);
+                } else {
+                    return Future<bool>::successful(hadTX);
+                }
+            });
+    }
+
+
+
+
+
+
+
+
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~é
+#if 0
     static void initializeSavedState(Option<SavedState> &savedState, int32_t halfBatchSize) {
 
         if (savedState.isEmpty()) {
@@ -196,15 +363,22 @@ namespace algorand {
         auto self = shared_from_this();
         return _explorer->startSession()
             .template map<Unit>(account->getContext(), [buddy] (void * const& t) -> Unit {
+
                 buddy->logger->info("Synchronization token obtained");
                 buddy->token = Option<void *>(t);
                 return unit;
+
             }).template flatMap<Unit>(account->getContext(), [buddy, self] (const Unit&) {
+
+                // This is where it's done
                 return self->synchronizeBatches(buddy, 0);
+
             }).template flatMap<Unit>(account->getContext(), [self, buddy] (const Unit&) {
+
                 auto tryKillSession = Try<Future<Unit>>::from([=](){
                     return self->_explorer->killSession(buddy->token.getValue());
                 });
+
                 if (tryKillSession.isFailure()) {
                     buddy->logger->warn("Failed to delete synchronization token {} for account#{} of wallet {}",
                                         static_cast<char *>(buddy->token.getValue()), buddy->account->getIndex(),
@@ -213,10 +387,14 @@ namespace algorand {
                     // Note: in a near future we'll try to get rid of sync token mechanism
                     return Future<Unit>::successful(unit);
                 }
+
                 return tryKillSession.getValue();
+
             }).template map<Unit>(ImmediateExecutionContext::INSTANCE, [self, buddy] (const Unit&) {
+
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         (DateUtils::now() - buddy->startDate.time_since_epoch()).time_since_epoch());
+
                 buddy->logger->info("End synchronization for account#{} of wallet {} in {}", buddy->account->getIndex(),
                                     buddy->account->getWallet()->getName(), DurationUtils::formatDuration(duration));
 
@@ -235,7 +413,9 @@ namespace algorand {
 
                 self->_account = nullptr;
                 return unit;
+
             }).recover(ImmediateExecutionContext::INSTANCE, [buddy] (const Exception& ex) -> Unit {
+
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                         (DateUtils::now() - buddy->startDate.time_since_epoch()).time_since_epoch());
                 buddy->logger->error("Error during during synchronization for account#{} of wallet {} in {} ms", buddy->account->getIndex(),
@@ -246,14 +426,12 @@ namespace algorand {
     };
 
     // Synchronize batches.
-    //
     // This function will synchronize all batches by iterating over batches and transactions
     // bulks. The input buddy can be used to customize the behavior of the synchronization.
     Future<Unit> AccountSynchronizer::synchronizeBatches(std::shared_ptr<SynchronizationBuddy> buddy,
                                                          const uint32_t currentBatchIndex) {
         buddy->logger->info("SYNC BATCHES");
-        //For ETH and XRP like wallets, one account corresponds to one ETH address,
-        //so ne need to discover other batches
+
         auto hasMultipleAddresses = buddy->wallet->hasMultipleAddresses();
         auto done = currentBatchIndex >= buddy->savedState.getValue().batches.size() - 1;
         if (currentBatchIndex >= buddy->savedState.getValue().batches.size()) {
@@ -446,7 +624,7 @@ namespace algorand {
             }
         }
     }
-
+#endif
 /*
     std::shared_ptr<AccountSynchronizer> AccountSynchronizer::getSharedFromThis() {
         return shared_from_this();

@@ -29,19 +29,29 @@
 
 #pragma once
 
-#include <core/wallet/BlockDatabaseHelper.hpp>
+//#include <core/wallet/BlockDatabaseHelper.hpp>
+#include <soci.h>
+//#include <string>
+
+#include <core/api/Block.hpp>
+//#include <core/utils/Option.hpp>
+
 
 namespace ledger {
 namespace core {
 namespace algorand {
 
-    class BlockDatabaseHelper : public ledger::core::BlockDatabaseHelper {
+    class BlockDatabaseHelper {//: public ledger::core::BlockDatabaseHelper {
 
     public:
 
-        static std::string createBlockUid(const api::Block& block);
-        static std::string createBlockUid(const int64_t blockHeight, const std::string& currencyName);
-        static bool blockExists(soci::session& sql, const int64_t blockHeight, const std::string& currencyName);
+        static bool blockExists(soci::session & sql, const int64_t blockHeight, const std::string & currencyName);
+        static bool putBlock(soci::session & sql, api::Block & block);
+
+
+    private:
+        //static std::string createBlockUid(const api::Block & block);
+        static std::string createBlockUid(const int64_t blockHeight, const std::string & currencyName);
 
         /*
         static std::string createBlockUid(const api::Block& block);

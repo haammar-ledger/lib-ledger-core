@@ -30,6 +30,7 @@
 #include <algorand/database/AlgorandBlockDatabaseHelper.hpp>
 
 #include <core/crypto/SHA256.hpp>
+#include <core/database/SociDate.hpp>
 
 #include <fmt/format.h>
 
@@ -37,19 +38,30 @@ namespace ledger {
 namespace core {
 namespace algorand {
 
-    std::string BlockDatabaseHelper::createBlockUid(const api::Block & block) {
-        return createBlockUid(block.height, block.currencyName);
-    }
-
-    std::string BlockDatabaseHelper::createBlockUid(const int64_t blockHeight, const std::string & currencyName) {
-        return SHA256::stringToHexHash(fmt::format("uid:{}+{}", blockHeight, currencyName));
-    }
-
-    bool BlockDatabaseHelper::blockExists(soci::session &sql, const int64_t blockHeight, const std::string &currencyName) {
+    bool BlockDatabaseHelper::blockExists(soci::session & sql, const int64_t blockHeight, const std::string & currencyName) {
         auto count = 0;
         auto uid = createBlockUid(blockHeight, currencyName);
         sql << "SELECT COUNT(*) FROM blocks WHERE uid = :uid", soci::use(uid), soci::into(count);
         return count > 0;
+    }
+
+    bool BlockDatabaseHelper::putBlock(soci::session & sql, api::Block & block) {
+        if (!blockExists(sql, block.height, block.currencyName)) {
+            block.uid = createBlockUid(block.height, block.currencyName);
+            sql << "INSERT INTO blocks VALUES(:uid, :hash, :height, :time, :currency_name)",
+                    soci::use(block.uid), soci::use(block.blockHash), soci::use(block.height), soci::use(block.time), soci::use(block.currencyName);
+            return true;
+        }
+        return false;
+    }
+
+/*
+    std::string BlockDatabaseHelper::createBlockUid(const api::Block & block) {
+        return createBlockUid(block.height, block.currencyName);
+    }
+*/
+    std::string BlockDatabaseHelper::createBlockUid(const int64_t blockHeight, const std::string & currencyName) {
+        return SHA256::stringToHexHash(fmt::format("uid:{}+{}", blockHeight, currencyName));
     }
 
 }

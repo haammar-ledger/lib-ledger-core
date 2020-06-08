@@ -95,7 +95,7 @@ namespace algorand {
                                             accountData.address,
                                             _explorer,
                                             _observer,
-                                            nullptr);
+                                            _synchronizerFactory());
         });
     }
 
