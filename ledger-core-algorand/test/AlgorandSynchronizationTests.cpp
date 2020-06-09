@@ -31,7 +31,6 @@
 #include <algorand/AlgorandAccount.hpp>
 #include <algorand/AlgorandWalletFactory.hpp>
 #include <algorand/AlgorandWallet.hpp>
-//#include <algorand/AlgorandBlockchainExplorer.hpp>
 #include <algorand/AlgorandLikeCurrencies.hpp>
 #include <algorand/AlgorandNetworks.hpp>
 #include <algorand/operations/AlgorandOperationQuery.hpp>
@@ -43,47 +42,17 @@
 
 #include <functional>
 
-/*
-#include <gtest/gtest.h>
-#include <iostream>
-#include <set>
-
-#include <core/api/BlockchainExplorerEngines.hpp>
-#include <core/api/KeychainEngines.hpp>
-#include <core/utils/DateUtils.hpp>
-
-#include <tezos/TezosLikeWallet.hpp>
-#include <tezos/api/TezosConfiguration.hpp>
-#include <tezos/api/TezosConfigurationDefaults.hpp>
-#include <tezos/database/TezosLikeAccountDatabaseHelper.hpp>
-#include <tezos/delegation/TezosLikeOriginatedAccount.hpp>
-#include <tezos/operations/TezosLikeOperation.hpp>
-#include <tezos/operations/TezosLikeOperationQuery.hpp>
-#include <tezos/transactions/TezosLikeTransactionBuilder.hpp>
-
-#include <integration/WalletFixture.hpp>
-
-#include "Common.hpp"
-*/
-
 using namespace ledger::testing::algorand;
 using namespace ledger::core::algorand;
-
-//const api::AlgorandNetworkParameters ALGORAND_PARAMS = networks::getAlgorandNetworkParameters("algorand-testnet");
 
 class AlgorandSynchronizationTest : public WalletFixture<WalletFactory> {
 };
 
-// TODO A tester:
-//- more than 100 txs
-//- synchro incrémentale??
-
-TEST_F(AlgorandSynchronizationTest, AccountSimpleSynchronizationTest) {
+TEST_F(AlgorandSynchronizationTest, AccountSynchronizationTest) {
     registerCurrency(currencies::algorand());
 
     auto configuration = DynamicObject::newInstance();
     configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME,"44'/<coin_type>'/<account>'/<node>'/<address>");
-    //configuration->putString(api::TezosConfiguration::TEZOS_XPUB_CURVE, api::TezosConfigurationDefaults::TEZOS_XPUB_CURVE_ED25519);
     configuration->putString(api::Configuration::BLOCKCHAIN_EXPLORER_ENGINE, api::AlgorandBlockchainExplorerEngines::ALGORAND_NODE);
     configuration->putString(api::Configuration::BLOCKCHAIN_EXPLORER_API_ENDPOINT, api::AlgorandConfigurationDefaults::ALGORAND_API_ENDPOINT);
 
@@ -101,6 +70,7 @@ TEST_F(AlgorandSynchronizationTest, AccountSimpleSynchronizationTest) {
     );
 
     auto account = std::dynamic_pointer_cast<Account>(wait(wallet->newAccountWithInfo(info)));
+    auto internalPreferences = account->getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer");
 
     auto receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
         fmt::print("Received event {}\n", api::to_string(event->getCode()));
@@ -116,110 +86,13 @@ TEST_F(AlgorandSynchronizationTest, AccountSimpleSynchronizationTest) {
     account->synchronize()->subscribe(dispatcher->getMainExecutionContext(), receiver);
     dispatcher->waitUntilStopped();
 
+    auto savedState = internalPreferences->template getObject<SavedState>("state");
+    std::cout << ">>> Saved block round for next synchronization: " << savedState.getValue().round << std::endl;
+    EXPECT_GT(savedState.getValue().round, 6000000);
+
     auto operations = wait(std::dynamic_pointer_cast<algorand::OperationQuery>(account->queryOperations()->complete())->execute());
     std::cout << ">>> Nb of operations: " << operations.size() << std::endl;
-    EXPECT_GT(operations.size(), 0);
+    EXPECT_GT(operations.size(), 20); // 27 on TestNet as of 08 June 2020
+
 }
 
-#if 0
-TEST_F(AlgorandSynchronizationTest, AccountSynchronizationTest) {
-    registerCurrency(currencies::algorand());
-
-    auto configuration = DynamicObject::newInstance();
-    configuration->putString(api::Configuration::KEYCHAIN_DERIVATION_SCHEME,"44'/<coin_type>'/<account>'/<node>'/<address>");
-    //configuration->putString(api::TezosConfiguration::TEZOS_XPUB_CURVE, api::TezosConfigurationDefaults::TEZOS_XPUB_CURVE_ED25519);
-    configuration->putString(api::Configuration::BLOCKCHAIN_EXPLORER_ENGINE, api::AlgorandBlockchainExplorerEngines::ALGORAND_NODE);
-    configuration->putString(api::Configuration::BLOCKCHAIN_EXPLORER_API_ENDPOINT, api::AlgorandConfigurationDefaults::ALGORAND_API_ENDPOINT);
-
-    auto wallet = std::dynamic_pointer_cast<Wallet>(wait(walletStore->createWallet("test-wallet", "algorand", configuration)));
-
-    std::set<std::string> emittedOperations;
-    {
-        auto nextIndex = wait(wallet->getNextAccountIndex());
-        EXPECT_EQ(nextIndex, 0);
-
-        const api::AccountCreationInfo info(
-            nextIndex,
-            {"main"},
-            {"44'/283'/0'/0'"},
-            {OBELIX_ADDRESS.begin(), OBELIX_ADDRESS.end()},
-            {hex::toByteArray("")}
-        );
-
-        auto account = std::dynamic_pointer_cast<Account>(wait(wallet->newAccountWithInfo(info)));
-
-        auto receiver = make_receiver([&](const std::shared_ptr<api::Event> &event) {
-            if (event->getCode() == api::EventCode::NEW_OPERATION) {
-                auto uid = event->getPayload()->getString(api::Account::EV_NEW_OP_UID).value();
-                EXPECT_EQ(emittedOperations.find(uid), emittedOperations.end());
-            }
-        });
-
-        // FIXME WTF is this doing?
-        services->getEventBus()->subscribe(dispatcher->getMainExecutionContext(), receiver);
-
-        receiver.reset();
-        receiver = make_receiver([=](const std::shared_ptr<api::Event> &event) {
-            fmt::print("Received event {}\n", api::to_string(event->getCode()));
-            if (event->getCode() == api::EventCode::SYNCHRONIZATION_STARTED) {
-                return;
-            }
-
-            EXPECT_EQ(event->getCode(), api::EventCode::SYNCHRONIZATION_SUCCEED);
-
-            auto balance = wait(account->getBalance());
-            EXPECT_GT(balance->toLong(), 0L);
-
-            // FIXME Remove originated stuff & retrieve algorand operations instead I guess?...
-
-            auto operations = wait(std::dynamic_pointer_cast<algorand::OperationQuery>(account->queryOperations()->complete())->execute());
-            EXPECT_GE(operations.size(), 3);
-            std::cout << ">>> Nb of operations: "<< operations.size() << std::endl;
-
-            balance = wait(account->getBalance());
-            EXPECT_NE(balance->toLong(), 0L);
-            std::cout << ">>> Balance: "<< balance->toString() << std::endl;
-
-            auto fromDate = "2018-01-01T13:38:23Z";
-            auto toDate = DateUtils::toJSON(DateUtils::now());
-            auto balanceHistory = wait(account->getBalanceHistory(fromDate, toDate, api::TimePeriod::MONTH));
-            EXPECT_EQ(balanceHistory[balanceHistory.size() - 1]->toLong(), balance->toLong());
-
-            dispatcher->stop();
-        });
-
-        auto restoreKey = account->getRestoreKey();
-        EXPECT_EQ(restoreKey, hex::toString(info.publicKeys[0]));
-
-        // Perform sychronization
-        account->synchronize()->subscribe(dispatcher->getMainExecutionContext(), receiver);
-
-        dispatcher->waitUntilStopped();
-
-        // FIXME WTF ???
-        // Re-launch a synchronization if it’s the first time
-        std::cout << "Running a second synchronization." << std::endl;
-        dispatcher = std::make_shared<QtThreadDispatcher>();
-        account->synchronize()->subscribe(dispatcher->getMainExecutionContext(), receiver);
-
-        dispatcher->waitUntilStopped();
-
-        auto operations = wait(std::dynamic_pointer_cast<algorand::OperationQuery>(account->queryOperations()->complete())->execute());
-        std::cout << ">>> Nb of operations: " << operations.size() << std::endl;
-        EXPECT_GT(operations.size(), 0);
-
-        //EXPECT_EQ(operations[0]->getTransaction()->getStatus(), 1);
-        //auto fees = wait(account->getFeeEstimate()); // FIXME Create & use a no-callback version for getFeeEstimate()
-        //EXPECT_GT(fees->toUint64(), 0);
-
-        //auto storage = wait(account->getStorage("tz1ZshTmtorFVkcZ7CpceCAxCn7HBJqTfmpk"));
-        //EXPECT_GT(storage->toUint64(), 0);
-
-        // TODO
-        //auto gasLimit = wait(account->getEstimatedGasLimit("tz1ZshTmtorFVkcZ7CpceCAxCn7HBJqTfmpk"));
-        //EXPECT_GT(gasLimit->toUint64(), 0);
-
-        //test(nextWalletName, "", explorerURL);
-    }
-}
-#endif

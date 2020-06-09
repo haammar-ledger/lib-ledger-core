@@ -47,30 +47,15 @@ namespace ledger {
 namespace core {
 namespace algorand {
 
-    // FIXME Should we use State???
-    struct BatchSavedState {
-        //std::string blockHash;
-        uint32_t blockHeight;
-
-        BatchSavedState() : blockHeight(0) {}
-
-        template<class Archive>
-        void serialize(Archive & archive) {
-            archive(/*blockHash, */blockHeight); // serialize things by passing them to the archive
-        };
-    };
-
     struct SavedState {
-        uint32_t halfBatchSize;
-        std::vector<BatchSavedState> batches;
-        std::map<std::string, std::string> pendingTxsHash;
+        uint64_t round;
 
-        SavedState(): halfBatchSize(0) {}
+        SavedState() : round(0) {}
 
         template<class Archive>
         void serialize(Archive & archive) {
-            archive(halfBatchSize, batches, pendingTxsHash); // serialize things by passing them to the archive
-        }
+            archive(round); // Serialize things by passing them to the archive
+        };
     };
 
     class Account;
@@ -88,54 +73,14 @@ namespace algorand {
             Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
 
             Future<bool> synchronizeBatch(const std::shared_ptr<Account> & account,
-                                          const Option<uint64_t> & beforeRound,
+                                          const Option<uint64_t> & minTxRound,
                                           const bool hadTransactions);
+
         private:
-/*
-            struct SynchronizationBuddy {
-                std::shared_ptr<Preferences> preferences;
-                std::shared_ptr<spdlog::logger> logger;
-                std::chrono::system_clock::time_point startDate;
-                std::shared_ptr<AbstractWallet> wallet;
-                std::shared_ptr<DynamicObject> configuration;
-                uint32_t halfBatchSize;
-                //std::shared_ptr<Keychain> keychain;
-                Option<SavedState> savedState;
-                Option<void *> token;
-                std::shared_ptr<Account> account;
-                std::map<std::string, std::string> transactionsToDrop;
-            };
 
-
-            Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
-
-            // Synchronize batches.
-            //
-            // This function will synchronize all batches by iterating over batches and transactions
-            // bulks. The input buddy can be used to customize the behavior of the synchronization.
-            Future<Unit> synchronizeBatches(std::shared_ptr<SynchronizationBuddy> buddy,
-                                            const uint32_t currentBatchIndex);
-
-            // Synchronize a transactions batch.
-            //
-            // The currentBatchIndex is the currently synchronized batch. buddy is the
-            // synchronization object used to accumulate a state. hadTransactions is used to check
-            // whether more data is needed. If a block doesn’t have any transaction, it means that
-            // we must stop.
-            Future<bool> synchronizeBatch(std::shared_ptr<SynchronizationBuddy> buddy,
-                                          const uint32_t currentBatchIndex,
-                                          const bool hadTransactions = false);
-
-            void updateCurrentBlock(std::shared_ptr<SynchronizationBuddy> & buddy,
-                                    const std::shared_ptr<api::ExecutionContext> & context);
-
-            void updateOperationsToDrop(soci::session & sql,
-                                        std::shared_ptr<SynchronizationBuddy> & buddy,
-                                        const std::string &accountUid);
-*/
             std::shared_ptr<Account> _account;
             std::shared_ptr<BlockchainExplorer> _explorer;
-            //std::shared_ptr<Preferences> _internalPreferences;
+            std::shared_ptr<Preferences> _internalPreferences;
             std::shared_ptr<ProgressNotifier<Unit>> _notifier;
             std::mutex _lock;
 
@@ -146,3 +91,4 @@ namespace algorand {
 } // namespace ledger
 
 #endif // LEDGER_CORE_ALGORANDACCOUNTSYNCHRONIZER_H
+

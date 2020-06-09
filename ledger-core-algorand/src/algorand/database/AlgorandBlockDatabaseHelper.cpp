@@ -31,12 +31,36 @@
 
 #include <core/crypto/SHA256.hpp>
 #include <core/database/SociDate.hpp>
+#include <core/database/SociNumber.hpp>
 
 #include <fmt/format.h>
 
 namespace ledger {
 namespace core {
 namespace algorand {
+
+    static Option<api::Block> getBlockFromRow(soci::row &databaseRow, const std::string &currencyName) {
+        auto uid = databaseRow.get<std::string>(0);
+        auto hash = databaseRow.get<std::string>(1);
+        auto height = soci::get_number<int64_t>(databaseRow, 2);
+        auto time = databaseRow.get<std::chrono::system_clock::time_point>(3);
+        return Option<api::Block>(
+                api::Block(hash, uid, time, currencyName, height)
+        );
+    }
+
+    Option<api::Block> BlockDatabaseHelper::getLastBlockBefore(soci::session &sql,
+                                                               const std::string &currencyName,
+                                                               std::chrono::system_clock::time_point date) {
+        soci::rowset<soci::row> rows = (sql.prepare << "SELECT uid, hash, height, time FROM blocks WHERE "
+                "currency_name = :name AND time < :date ORDER BY height DESC LIMIT 1",
+                soci::use(currencyName), soci::use(date));
+
+        for (auto& row : rows) {
+            return getBlockFromRow(row, currencyName);
+        }
+        return Option<api::Block>();
+    }
 
     bool BlockDatabaseHelper::blockExists(soci::session & sql, const int64_t blockHeight, const std::string & currencyName) {
         auto count = 0;
@@ -55,11 +79,6 @@ namespace algorand {
         return false;
     }
 
-/*
-    std::string BlockDatabaseHelper::createBlockUid(const api::Block & block) {
-        return createBlockUid(block.height, block.currencyName);
-    }
-*/
     std::string BlockDatabaseHelper::createBlockUid(const int64_t blockHeight, const std::string & currencyName) {
         return SHA256::stringToHexHash(fmt::format("uid:{}+{}", blockHeight, currencyName));
     }
@@ -67,3 +86,4 @@ namespace algorand {
 }
 }
 }
+

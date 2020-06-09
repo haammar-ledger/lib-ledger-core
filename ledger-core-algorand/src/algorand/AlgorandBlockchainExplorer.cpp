@@ -63,7 +63,6 @@ namespace algorand {
         _http->addHeader(constants::purestakeTokenHeader, api::AlgorandConfigurationDefaults::ALGORAND_API_TOKEN);
     }
 
-    // TODO In algorand::Account set block.currencyName after calling BlockchainExplorer::getBlock !
     Future<api::Block> BlockchainExplorer::getBlock(uint64_t blockHeight) const
     {
         return _http->GET(fmt::format(constants::purestakeBlockEndpoint, blockHeight))
@@ -106,12 +105,10 @@ namespace algorand {
     BlockchainExplorer::getTransactionById(const std::string & txId) const {
         return _http->GET(fmt::format(constants::purestakeTransactionEndpoint, txId))
             .json(false)
-            //.template flatMap -> Future<model::Transaction> ?
             .map<model::Transaction>(getContext(), [](const HttpRequest::JsonResult& response) {
                     const auto& json = std::get<1>(response)->GetObject();
                     auto tx = model::Transaction();
                     JsonParser::parseTransaction(json, tx);
-                    //return Future<model::Transaction>::successful(tx);
                     return tx;
             });
             /*// NOTE: In case we actually need to retrieve blocks for each tx... (untested!)
@@ -127,7 +124,6 @@ namespace algorand {
             */
     }
 
-    // FIXME Test this
     Future<model::TransactionsBulk>
     BlockchainExplorer::getTransactionsForAddress(const std::string & address,
                                                   const Option<uint64_t> & beforeRound) const
@@ -142,6 +138,7 @@ namespace algorand {
                     const auto& json = std::get<1>(response)->GetObject()[constants::xTransactions.c_str()].GetArray();
                     auto txs = model::TransactionsBulk();
                     JsonParser::parseTransactions(json, txs.transactions);
+
                     // Manage limit
                     txs.hasNext = txs.transactions.size() >= constants::EXPLORER_QUERY_LIMIT;
                     return txs;
@@ -167,7 +164,7 @@ namespace algorand {
                     .flatMap<model::TransactionsBulk>(getContext(), [&txs](const std::vector<api::Block> & blocks) {
                         // - build map of <blockHeight, api::Block> ?
                         //auto blockPerHeight = std::unordered_map<uint64_t, api::Block>();
-                        auto txsMutable = const_cast<model::TransactionsBulk &>(txs); // FIXME Is this legit?
+                        auto txsMutable = const_cast<model::TransactionsBulk &>(txs);
                         for (auto& tx : txsMutable.transactions) {
                             for (const auto& block : blocks) {
                                 if (tx.header.round.getValue() == block.height) {
@@ -206,3 +203,4 @@ namespace algorand {
 }  // namespace algorand
 }  // namespace core
 }  // namespace ledger
+

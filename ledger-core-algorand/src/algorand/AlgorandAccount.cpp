@@ -140,18 +140,12 @@ namespace algorand {
 
     int Account::putTransaction(soci::session& sql, const model::Transaction& transaction)
     {
-        if (transaction.header.round.hasValue()) {
-            auto block = createBlock(transaction, getWallet()->getCurrency().name);
-            putBlock(sql, block);
-        }
-
         const auto wallet = getWallet();
         if (wallet == nullptr) {
             throw Exception(api::ErrorCode::RUNTIME_ERROR, "Wallet reference is dead.");
         }
 
-        const auto txuid =
-            TransactionDatabaseHelper::putTransaction(sql, getAccountUid(), transaction);
+        const auto txuid = TransactionDatabaseHelper::putTransaction(sql, getAccountUid(), transaction);
         const auto operation = [&]() {
             auto operation = Operation(shared_from_this(), transaction);
             inflateOperation(operation, getWallet(), transaction);
@@ -159,7 +153,9 @@ namespace algorand {
             return operation;
         }();
 
-        OperationDatabaseHelper::putAlgorandOperation(sql, txuid, operation);
+        if (OperationDatabaseHelper::putAlgorandOperation(sql, txuid, operation)) {
+            emitNewOperationEvent(operation);
+        }
 
         return static_cast<int>(operation.type);
     }
@@ -403,7 +399,6 @@ namespace algorand {
         return _currentSyncEventBus != nullptr;
     }
 
-    // FIXME Test this
     std::shared_ptr<api::EventBus> Account::synchronize()
     {
         std::lock_guard<std::mutex> lock(_synchronizationLock);
@@ -417,13 +412,12 @@ namespace algorand {
 
         auto startTime = DateUtils::now();
         eventPublisher->postSticky(
-            std::make_shared<Event>(api::EventCode::SYNCHRONIZATION_STARTED, api::DynamicObject::newInstance()),
-            0
+            std::make_shared<Event>(api::EventCode::SYNCHRONIZATION_STARTED, api::DynamicObject::newInstance()), 0
         );
 
         auto self = std::static_pointer_cast<Account>(shared_from_this());
         _synchronizer->synchronizeAccount(self)->getFuture()
-            .onComplete(getContext(), [&, eventPublisher, self](const Try<Unit> &result) {
+            .onComplete(getContext(), [self, eventPublisher, startTime](const Try<Unit> &result) {
                 api::EventCode code;
                 auto payload = std::make_shared<DynamicObject>();
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(DateUtils::now() - startTime).count();
@@ -586,29 +580,19 @@ namespace algorand {
 
         soci::session sql(getWallet()->getDatabase()->getPool());
 
-        // FIXME Needed if we use synchronizer's state
-        /*
         // Update account's internal preferences (for synchronization)
         auto savedState = getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer")->getObject<SavedState>("state");
         if (savedState.nonEmpty()) {
-            // Reset batches to blocks mined before given date
-            auto previousBlock = BlockDatabaseHelper::getPreviousBlockInDatabase(sql, getWallet()->getCurrency().name, date);
-            for (auto& batch : savedState.getValue().batches) {
-                if (previousBlock.nonEmpty() && batch.blockHeight > previousBlock.getValue().height) {
-                    batch.blockHeight = (uint32_t) previousBlock.getValue().height;
-                    //batch.blockHash = previousBlock.getValue().blockHash;
-                } else if (!previousBlock.nonEmpty()) {//if no previous block, sync should go back from genesis block
-                    batch.blockHeight = 0;
-                    //batch.blockHash = "";
-                }
+            // Reset saved state to block mined before given date
+            auto previousBlock = BlockDatabaseHelper::getLastBlockBefore(sql, getWallet()->getCurrency().name, date);
+            if (previousBlock.nonEmpty() && savedState.getValue().round > previousBlock.getValue().height) {
+                savedState.getValue().round = static_cast<uint64_t>(previousBlock.getValue().height);
+            } else if (!previousBlock.nonEmpty()) { // if no previous block, sync should go back from genesis block
+                savedState.getValue().round = Option<uint64_t>();
             }
             getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer")->editor()->putObject<SavedState>("state", savedState.getValue())->commit();
         }
-        */
 
-        sql << "DELETE FROM block WHERE currency_name = :currency_name AND time >= :date ",
-            soci::use(getWallet()->getCurrency().name),
-            soci::use(date);
 
         sql << "DELETE FROM operations WHERE account_uid = :account_uid AND date >= :date ",
             soci::use(accountUid),
@@ -657,3 +641,4 @@ namespace algorand {
 } // namespace algorand
 } // namespace core
 } // namespace ledger
+
