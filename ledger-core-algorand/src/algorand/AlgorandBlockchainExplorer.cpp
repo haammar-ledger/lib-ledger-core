@@ -37,14 +37,6 @@ namespace ledger {
 namespace core {
 namespace algorand {
 
-    Future<void *> BlockchainExplorer::startSession() {
-        return Future<void *>::successful(new std::string("", 0));
-    }
-
-    Future<Unit> BlockchainExplorer::killSession(void *session) {
-        return Future<Unit>::successful(unit);
-    }
-
     BlockchainExplorer::BlockchainExplorer(
             const std::shared_ptr<api::ExecutionContext>& context,
             const std::shared_ptr<HttpClient>& http,

@@ -76,9 +76,6 @@ namespace constants {
         Future<model::TransactionParams> getTransactionParams() const;
         Future<std::string> pushTransaction(const std::vector<uint8_t> & transaction);
 
-        Future<void *> startSession();
-        Future<Unit> killSession(void *session);
-
     private:
 
         std::shared_ptr<HttpClient> _http;
