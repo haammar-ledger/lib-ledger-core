@@ -123,12 +123,13 @@ namespace algorand {
                 if (tx.header.timestamp) {
                     block.time = std::chrono::system_clock::time_point(std::chrono::seconds(*tx.header.timestamp));
                 }
+                block.uid = BlockDatabaseHelper::createBlockUid(block);
                 return block;
             }();
         }
     } // namespace
 
-    bool Account::putBlock(soci::session& sql, api::Block& block)
+    bool Account::putBlock(soci::session& sql, const api::Block& block)
     {
         if (BlockDatabaseHelper::putBlock(sql, block)) {
             emitNewBlockEvent(block);
