@@ -70,13 +70,13 @@ namespace algorand {
 
         std::shared_ptr<ProgressNotifier<Unit>> synchronizeAccount(const std::shared_ptr<Account> & account);
 
+    private:
+
         Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
 
         Future<bool> synchronizeBatch(const std::shared_ptr<Account> & account,
                                         const Option<uint64_t> & minTxRound,
                                         const bool hadTransactions);
-
-    private:
 
         std::shared_ptr<Account> _account;
         std::shared_ptr<BlockchainExplorer> _explorer;
