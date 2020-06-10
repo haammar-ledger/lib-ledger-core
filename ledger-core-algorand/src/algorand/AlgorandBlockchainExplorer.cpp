@@ -31,11 +31,7 @@
 #include <algorand/AlgorandJsonParser.hpp>
 #include <algorand/api/AlgorandConfigurationDefaults.hpp>
 
-#include <core/async/Algorithm.hpp>
-#include <core/collections/Vector.hpp>
 #include <core/api/Configuration.hpp>
-
-#include <unordered_set>
 
 namespace ledger {
 namespace core {

@@ -60,31 +60,31 @@ namespace algorand {
 
     class Account;
 
-        class AccountSynchronizer : public DedicatedContext,
-                                    public std::enable_shared_from_this<AccountSynchronizer> {
+    class AccountSynchronizer : public DedicatedContext,
+                                public std::enable_shared_from_this<AccountSynchronizer> {
 
-        public:
+    public:
 
-            AccountSynchronizer(const std::shared_ptr<Services> & services,
-                                const std::shared_ptr<BlockchainExplorer> & explorer);
+        AccountSynchronizer(const std::shared_ptr<Services> & services,
+                            const std::shared_ptr<BlockchainExplorer> & explorer);
 
-            std::shared_ptr<ProgressNotifier<Unit>> synchronizeAccount(const std::shared_ptr<Account> & account);
+        std::shared_ptr<ProgressNotifier<Unit>> synchronizeAccount(const std::shared_ptr<Account> & account);
 
-            Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
+        Future<Unit> performSynchronization(const std::shared_ptr<Account> & account);
 
-            Future<bool> synchronizeBatch(const std::shared_ptr<Account> & account,
-                                          const Option<uint64_t> & minTxRound,
-                                          const bool hadTransactions);
+        Future<bool> synchronizeBatch(const std::shared_ptr<Account> & account,
+                                        const Option<uint64_t> & minTxRound,
+                                        const bool hadTransactions);
 
-        private:
+    private:
 
-            std::shared_ptr<Account> _account;
-            std::shared_ptr<BlockchainExplorer> _explorer;
-            std::shared_ptr<Preferences> _internalPreferences;
-            std::shared_ptr<ProgressNotifier<Unit>> _notifier;
-            std::mutex _lock;
+        std::shared_ptr<Account> _account;
+        std::shared_ptr<BlockchainExplorer> _explorer;
+        std::shared_ptr<Preferences> _internalPreferences;
+        std::shared_ptr<ProgressNotifier<Unit>> _notifier;
+        std::mutex _lock;
 
-        };
+    };
 
 } // namespace algorand
 } // namespace core

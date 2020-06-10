@@ -30,7 +30,6 @@
 
 #include <algorand/AlgorandAccountSynchronizer.hpp>
 #include <algorand/AlgorandAccount.hpp>
-#include <algorand/database/AlgorandBlockDatabaseHelper.hpp>
 
 #include <core/wallet/AccountDatabaseHelper.hpp>
 #include <core/utils/DateUtils.hpp>
@@ -56,18 +55,17 @@ namespace algorand {
         if (!_account) {
             _account = account;
             _notifier = std::make_shared<ProgressNotifier<Unit>>();
-            auto self = shared_from_this();
 
             performSynchronization(account)
-                .onComplete(getContext(), [self] (const Try<Unit> &result) {
-                    std::lock_guard<std::mutex> l(self->_lock);
+                .onComplete(getContext(), [this] (const Try<Unit> &result) {
+                    std::lock_guard<std::mutex> l(_lock);
                     if (result.isFailure()) {
-                        self->_notifier->failure(result.getFailure());
+                        _notifier->failure(result.getFailure());
                     } else {
-                        self->_notifier->success(unit);
+                        _notifier->success(unit);
                     }
-                    self->_notifier = nullptr;
-                    self->_account = nullptr;
+                    _notifier = nullptr;
+                    _account = nullptr;
                 });
 
         } else if (account != _account) {
@@ -80,14 +78,16 @@ namespace algorand {
 
         _internalPreferences = account->getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer");
         auto savedState = _internalPreferences->template getObject<SavedState>("state");
-        if (savedState.isEmpty()) {
+        auto startRound = Option<uint64_t>();
+        if (savedState.hasValue()) {
+            startRound = savedState.getValue().round;
+        } else {
             savedState = Option<SavedState>(SavedState());
             savedState.getValue().round = 0;
             _internalPreferences->editor()->template putObject<SavedState>("state", savedState.getValue())->commit();
         }
 
-        auto firstRound = Option<uint64_t>();
-        return synchronizeBatch(account, savedState.getValue().round, false)
+        return synchronizeBatch(account, startRound, false)
             .template flatMap<Unit>(account->getContext(), [] (const bool hadTransactions) -> Future<Unit> {
                 return Future<Unit>::successful(unit);
             }).recoverWith(ImmediateExecutionContext::INSTANCE, [] (const Exception & exception) -> Future<Unit> {
@@ -98,9 +98,8 @@ namespace algorand {
     Future<bool> AccountSynchronizer::synchronizeBatch(const std::shared_ptr<Account> & account,
                                                        const Option<uint64_t> & maxRound,
                                                        const bool hadTransactions) {
-        auto self = shared_from_this();
         return _explorer->getTransactionsForAddress(account->getAddress(), maxRound)
-            .template flatMap<bool>(getContext(), [self, account, hadTransactions](const model::TransactionsBulk& bulk) -> Future<bool> {
+            .template flatMap<bool>(getContext(), [this, account, hadTransactions](const model::TransactionsBulk& bulk) -> Future<bool> {
 
                 soci::session sql(account->getWallet()->getDatabase()->getPool());
                 soci::transaction tr(sql);
@@ -123,15 +122,15 @@ namespace algorand {
 
                 tr.commit();
 
-                auto savedState = self->_internalPreferences->template getObject<SavedState>("state");
+                auto savedState = _internalPreferences->template getObject<SavedState>("state");
                 if (savedState.hasValue()) {
-                    savedState.getValue().round = highestRound;
-                    self->_internalPreferences->editor()->template putObject<SavedState>("state", savedState.getValue())->commit();
+                    savedState.getValue().round = std::max(savedState.getValue().round, highestRound);
+                    _internalPreferences->editor()->template putObject<SavedState>("state", savedState.getValue())->commit();
                 }
 
                 auto hadTX = hadTransactions || bulk.transactions.size() > 0;
                 if (bulk.hasNext) {
-                    return self->synchronizeBatch(account, lowestRound, hadTX);
+                    return synchronizeBatch(account, lowestRound, hadTX);
                 } else {
                     return Future<bool>::successful(hadTX);
                 }

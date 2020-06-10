@@ -30,15 +30,15 @@
 #include <algorand/AlgorandAccount.hpp>
 #include <algorand/database/AlgorandTransactionDatabaseHelper.hpp>
 #include <algorand/database/AlgorandOperationDatabaseHelper.hpp>
-#include <algorand/database/AlgorandBlockDatabaseHelper.hpp>
 #include <algorand/model/AlgorandModelMapper.hpp>
 #include <algorand/operations/AlgorandOperation.hpp>
 
 #include <algorand/api/AlgorandAssetAmount.hpp>
 #include <algorand/api/AlgorandAssetParams.hpp>
 
-#include <core/events/Event.hpp>
+#include <core/wallet/BlockDatabaseHelper.hpp>
 #include <core/database/SociDate.hpp>
+#include <core/events/Event.hpp>
 #include <core/math/BigInt.hpp>
 #include <core/utils/DateUtils.hpp>
 #include <core/utils/Hex.hpp>
@@ -106,8 +106,6 @@ namespace algorand {
             }
         }
 
-        // NOTE: Because the Algorand API doesn't return the block's hash in the transactions,
-        // we leave block.hash empty, and we use only the block's height ("round")
         api::Block createBlock(
             const model::Transaction& tx,
             const std::string& currencyName)
@@ -120,6 +118,7 @@ namespace algorand {
                         throw make_exception(api::ErrorCode::OUT_OF_RANGE, "Block height exceeds maximum value");
                     }
                     block.height = static_cast<int64_t>(*tx.header.round);
+                    block.blockHash = std::to_string(*tx.header.round);
                 }
                 if (tx.header.timestamp) {
                     block.time = std::chrono::system_clock::time_point(std::chrono::seconds(*tx.header.timestamp));
@@ -460,7 +459,7 @@ namespace algorand {
         return hex::toString(_address.getPublicKey());
     }
 
-    std::string Account::getAddress() const
+    const std::string & Account::getAddress() const
     {
         return _address.toString();
     }
@@ -584,11 +583,11 @@ namespace algorand {
         auto savedState = getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer")->getObject<SavedState>("state");
         if (savedState.nonEmpty()) {
             // Reset saved state to block mined before given date
-            auto previousBlock = BlockDatabaseHelper::getLastBlockBefore(sql, getWallet()->getCurrency().name, date);
+            auto previousBlock = BlockDatabaseHelper::getPreviousBlockInDatabase(sql, getWallet()->getCurrency().name, date);
             if (previousBlock.nonEmpty() && savedState.getValue().round > previousBlock.getValue().height) {
                 savedState.getValue().round = static_cast<uint64_t>(previousBlock.getValue().height);
             } else if (!previousBlock.nonEmpty()) { // if no previous block, sync should go back from genesis block
-                savedState.getValue().round = Option<uint64_t>();
+                savedState.getValue().round = 0;
             }
             getInternalPreferences()->getSubPreferences("AlgorandAccountSynchronizer")->editor()->putObject<SavedState>("state", savedState.getValue())->commit();
         }
