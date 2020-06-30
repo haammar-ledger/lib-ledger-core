@@ -124,7 +124,6 @@ namespace algorand {
 
     void Account::hasAsset(const std::string & addr, const std::string & assetId, const std::shared_ptr<api::BoolCallback> & callback)
     {
-        // TODO [libcore v2]
         _explorer->getAccount(addr)
             .map<bool>(
                     getContext(),
@@ -401,7 +400,7 @@ namespace algorand {
 
         auto self = std::static_pointer_cast<Account>(shared_from_this());
         _synchronizer->synchronizeAccount(self)->getFuture()
-            .onComplete(getContext(), [self, eventPublisher, startTime](const Try<Unit> &result) {
+            .onComplete(getContext(), [this, eventPublisher, startTime](const Try<Unit> &result) {
                 api::EventCode code;
                 auto payload = std::make_shared<DynamicObject>();
                 auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(DateUtils::now() - startTime).count();
@@ -416,8 +415,8 @@ namespace algorand {
                     payload->putString(api::Account::EV_SYNC_ERROR_MESSAGE, result.getFailure().getMessage());
                 }
                 eventPublisher->postSticky(std::make_shared<Event>(code, payload), 0);
-                std::lock_guard<std::mutex> lock(self->_synchronizationLock);
-                self->_currentSyncEventBus = nullptr;
+                std::lock_guard<std::mutex> lock(_synchronizationLock);
+                _currentSyncEventBus = nullptr;
                 return Future<Unit>::successful(result.getValue());
             });
 
