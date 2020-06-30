@@ -25,7 +25,7 @@ private:
     AlgorandConfigurationDefaults();
     friend ::djinni::JniClass<AlgorandConfigurationDefaults>;
 
-    const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("co/ledger/core/AlgorandConfigurationDefaults") };
+    const ::djinni::GlobalRef<jclass> clazz { ::djinni::jniFindClass("AlgorandConfigurationDefaults") };
     const jmethodID jconstructor { ::djinni::jniGetMethodID(clazz.get(), "<init>", "()V") };
 };
 
