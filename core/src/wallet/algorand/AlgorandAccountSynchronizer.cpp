@@ -41,8 +41,6 @@
 #include <api/Configuration.hpp>
 #include <api/ConfigurationDefaults.hpp>
 
-#include <iostream>
-
 
 namespace ledger {
 namespace core {

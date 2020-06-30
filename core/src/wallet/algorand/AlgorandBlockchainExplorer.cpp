@@ -68,7 +68,7 @@ namespace algorand {
         // The Algorand API doesn't have a "latest block" endpoint,
         // so we need to retrieve the latest round number first,
         // then retrieve the associated block
-        return _http->GET(fmt::format(constants::purestakeStatusEndpoint))
+        return _http->GET(constants::purestakeStatusEndpoint)
             .json(true)
             .map<uint64_t>(getContext(), [](const HttpRequest::JsonResult &response) {
                     const auto &json = std::get<1>(response)->GetObject();
