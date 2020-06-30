@@ -307,7 +307,7 @@ workflows:
             tags:
               only: /.*/
             branches:
-              ignore: /int-.*/
+              ignore:
       - build_macos_release:
           filters:
             tags:
