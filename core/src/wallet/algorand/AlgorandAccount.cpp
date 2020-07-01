@@ -398,8 +398,7 @@ namespace algorand {
             std::make_shared<Event>(api::EventCode::SYNCHRONIZATION_STARTED, api::DynamicObject::newInstance()), 0
         );
 
-        auto self = std::static_pointer_cast<Account>(shared_from_this());
-        _synchronizer->synchronizeAccount(self)->getFuture()
+        _synchronizer->synchronizeAccount(getSelf())->getFuture()
             .onComplete(getContext(), [this, eventPublisher, startTime](const Try<Unit> &result) {
                 api::EventCode code;
                 auto payload = std::make_shared<DynamicObject>();
@@ -586,7 +585,7 @@ namespace algorand {
 
     std::shared_ptr<Account> Account::getSelf()
     {
-        return std::dynamic_pointer_cast<Account>(shared_from_this());
+        return std::static_pointer_cast<Account>(shared_from_this());
     }
 
     Future<model::Account> Account::getAccountInformation() const
