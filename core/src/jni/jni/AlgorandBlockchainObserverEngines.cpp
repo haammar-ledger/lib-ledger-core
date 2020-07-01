@@ -6,12 +6,12 @@
 
 namespace djinni_generated {
 
-AlgorandBlockchainObserverEngines::AlgorandBlockchainObserverEngines() : ::djinni::JniInterface<::ledger::core::api::AlgorandBlockchainObserverEngines, AlgorandBlockchainObserverEngines>("AlgorandBlockchainObserverEngines$CppProxy") {}
+AlgorandBlockchainObserverEngines::AlgorandBlockchainObserverEngines() : ::djinni::JniInterface<::ledger::core::api::AlgorandBlockchainObserverEngines, AlgorandBlockchainObserverEngines>("co/ledger/core/AlgorandBlockchainObserverEngines$CppProxy") {}
 
 AlgorandBlockchainObserverEngines::~AlgorandBlockchainObserverEngines() = default;
 
 
-CJNIEXPORT void JNICALL Java_AlgorandBlockchainObserverEngines_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+CJNIEXPORT void JNICALL Java_co_ledger_core_AlgorandBlockchainObserverEngines_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);

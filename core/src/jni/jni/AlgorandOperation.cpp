@@ -7,12 +7,12 @@
 
 namespace djinni_generated {
 
-AlgorandOperation::AlgorandOperation() : ::djinni::JniInterface<::ledger::core::api::AlgorandOperation, AlgorandOperation>("AlgorandOperation$CppProxy") {}
+AlgorandOperation::AlgorandOperation() : ::djinni::JniInterface<::ledger::core::api::AlgorandOperation, AlgorandOperation>("co/ledger/core/AlgorandOperation$CppProxy") {}
 
 AlgorandOperation::~AlgorandOperation() = default;
 
 
-CJNIEXPORT void JNICALL Java_AlgorandOperation_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+CJNIEXPORT void JNICALL Java_co_ledger_core_AlgorandOperation_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -20,7 +20,7 @@ CJNIEXPORT void JNICALL Java_AlgorandOperation_00024CppProxy_nativeDestroy(JNIEn
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_AlgorandOperation_00024CppProxy_native_1getAlgorandOperationType(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+CJNIEXPORT jobject JNICALL Java_co_ledger_core_AlgorandOperation_00024CppProxy_native_1getAlgorandOperationType(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -30,7 +30,7 @@ CJNIEXPORT jobject JNICALL Java_AlgorandOperation_00024CppProxy_native_1getAlgor
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT jobject JNICALL Java_AlgorandOperation_00024CppProxy_native_1getTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+CJNIEXPORT jobject JNICALL Java_co_ledger_core_AlgorandOperation_00024CppProxy_native_1getTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);

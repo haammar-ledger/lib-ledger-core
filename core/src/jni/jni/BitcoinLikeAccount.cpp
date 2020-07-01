@@ -13,12 +13,12 @@
 
 namespace djinni_generated {
 
-BitcoinLikeAccount::BitcoinLikeAccount() : ::djinni::JniInterface<::ledger::core::api::BitcoinLikeAccount, BitcoinLikeAccount>("BitcoinLikeAccount$CppProxy") {}
+BitcoinLikeAccount::BitcoinLikeAccount() : ::djinni::JniInterface<::ledger::core::api::BitcoinLikeAccount, BitcoinLikeAccount>("co/ledger/core/BitcoinLikeAccount$CppProxy") {}
 
 BitcoinLikeAccount::~BitcoinLikeAccount() = default;
 
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_nativeDestroy(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -26,7 +26,7 @@ CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_nativeDestroy(JNIE
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getUTXO(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jint j_from, jint j_to, jobject j_callback)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1getUTXO(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jint j_from, jint j_to, jobject j_callback)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -37,7 +37,7 @@ CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getUTXO(JN
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getUTXOCount(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_callback)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1getUTXOCount(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_callback)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -46,7 +46,7 @@ CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getUTXOCou
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1broadcastRawTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jbyteArray j_transaction, jobject j_callback)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1broadcastRawTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jbyteArray j_transaction, jobject j_callback)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -56,7 +56,7 @@ CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1broadcastR
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1broadcastTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_transaction, jobject j_callback)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1broadcastTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_transaction, jobject j_callback)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -66,7 +66,7 @@ CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1broadcastT
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT jobject JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1buildTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_partial)
+CJNIEXPORT jobject JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1buildTransaction(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_partial)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -76,7 +76,7 @@ CJNIEXPORT jobject JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1buildTr
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, 0 /* value doesn't matter */)
 }
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getFees(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_callback)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1getFees(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jobject j_callback)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
@@ -85,7 +85,7 @@ CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getFees(JN
     } JNI_TRANSLATE_EXCEPTIONS_RETURN(jniEnv, )
 }
 
-CJNIEXPORT void JNICALL Java_BitcoinLikeAccount_00024CppProxy_native_1getAddresses(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_from, jlong j_to, jobject j_callback)
+CJNIEXPORT void JNICALL Java_co_ledger_core_BitcoinLikeAccount_00024CppProxy_native_1getAddresses(JNIEnv* jniEnv, jobject /*this*/, jlong nativeRef, jlong j_from, jlong j_to, jobject j_callback)
 {
     try {
         DJINNI_FUNCTION_PROLOGUE1(jniEnv, nativeRef);
