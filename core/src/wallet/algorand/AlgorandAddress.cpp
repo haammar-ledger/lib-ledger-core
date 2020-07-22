@@ -28,6 +28,7 @@
  */
 
 #include "AlgorandAddress.hpp"
+#include <api/AlgorandAddress.hpp>
 
 #include <collections/vector.hpp>
 #include <crypto/sha512_256.h>
@@ -39,30 +40,11 @@ namespace core {
 namespace api {
 
     std::string AlgorandAddress::fromPublicKey(const std::vector<uint8_t> & pubKey) {
-        // 1. pubkey --> pubKeyHash
-        auto hasher = cppcrypto::sha512(256);
-        unsigned char pubKeyHash[algorand::Address::PUBKEY_LEN_BYTES];
-        hasher.init();
-        hasher.update(pubKey.data(), pubKey.size());
-        hasher.final(pubKeyHash); // Now hash contains the hash
-        // 2. 4 last bytes of pubKeyHash
-        const auto pubKeyHashBegin = pubKeyHash + algorand::Address::PUBKEY_LEN_BYTES - algorand::Address::CHECKSUM_LEN_BYTES;
-        const auto pubKeyHashEnd = pubKeyHash + algorand::Address::PUBKEY_LEN_BYTES;
-        const std::vector<uint8_t> pubKeyHashChecksum(pubKeyHashBegin, pubKeyHashEnd);
-        // 3. pubkey + 4 last bytes of pubKeyHash
-        const std::vector<uint8_t> addressBytes = vector::concat<uint8_t>(pubKey, pubKeyHashChecksum);
-        // 4. Encode to Base32
-        return BaseConverter::encode(addressBytes, BaseConverter::BASE32_RFC4648_NO_PADDING);
+        return algorand::Address::fromPublicKey(pubKey);
     }
 
     std::vector<uint8_t> AlgorandAddress::toPublicKey(const std::string & address) {
-        std::vector<uint8_t> decoded;
-        decoded.reserve(algorand::Address::PUBKEY_LEN_BYTES + algorand::Address::CHECKSUM_LEN_BYTES);
-        // 1. Decode from Base32
-        BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, decoded);
-        // 2. Strip last 4 bytes to keep only the public key
-        decoded.resize(algorand::Address::PUBKEY_LEN_BYTES);
-        return decoded;
+        return algorand::Address::toPublicKey(address);
     }
 
 } // namespace api
@@ -94,10 +76,35 @@ namespace algorand {
     std::shared_ptr<ledger::core::AbstractAddress>
     Address::parse(const std::string& address, const api::Currency& currency)
     {
-        if (api::AlgorandAddress::fromPublicKey(api::AlgorandAddress::toPublicKey(address)) == address) {
+        if (fromPublicKey(toPublicKey(address)) == address) {
             return std::make_shared<Address>(currency, address);
         }
         return nullptr;
+    }
+
+    std::string Address::fromPublicKey(const std::vector<uint8_t> & pubKey) {
+        // 1. pubkey --> pubKeyHash
+        auto hasher = cppcrypto::sha512(256);
+        unsigned char pubKeyHash[PUBKEY_LEN_BYTES];
+        hasher.init();
+        hasher.update(pubKey.data(), pubKey.size());
+        hasher.final(pubKeyHash); // Now hash contains the hash
+        // 2. 4 last bytes of pubKeyHash
+        const std::vector<uint8_t> pubKeyHashChecksum(pubKeyHash + PUBKEY_LEN_BYTES - CHECKSUM_LEN_BYTES, pubKeyHash + PUBKEY_LEN_BYTES);
+        // 3. pubkey + 4 last bytes of pubKeyHash
+        const std::vector<uint8_t> addressBytes = vector::concat<uint8_t>(pubKey, pubKeyHashChecksum);
+        // 4. Encode to Base32
+        return BaseConverter::encode(addressBytes, BaseConverter::BASE32_RFC4648_NO_PADDING);
+    }
+
+    std::vector<uint8_t> Address::toPublicKey(const std::string & address) {
+        std::vector<uint8_t> decoded;
+        decoded.reserve(PUBKEY_LEN_BYTES + CHECKSUM_LEN_BYTES);
+        // 1. Decode from Base32
+        BaseConverter::decode(address, BaseConverter::BASE32_RFC4648_NO_PADDING, decoded);
+        // 2. Strip last 4 bytes to keep only the public key
+        decoded.resize(PUBKEY_LEN_BYTES);
+        return decoded;
     }
 
 } // namespace algorand

@@ -36,7 +36,6 @@
 #include <wallet/algorand/utils/B64String.hpp>
 
 #include <api/AlgorandAssetAmount.hpp>
-#include <api/AlgorandAddress.hpp>
 
 #include <api/AccountCreationInfo.hpp>
 
@@ -218,7 +217,7 @@ public:
         const auto currency = currencies::ALGORAND;
         registerCurrency(currency);
 
-        accountInfo = api::AccountCreationInfo(1, {}, {}, { api::AlgorandAddress::toPublicKey(OBELIX) }, {});
+        accountInfo = api::AccountCreationInfo(1, {}, {}, { algorand::Address::toPublicKey(OBELIX) }, {});
 
         wallet = std::dynamic_pointer_cast<algorand::Wallet>(wait(pool->createWallet("algorand", currency.name, api::DynamicObject::newInstance())));
         account = createAlgorandAccount(wallet, accountInfo.index, accountInfo);

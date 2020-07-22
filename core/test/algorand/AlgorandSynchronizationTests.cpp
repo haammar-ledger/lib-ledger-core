@@ -34,7 +34,6 @@
 #include <wallet/algorand/AlgorandLikeCurrencies.hpp>
 #include <wallet/algorand/AlgorandNetworks.hpp>
 #include <wallet/common/OperationQuery.h>
-#include <api/AlgorandAddress.hpp>
 #include <api/AlgorandConfigurationDefaults.hpp>
 #include <api/AlgorandBlockchainExplorerEngines.hpp>
 #include <api/Configuration.hpp>
@@ -70,7 +69,7 @@ public:
             nextIndex,
             {"main"},
             {"44'/283'/0'/0'"},
-            { api::AlgorandAddress::toPublicKey(accountAddress) },
+            { algorand::Address::toPublicKey(accountAddress) },
             {hex::toByteArray("")}
         );
 
