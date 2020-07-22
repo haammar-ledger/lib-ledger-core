@@ -32,6 +32,7 @@
 
 #include "AlgorandLikeCurrencies.hpp"
 
+#include <api/AlgorandAddress.hpp>
 #include <wallet/common/AbstractAddress.h>
 
 #include <string>
@@ -42,6 +43,8 @@ namespace core {
 namespace algorand {
 
     class Address : public AbstractAddress {
+
+    friend api::AlgorandAddress;
 
     public:
 
@@ -56,10 +59,6 @@ namespace algorand {
         std::string toString() override;
         const std::string& toString() const;
         std::vector<uint8_t> getPublicKey() const;
-
-        // Utility methods for easy conversion, could be useful for tests
-        static std::string fromPublicKey(const std::vector<uint8_t> & pubKey);
-        static std::vector<uint8_t> toPublicKey(const std::string & address);
 
         static std::shared_ptr<ledger::core::AbstractAddress>
         parse(const std::string& address, const api::Currency& currency);

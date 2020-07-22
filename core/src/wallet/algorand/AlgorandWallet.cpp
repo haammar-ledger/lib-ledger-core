@@ -34,8 +34,9 @@
 #include "database/AlgorandAccountDatabaseHelper.hpp"
 
 #include <wallet/pool/WalletPool.hpp>
-#include <api/ErrorCode.hpp>
 #include <wallet/common/database/AccountDatabaseHelper.h>
+#include <api/AlgorandAddress.hpp>
+#include <api/ErrorCode.hpp>
 
 
 namespace ledger {
@@ -81,7 +82,7 @@ namespace algorand {
 
             const AccountDatabaseEntry accountData {
                 info.index,
-                Address::fromPublicKey(info.publicKeys[0])
+                api::AlgorandAddress::fromPublicKey(info.publicKeys[0])
             };
 
             soci::transaction tr(sql);
