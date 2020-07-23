@@ -167,12 +167,12 @@ namespace algorand {
             .callback(getMainExecutionContext(), callback);
     }
 
-    void Account::isAmountValid(const std::string & addr, const std::string & amount, const std::shared_ptr<api::BoolCallback> & callback)
+    void Account::isAmountValid(const std::string & addr, const std::string & amount, const std::shared_ptr<api::BoolCallback> & callback) const
     {
         isAmountValid(addr, amount).callback(getMainExecutionContext(), callback);
     }
 
-    Future<bool> Account::isAmountValid(const std::string & addr, const std::string & amount)
+    Future<bool> Account::isAmountValid(const std::string & addr, const std::string & amount) const
     {
         return _explorer->getAccount(addr)
             .map<bool>(

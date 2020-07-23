@@ -63,7 +63,7 @@ public:
      * @param amount, the amount to test
      * @param callback, Callback returning the true if the address hold the asset
      */
-    virtual void isAmountValid(const std::string & address, const std::string & amount, const std::shared_ptr<BoolCallback> & callback) = 0;
+    virtual void isAmountValid(const std::string & address, const std::string & amount, const std::shared_ptr<BoolCallback> & callback) const = 0;
 
     /**
      * Get balance of account for a particular asset.
