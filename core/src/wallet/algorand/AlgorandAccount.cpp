@@ -178,7 +178,11 @@ namespace algorand {
             .map<bool>(
                 getContext(),
                 [amount](const model::Account& account) {
-                    return std::stoull(amount) >= computeMinimumBalance(account, api::AlgorandOperationType::PAYMENT);
+                    if (account.amount == 0) {
+                        constexpr uint64_t minValue = 100000;
+                        return std::stoull(amount) >= minValue;
+                    }
+                    return true;
                 });
     }
 
